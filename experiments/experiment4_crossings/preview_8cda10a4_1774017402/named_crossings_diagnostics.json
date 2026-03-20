@@ -1,0 +1,37 @@
+{
+  "input": "C:\\Users\\phx25\\Desktop\\Grad Project\\Bus-Logistics-Tool-Crossings\\experiments\\experiment4_crossings\\input.json",
+  "output_html": "C:\\Users\\phx25\\Desktop\\Grad Project\\Bus-Logistics-Tool-Crossings\\experiments\\experiment4_crossings\\preview_8cda10a4_1774017402\\named_crossings_preview.html",
+  "crossings_injection_pkl": "C:\\Users\\phx25\\Desktop\\Grad Project\\Bus-Logistics-Tool-Crossings\\experiments\\experiment4_crossings\\preview_8cda10a4_1774017402\\crossings_nodes_injection.pkl",
+  "crossings_count": 145,
+  "crossings_injection": {
+    "nodes": 193,
+    "edge_pairs": 98
+  },
+  "diagnostics": {
+    "strategy": "drive_node_crossings",
+    "drive_edges_found": 355,
+    "drive_nodes_extracted": 404,
+    "roads_found": 32,
+    "roads_with_both_directions": 23,
+    "real_to_real_crossings": 56,
+    "real_to_synthetic_crossings": 89,
+    "synthetic_nodes_created": 89,
+    "rejected_no_opposite": 9,
+    "pairing_attempts": 1659,
+    "pairing_rejected_distance_too_short": 0,
+    "pairing_rejected_distance_too_long": 1423,
+    "pairing_rejected_angle": 5,
+    "pairing_rejected_bearing_calc_failed": 0,
+    "rejected_distance": 0,
+    "rejected_angle": 0,
+    "rejected_spacing": 11,
+    "skipped_global_connection_lock": 40,
+    "rejected_fallback_geometry": 0,
+    "fallback_reused_existing_nodes": 30,
+    "fallback_projected_with_spacing": 51,
+    "fallback_projected_no_spacing": 29,
+    "fallback_guaranteed": 18,
+    "fallback_failed_completely": 0
+  },
+  "debug_edges_count": 303
+}

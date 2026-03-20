@@ -1,0 +1,10 @@
+{
+  "mode": "generate_routes",
+  "input_file": "api_requests/generate_routes_input.json",
+  "total_runtime_seconds": 44.89,
+  "optimization_time_seconds": 0.26,
+  "students_total": 6,
+  "students_served": 5,
+  "routes_created": 1,
+  "final_objective": 49924.65
+}

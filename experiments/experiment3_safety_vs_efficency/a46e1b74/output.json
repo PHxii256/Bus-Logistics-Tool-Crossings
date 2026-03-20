@@ -1,0 +1,1261 @@
+{
+  "generated_at": "27/02/26 02:29 am",
+  "total_wall_time_seconds": 1495.14,
+  "debug_stats": {
+    "step_times": {
+      "generate_dataset_s": 14.05,
+      "build_constrained_graph_s": 19.48,
+      "build_unconstrained_graph_s": 22.17,
+      "build_map_s": 73.62
+    },
+    "mode_breakdown": {
+      "A": {
+        "mode_wall_time_s": 385.58,
+        "alns_solve_s": 129.97,
+        "setup_and_overhead_s": 255.61,
+        "alns_iterations": null,
+        "n_candidates_per_student": 1.0
+      },
+      "B": {
+        "mode_wall_time_s": 911.89,
+        "alns_solve_s": 288.3,
+        "setup_and_overhead_s": 623.59,
+        "alns_iterations": null,
+        "n_candidates_per_student": 1.0
+      },
+      "C": {
+        "mode_wall_time_s": 15.07,
+        "alns_solve_s": 6.7,
+        "setup_and_overhead_s": 8.37,
+        "alns_iterations": null,
+        "n_candidates_per_student": 1.0
+      }
+    }
+  },
+  "config": {
+    "n_students": 60,
+    "seed": 42,
+    "iterations": 200,
+    "buses_capacity": 22,
+    "stage_walk_limits": {
+      "KG": 0,
+      "ELEMENTARY": 0,
+      "MIDDLE": 400,
+      "HIGH": 400
+    },
+    "stage_distribution": {
+      "KG": 0.0,
+      "ELEMENTARY": 0.0,
+      "MIDDLE": 0.5,
+      "HIGH": 0.5
+    }
+  },
+  "modes": {
+    "constrained": {
+      "routes_created": 4,
+      "students_served": 52,
+      "students_unserved": 8,
+      "total_route_time_min": 266.35,
+      "total_route_dist_km": 133.18,
+      "avg_route_time_min": 66.59,
+      "alns_runtime_seconds": 129.97,
+      "mode_wall_time_seconds": null,
+      "unsafe_crossings": 0,
+      "walk_stats": {
+        "avg_walk_dist_m": 82.4,
+        "median_walk_dist_m": 68.7,
+        "max_walk_dist_m": 371.6,
+        "min_walk_dist_m": 0.0,
+        "avg_walk_time_min": 1.03,
+        "avg_walk_utilisation_pct": 20.6
+      },
+      "students": [
+        {
+          "id": "S048",
+          "stage": "MIDDLE",
+          "ride_time_min": 56.79,
+          "direct_potential_min": 17.99,
+          "walk_distance_m": 101.2
+        },
+        {
+          "id": "S059",
+          "stage": "MIDDLE",
+          "ride_time_min": 42.27,
+          "direct_potential_min": 12.15,
+          "walk_distance_m": 70.7
+        },
+        {
+          "id": "S038",
+          "stage": "HIGH",
+          "ride_time_min": 37.26,
+          "direct_potential_min": 12.43,
+          "walk_distance_m": 54.0
+        },
+        {
+          "id": "S051",
+          "stage": "MIDDLE",
+          "ride_time_min": 33.08,
+          "direct_potential_min": 8.47,
+          "walk_distance_m": 278.5
+        },
+        {
+          "id": "S036",
+          "stage": "MIDDLE",
+          "ride_time_min": 33.08,
+          "direct_potential_min": 9.24,
+          "walk_distance_m": 130.5
+        },
+        {
+          "id": "S021",
+          "stage": "MIDDLE",
+          "ride_time_min": 23.4,
+          "direct_potential_min": 5.39,
+          "walk_distance_m": 42.0
+        },
+        {
+          "id": "S040",
+          "stage": "MIDDLE",
+          "ride_time_min": 16.07,
+          "direct_potential_min": 9.88,
+          "walk_distance_m": 106.6
+        },
+        {
+          "id": "S019",
+          "stage": "MIDDLE",
+          "ride_time_min": 15.36,
+          "direct_potential_min": 9.72,
+          "walk_distance_m": 245.1
+        },
+        {
+          "id": "S011",
+          "stage": "HIGH",
+          "ride_time_min": 5.55,
+          "direct_potential_min": 4.61,
+          "walk_distance_m": 102.4
+        },
+        {
+          "id": "S004",
+          "stage": "MIDDLE",
+          "ride_time_min": 4.77,
+          "direct_potential_min": 4.36,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S050",
+          "stage": "HIGH",
+          "ride_time_min": 71.28,
+          "direct_potential_min": 21.84,
+          "walk_distance_m": 371.6
+        },
+        {
+          "id": "S024",
+          "stage": "HIGH",
+          "ride_time_min": 71.28,
+          "direct_potential_min": 21.19,
+          "walk_distance_m": 147.1
+        },
+        {
+          "id": "S003",
+          "stage": "MIDDLE",
+          "ride_time_min": 54.59,
+          "direct_potential_min": 17.98,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S042",
+          "stage": "HIGH",
+          "ride_time_min": 53.74,
+          "direct_potential_min": 17.12,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S053",
+          "stage": "MIDDLE",
+          "ride_time_min": 52.93,
+          "direct_potential_min": 15.71,
+          "walk_distance_m": 77.4
+        },
+        {
+          "id": "S044",
+          "stage": "HIGH",
+          "ride_time_min": 36.33,
+          "direct_potential_min": 12.64,
+          "walk_distance_m": 85.8
+        },
+        {
+          "id": "S002",
+          "stage": "HIGH",
+          "ride_time_min": 30.79,
+          "direct_potential_min": 11.25,
+          "walk_distance_m": 57.4
+        },
+        {
+          "id": "S054",
+          "stage": "HIGH",
+          "ride_time_min": 29.12,
+          "direct_potential_min": 12.5,
+          "walk_distance_m": 191.5
+        },
+        {
+          "id": "S041",
+          "stage": "MIDDLE",
+          "ride_time_min": 29.12,
+          "direct_potential_min": 10.53,
+          "walk_distance_m": 264.4
+        },
+        {
+          "id": "S037",
+          "stage": "MIDDLE",
+          "ride_time_min": 23.91,
+          "direct_potential_min": 12.1,
+          "walk_distance_m": 110.8
+        },
+        {
+          "id": "S022",
+          "stage": "MIDDLE",
+          "ride_time_min": 20.08,
+          "direct_potential_min": 10.84,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S007",
+          "stage": "MIDDLE",
+          "ride_time_min": 11.43,
+          "direct_potential_min": 9.23,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S028",
+          "stage": "HIGH",
+          "ride_time_min": 6.95,
+          "direct_potential_min": 6.25,
+          "walk_distance_m": 164.4
+        },
+        {
+          "id": "S017",
+          "stage": "MIDDLE",
+          "ride_time_min": 50.77,
+          "direct_potential_min": 15.64,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S035",
+          "stage": "MIDDLE",
+          "ride_time_min": 42.95,
+          "direct_potential_min": 12.71,
+          "walk_distance_m": 39.4
+        },
+        {
+          "id": "S015",
+          "stage": "HIGH",
+          "ride_time_min": 40.13,
+          "direct_potential_min": 14.36,
+          "walk_distance_m": 49.7
+        },
+        {
+          "id": "S001",
+          "stage": "MIDDLE",
+          "ride_time_min": 38.01,
+          "direct_potential_min": 13.24,
+          "walk_distance_m": 27.2
+        },
+        {
+          "id": "S057",
+          "stage": "MIDDLE",
+          "ride_time_min": 32.29,
+          "direct_potential_min": 8.94,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S008",
+          "stage": "MIDDLE",
+          "ride_time_min": 27.06,
+          "direct_potential_min": 10.29,
+          "walk_distance_m": 19.2
+        },
+        {
+          "id": "S009",
+          "stage": "HIGH",
+          "ride_time_min": 24.21,
+          "direct_potential_min": 9.99,
+          "walk_distance_m": 85.7
+        },
+        {
+          "id": "S039",
+          "stage": "HIGH",
+          "ride_time_min": 14.75,
+          "direct_potential_min": 8.82,
+          "walk_distance_m": 68.4
+        },
+        {
+          "id": "S055",
+          "stage": "HIGH",
+          "ride_time_min": 12.33,
+          "direct_potential_min": 9.01,
+          "walk_distance_m": 69.1
+        },
+        {
+          "id": "S052",
+          "stage": "HIGH",
+          "ride_time_min": 10.71,
+          "direct_potential_min": 7.63,
+          "walk_distance_m": 14.9
+        },
+        {
+          "id": "S016",
+          "stage": "HIGH",
+          "ride_time_min": 10.26,
+          "direct_potential_min": 7.04,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S058",
+          "stage": "MIDDLE",
+          "ride_time_min": 10.24,
+          "direct_potential_min": 7.02,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S014",
+          "stage": "MIDDLE",
+          "ride_time_min": 9.5,
+          "direct_potential_min": 6.27,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S005",
+          "stage": "HIGH",
+          "ride_time_min": 7.17,
+          "direct_potential_min": 6.76,
+          "walk_distance_m": 88.0
+        },
+        {
+          "id": "S010",
+          "stage": "HIGH",
+          "ride_time_min": 1.96,
+          "direct_potential_min": 2.4,
+          "walk_distance_m": 95.0
+        },
+        {
+          "id": "S043",
+          "stage": "HIGH",
+          "ride_time_min": 55.59,
+          "direct_potential_min": 16.69,
+          "walk_distance_m": 47.7
+        },
+        {
+          "id": "S012",
+          "stage": "MIDDLE",
+          "ride_time_min": 51.28,
+          "direct_potential_min": 16.43,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S060",
+          "stage": "MIDDLE",
+          "ride_time_min": 49.14,
+          "direct_potential_min": 18.17,
+          "walk_distance_m": 25.1
+        },
+        {
+          "id": "S025",
+          "stage": "MIDDLE",
+          "ride_time_min": 40.14,
+          "direct_potential_min": 12.68,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S056",
+          "stage": "MIDDLE",
+          "ride_time_min": 31.72,
+          "direct_potential_min": 11.17,
+          "walk_distance_m": 12.2
+        },
+        {
+          "id": "S045",
+          "stage": "HIGH",
+          "ride_time_min": 28.85,
+          "direct_potential_min": 8.59,
+          "walk_distance_m": 48.2
+        },
+        {
+          "id": "S030",
+          "stage": "MIDDLE",
+          "ride_time_min": 28.85,
+          "direct_potential_min": 8.23,
+          "walk_distance_m": 48.7
+        },
+        {
+          "id": "S027",
+          "stage": "HIGH",
+          "ride_time_min": 22.14,
+          "direct_potential_min": 8.19,
+          "walk_distance_m": 38.7
+        },
+        {
+          "id": "S047",
+          "stage": "MIDDLE",
+          "ride_time_min": 18.72,
+          "direct_potential_min": 9.48,
+          "walk_distance_m": 76.3
+        },
+        {
+          "id": "S026",
+          "stage": "HIGH",
+          "ride_time_min": 14.39,
+          "direct_potential_min": 9.35,
+          "walk_distance_m": 139.6
+        },
+        {
+          "id": "S023",
+          "stage": "HIGH",
+          "ride_time_min": 12.95,
+          "direct_potential_min": 9.81,
+          "walk_distance_m": 156.5
+        },
+        {
+          "id": "S029",
+          "stage": "MIDDLE",
+          "ride_time_min": 8.41,
+          "direct_potential_min": 5.42,
+          "walk_distance_m": 50.7
+        },
+        {
+          "id": "S018",
+          "stage": "MIDDLE",
+          "ride_time_min": 5.04,
+          "direct_potential_min": 4.24,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S013",
+          "stage": "MIDDLE",
+          "ride_time_min": 4.07,
+          "direct_potential_min": 3.47,
+          "walk_distance_m": 0.0
+        }
+      ],
+      "fleet_search": {
+        "buses_used": 4,
+        "summary": "No fleet size in range 3..4 served all students. Best: k=4 with 52/60 served, 8 unserved. 8 student(s) likely unserved due to ALNS budget exhaustion — try increasing time_budget_seconds.",
+        "search_log": [
+          {
+            "k": 3,
+            "served": 46,
+            "unserved": 14,
+            "feasible": false,
+            "runtime_s": 138.75,
+            "rejection_reasons": {
+              "search_budget_exhausted": 14
+            }
+          },
+          {
+            "k": 4,
+            "served": 52,
+            "unserved": 8,
+            "feasible": false,
+            "runtime_s": 129.97,
+            "rejection_reasons": {
+              "search_budget_exhausted": 8
+            }
+          }
+        ]
+      }
+    },
+    "unconstrained": {
+      "routes_created": 4,
+      "students_served": 52,
+      "students_unserved": 8,
+      "total_route_time_min": 270.36,
+      "total_route_dist_km": 135.18,
+      "avg_route_time_min": 67.59,
+      "alns_runtime_seconds": 288.3,
+      "mode_wall_time_seconds": null,
+      "unsafe_crossings": 2,
+      "walk_stats": {
+        "avg_walk_dist_m": 96.8,
+        "median_walk_dist_m": 72.8,
+        "max_walk_dist_m": 371.6,
+        "min_walk_dist_m": 0.0,
+        "avg_walk_time_min": 1.21,
+        "avg_walk_utilisation_pct": 24.2
+      },
+      "students": [
+        {
+          "id": "S024",
+          "stage": "HIGH",
+          "ride_time_min": 72.61,
+          "direct_potential_min": 21.19,
+          "walk_distance_m": 147.1
+        },
+        {
+          "id": "S050",
+          "stage": "HIGH",
+          "ride_time_min": 72.61,
+          "direct_potential_min": 21.84,
+          "walk_distance_m": 371.6
+        },
+        {
+          "id": "S042",
+          "stage": "HIGH",
+          "ride_time_min": 55.92,
+          "direct_potential_min": 17.12,
+          "walk_distance_m": 257.1
+        },
+        {
+          "id": "S003",
+          "stage": "MIDDLE",
+          "ride_time_min": 55.92,
+          "direct_potential_min": 17.98,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S053",
+          "stage": "MIDDLE",
+          "ride_time_min": 54.25,
+          "direct_potential_min": 15.71,
+          "walk_distance_m": 77.4
+        },
+        {
+          "id": "S002",
+          "stage": "HIGH",
+          "ride_time_min": 38.84,
+          "direct_potential_min": 11.25,
+          "walk_distance_m": 57.4
+        },
+        {
+          "id": "S054",
+          "stage": "HIGH",
+          "ride_time_min": 37.16,
+          "direct_potential_min": 12.5,
+          "walk_distance_m": 191.5
+        },
+        {
+          "id": "S041",
+          "stage": "MIDDLE",
+          "ride_time_min": 35.93,
+          "direct_potential_min": 10.53,
+          "walk_distance_m": 79.7
+        },
+        {
+          "id": "S029",
+          "stage": "MIDDLE",
+          "ride_time_min": 30.41,
+          "direct_potential_min": 5.42,
+          "walk_distance_m": 50.7
+        },
+        {
+          "id": "S039",
+          "stage": "HIGH",
+          "ride_time_min": 15.0,
+          "direct_potential_min": 8.82,
+          "walk_distance_m": 68.4
+        },
+        {
+          "id": "S055",
+          "stage": "HIGH",
+          "ride_time_min": 12.58,
+          "direct_potential_min": 9.01,
+          "walk_distance_m": 69.1
+        },
+        {
+          "id": "S016",
+          "stage": "HIGH",
+          "ride_time_min": 11.02,
+          "direct_potential_min": 7.04,
+          "walk_distance_m": 234.2
+        },
+        {
+          "id": "S052",
+          "stage": "HIGH",
+          "ride_time_min": 11.02,
+          "direct_potential_min": 7.63,
+          "walk_distance_m": 88.6
+        },
+        {
+          "id": "S058",
+          "stage": "MIDDLE",
+          "ride_time_min": 11.02,
+          "direct_potential_min": 7.02,
+          "walk_distance_m": 220.0
+        },
+        {
+          "id": "S014",
+          "stage": "MIDDLE",
+          "ride_time_min": 9.5,
+          "direct_potential_min": 6.27,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S005",
+          "stage": "HIGH",
+          "ride_time_min": 7.17,
+          "direct_potential_min": 6.76,
+          "walk_distance_m": 88.0
+        },
+        {
+          "id": "S010",
+          "stage": "HIGH",
+          "ride_time_min": 1.96,
+          "direct_potential_min": 2.4,
+          "walk_distance_m": 95.0
+        },
+        {
+          "id": "S060",
+          "stage": "MIDDLE",
+          "ride_time_min": 56.07,
+          "direct_potential_min": 18.17,
+          "walk_distance_m": 33.2
+        },
+        {
+          "id": "S012",
+          "stage": "MIDDLE",
+          "ride_time_min": 56.07,
+          "direct_potential_min": 16.43,
+          "walk_distance_m": 349.3
+        },
+        {
+          "id": "S006",
+          "stage": "MIDDLE",
+          "ride_time_min": 42.63,
+          "direct_potential_min": 14.39,
+          "walk_distance_m": 74.8
+        },
+        {
+          "id": "S049",
+          "stage": "MIDDLE",
+          "ride_time_min": 39.04,
+          "direct_potential_min": 12.79,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S040",
+          "stage": "MIDDLE",
+          "ride_time_min": 34.24,
+          "direct_potential_min": 9.88,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S019",
+          "stage": "MIDDLE",
+          "ride_time_min": 34.24,
+          "direct_potential_min": 9.72,
+          "walk_distance_m": 245.1
+        },
+        {
+          "id": "S009",
+          "stage": "HIGH",
+          "ride_time_min": 27.46,
+          "direct_potential_min": 9.99,
+          "walk_distance_m": 78.9
+        },
+        {
+          "id": "S008",
+          "stage": "MIDDLE",
+          "ride_time_min": 24.45,
+          "direct_potential_min": 10.29,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S056",
+          "stage": "MIDDLE",
+          "ride_time_min": 15.89,
+          "direct_potential_min": 11.17,
+          "walk_distance_m": 22.8
+        },
+        {
+          "id": "S057",
+          "stage": "MIDDLE",
+          "ride_time_min": 12.1,
+          "direct_potential_min": 8.94,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S021",
+          "stage": "MIDDLE",
+          "ride_time_min": 5.36,
+          "direct_potential_min": 5.39,
+          "walk_distance_m": 35.5
+        },
+        {
+          "id": "S048",
+          "stage": "MIDDLE",
+          "ride_time_min": 55.6,
+          "direct_potential_min": 17.99,
+          "walk_distance_m": 96.9
+        },
+        {
+          "id": "S044",
+          "stage": "HIGH",
+          "ride_time_min": 42.4,
+          "direct_potential_min": 12.64,
+          "walk_distance_m": 85.8
+        },
+        {
+          "id": "S059",
+          "stage": "MIDDLE",
+          "ride_time_min": 38.11,
+          "direct_potential_min": 12.15,
+          "walk_distance_m": 70.7
+        },
+        {
+          "id": "S027",
+          "stage": "HIGH",
+          "ride_time_min": 31.13,
+          "direct_potential_min": 8.19,
+          "walk_distance_m": 58.3
+        },
+        {
+          "id": "S030",
+          "stage": "MIDDLE",
+          "ride_time_min": 25.06,
+          "direct_potential_min": 8.23,
+          "walk_distance_m": 47.9
+        },
+        {
+          "id": "S045",
+          "stage": "HIGH",
+          "ride_time_min": 25.06,
+          "direct_potential_min": 8.59,
+          "walk_distance_m": 101.8
+        },
+        {
+          "id": "S018",
+          "stage": "MIDDLE",
+          "ride_time_min": 19.43,
+          "direct_potential_min": 4.24,
+          "walk_distance_m": 16.5
+        },
+        {
+          "id": "S013",
+          "stage": "MIDDLE",
+          "ride_time_min": 19.39,
+          "direct_potential_min": 3.47,
+          "walk_distance_m": 99.8
+        },
+        {
+          "id": "S007",
+          "stage": "MIDDLE",
+          "ride_time_min": 12.06,
+          "direct_potential_min": 9.23,
+          "walk_distance_m": 127.1
+        },
+        {
+          "id": "S028",
+          "stage": "HIGH",
+          "ride_time_min": 8.19,
+          "direct_potential_min": 6.25,
+          "walk_distance_m": 8.9
+        },
+        {
+          "id": "S043",
+          "stage": "HIGH",
+          "ride_time_min": 51.12,
+          "direct_potential_min": 16.69,
+          "walk_distance_m": 47.7
+        },
+        {
+          "id": "S025",
+          "stage": "MIDDLE",
+          "ride_time_min": 42.78,
+          "direct_potential_min": 12.68,
+          "walk_distance_m": 44.6
+        },
+        {
+          "id": "S017",
+          "stage": "MIDDLE",
+          "ride_time_min": 39.7,
+          "direct_potential_min": 15.64,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S001",
+          "stage": "MIDDLE",
+          "ride_time_min": 33.88,
+          "direct_potential_min": 13.24,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S015",
+          "stage": "HIGH",
+          "ride_time_min": 32.14,
+          "direct_potential_min": 14.36,
+          "walk_distance_m": 49.7
+        },
+        {
+          "id": "S035",
+          "stage": "MIDDLE",
+          "ride_time_min": 29.98,
+          "direct_potential_min": 12.71,
+          "walk_distance_m": 39.3
+        },
+        {
+          "id": "S038",
+          "stage": "HIGH",
+          "ride_time_min": 26.47,
+          "direct_potential_min": 12.43,
+          "walk_distance_m": 53.8
+        },
+        {
+          "id": "S036",
+          "stage": "MIDDLE",
+          "ride_time_min": 22.12,
+          "direct_potential_min": 9.24,
+          "walk_distance_m": 130.5
+        },
+        {
+          "id": "S051",
+          "stage": "MIDDLE",
+          "ride_time_min": 22.12,
+          "direct_potential_min": 8.47,
+          "walk_distance_m": 278.5
+        },
+        {
+          "id": "S047",
+          "stage": "MIDDLE",
+          "ride_time_min": 20.1,
+          "direct_potential_min": 9.48,
+          "walk_distance_m": 153.7
+        },
+        {
+          "id": "S026",
+          "stage": "HIGH",
+          "ride_time_min": 16.44,
+          "direct_potential_min": 9.35,
+          "walk_distance_m": 50.7
+        },
+        {
+          "id": "S023",
+          "stage": "HIGH",
+          "ride_time_min": 15.81,
+          "direct_potential_min": 9.81,
+          "walk_distance_m": 156.5
+        },
+        {
+          "id": "S004",
+          "stage": "MIDDLE",
+          "ride_time_min": 4.77,
+          "direct_potential_min": 4.36,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S011",
+          "stage": "HIGH",
+          "ride_time_min": 4.77,
+          "direct_potential_min": 4.61,
+          "walk_distance_m": 191.1
+        }
+      ],
+      "fleet_search": {
+        "buses_used": 4,
+        "summary": "No fleet size in range 3..4 served all students. Best: k=4 with 52/60 served, 8 unserved. 8 student(s) likely unserved due to ALNS budget exhaustion — try increasing time_budget_seconds.",
+        "search_log": [
+          {
+            "k": 3,
+            "served": 44,
+            "unserved": 16,
+            "feasible": false,
+            "runtime_s": 499.37,
+            "rejection_reasons": {
+              "search_budget_exhausted": 16
+            }
+          },
+          {
+            "k": 4,
+            "served": 52,
+            "unserved": 8,
+            "feasible": false,
+            "runtime_s": 288.3,
+            "rejection_reasons": {
+              "search_budget_exhausted": 8
+            }
+          }
+        ]
+      }
+    },
+    "door_to_door": {
+      "routes_created": 4,
+      "students_served": 47,
+      "students_unserved": 13,
+      "total_route_time_min": 282.64,
+      "total_route_dist_km": 141.32,
+      "avg_route_time_min": 70.66,
+      "alns_runtime_seconds": 6.7,
+      "mode_wall_time_seconds": null,
+      "unsafe_crossings": 0,
+      "walk_stats": {
+        "avg_walk_dist_m": 10.9,
+        "median_walk_dist_m": 0.0,
+        "max_walk_dist_m": 147.8,
+        "min_walk_dist_m": 0.0,
+        "avg_walk_time_min": 0.14,
+        "avg_walk_utilisation_pct": null
+      },
+      "students": [
+        {
+          "id": "S043",
+          "stage": "HIGH",
+          "ride_time_min": 57.63,
+          "direct_potential_min": 16.69,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S012",
+          "stage": "MIDDLE",
+          "ride_time_min": 52.8,
+          "direct_potential_min": 16.43,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S060",
+          "stage": "MIDDLE",
+          "ride_time_min": 50.49,
+          "direct_potential_min": 18.17,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S025",
+          "stage": "MIDDLE",
+          "ride_time_min": 41.32,
+          "direct_potential_min": 12.68,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S009",
+          "stage": "HIGH",
+          "ride_time_min": 35.47,
+          "direct_potential_min": 9.99,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S006",
+          "stage": "MIDDLE",
+          "ride_time_min": 28.55,
+          "direct_potential_min": 14.39,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S049",
+          "stage": "MIDDLE",
+          "ride_time_min": 24.41,
+          "direct_potential_min": 12.79,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S040",
+          "stage": "MIDDLE",
+          "ride_time_min": 19.62,
+          "direct_potential_min": 9.88,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S019",
+          "stage": "MIDDLE",
+          "ride_time_min": 17.38,
+          "direct_potential_min": 9.72,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S011",
+          "stage": "HIGH",
+          "ride_time_min": 6.45,
+          "direct_potential_min": 4.61,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S004",
+          "stage": "MIDDLE",
+          "ride_time_min": 5.31,
+          "direct_potential_min": 4.36,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S010",
+          "stage": "HIGH",
+          "ride_time_min": 2.8,
+          "direct_potential_min": 2.4,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S003",
+          "stage": "MIDDLE",
+          "ride_time_min": 64.01,
+          "direct_potential_min": 17.98,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S042",
+          "stage": "HIGH",
+          "ride_time_min": 63.15,
+          "direct_potential_min": 17.12,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S054",
+          "stage": "HIGH",
+          "ride_time_min": 45.64,
+          "direct_potential_min": 12.5,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S002",
+          "stage": "HIGH",
+          "ride_time_min": 41.71,
+          "direct_potential_min": 11.25,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S041",
+          "stage": "MIDDLE",
+          "ride_time_min": 38.57,
+          "direct_potential_min": 10.53,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S047",
+          "stage": "MIDDLE",
+          "ride_time_min": 28.4,
+          "direct_potential_min": 9.48,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S051",
+          "stage": "MIDDLE",
+          "ride_time_min": 22.87,
+          "direct_potential_min": 8.47,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S030",
+          "stage": "MIDDLE",
+          "ride_time_min": 17.42,
+          "direct_potential_min": 8.23,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S045",
+          "stage": "HIGH",
+          "ride_time_min": 16.38,
+          "direct_potential_min": 8.59,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S057",
+          "stage": "MIDDLE",
+          "ride_time_min": 12.98,
+          "direct_potential_min": 8.94,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S018",
+          "stage": "MIDDLE",
+          "ride_time_min": 5.04,
+          "direct_potential_min": 4.24,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S013",
+          "stage": "MIDDLE",
+          "ride_time_min": 4.07,
+          "direct_potential_min": 3.47,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S050",
+          "stage": "HIGH",
+          "ride_time_min": 77.08,
+          "direct_potential_min": 21.84,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S024",
+          "stage": "HIGH",
+          "ride_time_min": 73.42,
+          "direct_potential_min": 21.19,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S046",
+          "stage": "HIGH",
+          "ride_time_min": 39.59,
+          "direct_potential_min": 16.12,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S020",
+          "stage": "MIDDLE",
+          "ride_time_min": 30.37,
+          "direct_potential_min": 9.74,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S039",
+          "stage": "HIGH",
+          "ride_time_min": 22.53,
+          "direct_potential_min": 8.82,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S055",
+          "stage": "HIGH",
+          "ride_time_min": 19.87,
+          "direct_potential_min": 9.01,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S052",
+          "stage": "HIGH",
+          "ride_time_min": 17.44,
+          "direct_potential_min": 7.63,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S031",
+          "stage": "MIDDLE",
+          "ride_time_min": 14.31,
+          "direct_potential_min": 9.62,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S016",
+          "stage": "HIGH",
+          "ride_time_min": 11.52,
+          "direct_potential_min": 7.04,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S058",
+          "stage": "MIDDLE",
+          "ride_time_min": 11.5,
+          "direct_potential_min": 7.02,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S014",
+          "stage": "MIDDLE",
+          "ride_time_min": 10.76,
+          "direct_potential_min": 6.27,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S005",
+          "stage": "HIGH",
+          "ride_time_min": 7.96,
+          "direct_potential_min": 6.76,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S017",
+          "stage": "MIDDLE",
+          "ride_time_min": 53.88,
+          "direct_potential_min": 15.64,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S015",
+          "stage": "HIGH",
+          "ride_time_min": 49.06,
+          "direct_potential_min": 14.36,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S001",
+          "stage": "MIDDLE",
+          "ride_time_min": 46.99,
+          "direct_potential_min": 13.24,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S035",
+          "stage": "MIDDLE",
+          "ride_time_min": 43.97,
+          "direct_potential_min": 12.71,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S038",
+          "stage": "HIGH",
+          "ride_time_min": 39.67,
+          "direct_potential_min": 12.43,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S044",
+          "stage": "HIGH",
+          "ride_time_min": 33.53,
+          "direct_potential_min": 12.64,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S059",
+          "stage": "MIDDLE",
+          "ride_time_min": 28.42,
+          "direct_potential_min": 12.15,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S026",
+          "stage": "HIGH",
+          "ride_time_min": 24.37,
+          "direct_potential_min": 9.35,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S023",
+          "stage": "HIGH",
+          "ride_time_min": 22.07,
+          "direct_potential_min": 9.81,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S029",
+          "stage": "MIDDLE",
+          "ride_time_min": 16.0,
+          "direct_potential_min": 5.42,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S028",
+          "stage": "HIGH",
+          "ride_time_min": 8.25,
+          "direct_potential_min": 6.25,
+          "walk_distance_m": 0.0
+        }
+      ],
+      "fleet_search": {
+        "buses_used": 4,
+        "summary": "No fleet size in range 3..4 served all students. Best: k=4 with 47/60 served, 13 unserved. 13 student(s) have walk_radius=0 with no candidate stop found.",
+        "search_log": [
+          {
+            "k": 3,
+            "served": 42,
+            "unserved": 18,
+            "feasible": false,
+            "runtime_s": 8.36,
+            "rejection_reasons": {
+              "zero_walk_radius_no_candidates": 18
+            }
+          },
+          {
+            "k": 4,
+            "served": 47,
+            "unserved": 13,
+            "feasible": false,
+            "runtime_s": 6.7,
+            "rejection_reasons": {
+              "zero_walk_radius_no_candidates": 13
+            }
+          }
+        ]
+      }
+    }
+  },
+  "comparison": {
+    "efficiency_gain_vs_d2d_pct": 5.8,
+    "safety_cost_vs_unconstrained_pct": -1.5,
+    "crossings_eliminated_vs_unconstrained": 2,
+    "constrained_total_time_min": 266.35,
+    "unconstrained_total_time_min": 270.36,
+    "door_to_door_total_time_min": 282.64
+  }
+}

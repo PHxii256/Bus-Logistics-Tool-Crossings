@@ -1,0 +1,100 @@
+IMMEDIATE (validates algorithm before experiments):
+  [✓] Parse .bus benchmark files → bus_loader.py adapter
+  [✓] Run graph-free mode (Euclidean fallback) on all 10 instances
+  [✓] Compare objective values against Lewis paper published results
+      STATUS: DONE — see benchmarks/compare_lewis.py
+      Route count match: 4/10 (exact), 6/10 use 1 extra route.
+      Journey time gap: +189% to +365% vs Lewis best.
+      Root cause: our system visits ~20 stops/route (virtual stop per
+      student); Lewis selects a small subset (~5-8 stops/route) and
+      clusters students at them. Different problem formulations —
+      we solve routing-with-insertion, they solve stop-selection+routing.
+      CONCLUSION: direct objective comparison is not meaningful.
+      Benchmarks validate feasibility (100% served) and scalability,
+      not solution quality parity with Lewis.
+  [✓] Record runtime for Brisbane + Adelaide → scalability table
+      STATUS: Done. Brisbane=499s/757students, Adelaide=151s/565students.
+
+PRIMARY CONTRIBUTION (safety vs efficiency):
+  [✓] Build generate_dataset.py
+  [✓] Add "unconstrained" mode flag to run_algorithm.py
+  [✓] Run Experiment 1: safety vs unconstrained (DONE)
+  [✓] Run Experiment 2: scalability on Cairo graph (DONE)
+
+PAPER WRITING (in order):
+  [ ] 1. Benchmark table: route counts + served% + runtime vs Lewis
+         Data ready in benchmarks/compare_lewis.py output.
+         Add paragraph on why time comparison isn't applicable.
+  [ ] 2. Experiment 1 table: safety vs unconstrained
+         Data: experiment1_results.csv
+         Key finding: safety costs ~36% more time, -3% served
+  [ ] 3. Safety constraint formulation section
+         Document: safe_to_cross, age walk limits, ALNS integration
+  [ ] 4. Scalability figure: runtime vs n_students line plot
+         Data: experiment2_results.csv
+  [ ] 5. Route map figure: best seed from Experiment 1
+         Use existing Folium output — screenshot is fine
+
+
+to explore: (done)
+creating the potential bus stops per student, have one at the student home
+and one at every intersection or corner or turn every x meters untill all reachable
+streets within the walking radius have a path of potential stop nodes
+is it currently working this way?
+
+add date (DD/MM/YY) and time as hh:mm pm/am for outputs (more readable timestamps)
+
+add to the three mode comparison element's table a horizontal scroll-bar (the area for first "page" i.e horizontal scroll bar at start)
+should show the stats for the totals, and adjust average occupancy to be a percentage, if you scroll you'll see the follwing 
+collumns in order: route id, distance, time, occupancy (shown as students served for this route / bus capacity), satisfied.
+the horizontal scrollbar should be for all three modes not one scrollbar per mode and keep the width as is.
+
+add a vertical scroll bar to the three mode comparison so that the height of it is only the height of the main compairson of the totals
+and the you have to scroll down to see the Per-Route Details
+
+and remove this line: Dots = candidate stops evaluated per student.
+Dark=2pts, Grey=1pt, Light=0pt. Click for details. in the Candidate Stop Inspector
+
+runtime is taking ~30 minutes for the comparison 
+
+SKIP UNLESS EXTRA TIME:
+  [ ] gmaps post-optimization display (Folium is sufficient)
+  [ ] Real Cairo school dataset (synthetic dataset is sufficient)
+
+
+Previous run stats (run before implementing fixes for cache misses):
+
+  "total_wall_time_seconds": 1647.39,
+  "debug_stats": {
+    "step_times": {
+      "generate_dataset_s": 21.74,
+      "build_constrained_graph_s": 37.19,
+      "build_unconstrained_graph_s": 32.35,
+      "build_map_s": 122.28
+    },
+    "mode_breakdown": {
+      "A": {
+        "mode_wall_time_s": 752.84,
+        "alns_solve_s": 184.36,
+        "setup_and_overhead_s": 568.48,
+        "alns_iterations": null,
+        "n_candidates_per_student": 1.0
+      },
+      "B": {
+        "mode_wall_time_s": 491.33,
+        "alns_solve_s": 57.56,
+        "setup_and_overhead_s": 433.77,
+        "alns_iterations": null,
+        "n_candidates_per_student": 1.0
+      },
+      "C": {
+        "mode_wall_time_s": 119.9,
+        "alns_solve_s": 10.63,
+        "setup_and_overhead_s": 109.27,
+        "alns_iterations": null,
+        "n_candidates_per_student": 1.0
+      }
+    }
+  },
+
+  potential bottleneck: running out of memory causing page reads, python consumes around 5gb and vscode 2.5gb (100% memory util)

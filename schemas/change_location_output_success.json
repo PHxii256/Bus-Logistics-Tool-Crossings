@@ -1,0 +1,16 @@
+{
+  "_description": "Mode 2: Change Student Location — Output Schema (Success)",
+
+  "status": "success",
+  "student_id": "S1",
+  "change_type": "temporary",
+  "algorithm_used": "cheapest_insertion",
+  "insertion_cost_minutes": 1.34,
+  "walk_distance": 45.2,
+
+  "routes": [
+    {
+      "_note": "Full updated routes array in the unified schema format. The student's new temporary stop appears in the path with assignment='temporary' and the date range."
+    }
+  ]
+}

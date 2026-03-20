@@ -1,0 +1,11 @@
+label,served,total,serve_pct,total_time_min,total_dist_km,objective,active_routes,runtime_seconds,iterations,seed,mode,input_file
+s42_C,39,40,97.5,375.13,187.56,389609.23,1,1.71,20,42,constrained,experiment1_40st_s42.json
+s42_U,40,40,100.0,239.6,119.8,399760.4,1,0.85,20,42,unconstrained,experiment1_40st_s42.json
+s43_C,38,40,95.0,412.44,206.22,379569.1,1,0.95,20,43,constrained,experiment1_40st_s43.json
+s43_U,39,40,97.5,236.19,118.09,389763.81,1,0.78,20,43,unconstrained,experiment1_40st_s43.json
+s44_C,39,40,97.5,420.16,210.08,389557.39,1,3.35,20,44,constrained,experiment1_40st_s44.json
+s44_U,40,40,100.0,272.62,136.31,399727.38,1,0.32,20,44,unconstrained,experiment1_40st_s44.json
+s45_C,38,40,95.0,378.6,189.3,379607.38,1,3.54,20,45,constrained,experiment1_40st_s45.json
+s45_U,40,40,100.0,268.36,134.18,399731.64,1,0.95,20,45,unconstrained,experiment1_40st_s45.json
+s46_C,38,40,95.0,399.41,199.7,379591.51,2,0.73,20,46,constrained,experiment1_40st_s46.json
+s46_U,39,40,97.5,253.53,126.77,389746.47,1,0.24,20,46,unconstrained,experiment1_40st_s46.json

@@ -1,0 +1,6 @@
+label,served,total,serve_pct,total_time_min,total_dist_km,objective,active_routes,runtime_seconds,iterations,n_students,input_file
+n20,19,20,95.0,222.09,111.04,189771.71,1,7.16,20,20,scalability_20st.json
+n40,39,40,97.5,349.56,174.78,389634.8,1,13.32,20,40,experiment1_40st_s42.json
+n60,57,60,95.0,536.82,268.41,569443.1,1,23.16,20,60,scalability_60st.json
+n80,77,80,96.25,643.37,321.68,769326.86,2,33.81,20,80,scalability_80st.json
+n100,97,100,97.0,824.9,412.45,969130.08,2,14.39,20,100,scalability_100st.json

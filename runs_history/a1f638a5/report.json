@@ -1,0 +1,19 @@
+{
+  "run_timestamp": "2026-02-21T14:43:18",
+  "mode": "generate_routes",
+  "input_file": "api_requests/generate_routes_input.json",
+  "total_runtime_seconds": 70.54,
+  "optimization_time_seconds": 0.4,
+  "students_total": 6,
+  "students_served": 6,
+  "students_unserved": [],
+  "routes_created": 1,
+  "buses_used": [
+    {
+      "id": "BUS_1",
+      "capacity": 20
+    }
+  ],
+  "final_objective": 59921.62,
+  "alns_iterations": 60
+}

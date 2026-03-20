@@ -1,0 +1,70 @@
+{
+  "_comment": "Controllable comparison experiment config. Edit this to change what gets compared.",
+
+  "school": {
+    "name": "Victory College School",
+    "latitude": 29.964406,
+    "longitude": 31.270319
+  },
+
+  "n_students": 60,
+  "seed": 42,
+
+  "stage_distribution": {
+    "_comment": "Fraction of students per school stage. Must sum to 1.0. Set KG/ELEM to 0 for a fair constrained-vs-unconstrained comparison (they have walk_radius=0 which is effectively door-to-door).",
+    "KG": 0.0,
+    "ELEMENTARY": 0.0,
+    "MIDDLE": 0.5,
+    "HIGH": 0.5
+  },
+
+  "stage_walk_limits": {
+    "_comment": "Override walk radius (metres) per stage. Must match unconstrained (400 m) for a fair comparison — only the safety constraint differs, not the walk budget.",
+    "KG": 0,
+    "ELEMENTARY": 0,
+    "MIDDLE": 400,
+    "HIGH": 400
+  },
+
+  "buses": {
+    "count": 4,
+    "capacity": 22
+  },
+
+  "constraints": {
+    "enabled": true,
+    "_comment_enabled": "Set to false to disable all ride-time caps (effectively uncaps routes for raw comparison).",
+    "ride_time_multiplier": 3,
+    "floor_minutes": 30,
+    "ceiling_minutes": 60,
+    "daily_detour_budget_minutes": 5,
+    "bidirectional_check": true,
+    "_comment_bidirectional": "If true, a student is only rejected when BOTH morning (home→school) AND afternoon (school→home) rides exceed the cap. If false, only the morning ride is checked (stricter)."
+  },
+
+  "algorithm": {
+    "iterations": 100,
+    "time_budget_seconds": 60,
+    "_comment_budget": "Each mode runs until time_budget_seconds of wall-clock time is used (or iterations is hit first, whichever comes first). Ensures all three modes get equal search effort.",
+    "max_candidates_per_student": 8,
+    "_comment_candidates": "How many walk-radius candidate stops to evaluate per student. Candidates are ranked: home snap always first, then other nodes sorted by (-intersection_or_arterial_points, walk_distance). Higher values explore more stops but slow down each insertion evaluation.",
+    "minimize_buses": true,
+    "_comment_minimize": "If true, run_comparison calls find_minimum_fleet() for each mode, iterating fleet sizes from the theoretical minimum up to buses.count until all students are served. Disabled by default as it multiplies run time by fleet-search depth."
+  },
+
+  "annulus": {
+    "peak_km": 2.0,
+    "sigma_km": 1.0,
+    "min_km": 0.4,
+    "max_km": 5.0
+  },
+
+  "output": "comparison_map.html",
+
+  "debug": {
+    "_comment": "Set any run_mode_* to false to skip that mode — useful for faster iteration when only one mode needs re-running.",
+    "run_mode_a": true,
+    "run_mode_b": true,
+    "run_mode_c": true
+  }
+}

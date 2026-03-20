@@ -1,0 +1,95 @@
+{
+  "_description": "Mode 1: Initial Route Generation — Input Schema",
+  "_notes": "Given a school, buses, students, and constraints, the ALNS algorithm generates optimal routes. This is for first-time setup or full re-optimization.",
+
+  "mode": "generate_routes",
+
+  "school": {
+    "name": "Victory College School",
+    "latitude": 29.964406,
+    "longitude": 31.270319
+  },
+
+  "buses": [
+    {
+      "id": "BUS_1",
+      "type": "Small",
+      "capacity": 20,
+      "fixed_cost": 50.0,
+      "var_cost_km": 5.0
+    },
+    {
+      "id": "BUS_2",
+      "type": "Large",
+      "capacity": 90,
+      "fixed_cost": 80.0,
+      "var_cost_km": 7.0
+    }
+  ],
+
+  "students": [
+    {
+      "id": "S1",
+      "latitude": 29.958506,
+      "longitude": 31.276834,
+      "age": 10,
+      "school_stage": "ELEMENTARY",
+      "fee": 100.0
+    },
+    {
+      "id": "S2",
+      "latitude": 29.97,
+      "longitude": 31.29,
+      "age": 12,
+      "school_stage": "MIDDLE",
+      "fee": 120.0
+    },
+    {
+      "id": "S3",
+      "latitude": 29.98,
+      "longitude": 31.27,
+      "age": 15,
+      "school_stage": "HIGH",
+      "fee": 150.0
+    },
+    {
+      "id": "S4",
+      "latitude": 29.955,
+      "longitude": 31.275,
+      "age": 11,
+      "school_stage": "ELEMENTARY",
+      "fee": 100.0
+    },
+    {
+      "id": "S5",
+      "latitude": 29.965,
+      "longitude": 31.285,
+      "age": 13,
+      "school_stage": "MIDDLE",
+      "fee": 120.0
+    },
+    {
+      "id": "S6",
+      "latitude": 29.960161,
+      "longitude": 31.269820,
+      "age": 10,
+      "school_stage": "ELEMENTARY",
+      "fee": 100.0
+    }
+  ],
+
+  "constraints": {
+    "route_tmax": 90,
+    "daily_detour_budget_minutes": 5,
+    "cairo_factor": {
+      "arterial_speed_multiplier": 0.4,
+      "residential_speed_multiplier": 0.7,
+      "peak_hour_congestion": true
+    }
+  },
+
+  "algorithm": {
+    "method": "alns",
+    "iterations": 60
+  }
+}

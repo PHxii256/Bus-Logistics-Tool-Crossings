@@ -1,0 +1,177 @@
+{
+  "input": "/home/hero/studies/SafeRoute/Bus-Logistics-Tool/experiments/experiment4_crossings/input.json",
+  "output_html": "/home/hero/studies/SafeRoute/Bus-Logistics-Tool/experiments/experiment4_crossings/preview_d1346d68/named_crossings_preview.html",
+  "crossings_count": 28,
+  "diagnostics": {
+    "strategy": "named_opposite_secondary_tertiary",
+    "candidate_nodes": 521,
+    "roads_found": 32,
+    "roads_with_both_directions": 25,
+    "candidate_pairs_checked": 291,
+    "valid_pairs_found": 52,
+    "rejected_missing_signature": 4289,
+    "rejected_existing_edge": 93,
+    "rejected_distance": 87,
+    "rejected_spacing": 0,
+    "rejected_road_spacing": 24,
+    "rejected_road_cap": 0,
+    "added": 28
+  },
+  "debug_direction_stats": {
+    "\u0645\u064a\u062f\u0627\u0646 \u0645\u0633\u062c\u062f \u0627\u0644\u0641\u0627\u0631\u0648\u0642|secondary": {
+      "group_a_count": 3,
+      "group_b_count": 2,
+      "has_both": true
+    },
+    "\u0645\u064a\u062f\u0627\u0646 \u0627\u0644\u0646\u0635\u0631|secondary": {
+      "group_a_count": 3,
+      "group_b_count": 7,
+      "has_both": true
+    },
+    "\u0634\u0627\u0631\u0639 206|tertiary": {
+      "group_a_count": 6,
+      "group_b_count": 2,
+      "has_both": true
+    },
+    "\u0634\u0627\u0631\u0639 \u0627\u0644\u0646\u0647\u0636\u0647|secondary": {
+      "group_a_count": 14,
+      "group_b_count": 0,
+      "has_both": false
+    },
+    "\u0634\u0627\u0631\u0639 \u0627\u0644\u0646\u0627\u062f\u064a \u0627\u0644\u062c\u062f\u064a\u062f|tertiary": {
+      "group_a_count": 15,
+      "group_b_count": 28,
+      "has_both": true
+    },
+    "\u0634\u0627\u0631\u0639 \u0627\u0644\u0646\u0635\u0631|tertiary": {
+      "group_a_count": 27,
+      "group_b_count": 25,
+      "has_both": true
+    },
+    "\u0645\u064a\u062f\u0627\u0646 \u0627\u0644\u0645\u0639\u0627\u062f\u064a \u062c\u0631\u0627\u0646\u062f \u0645\u0648\u0644|tertiary": {
+      "group_a_count": 4,
+      "group_b_count": 9,
+      "has_both": true
+    },
+    "\u0634\u0627\u0631\u0639 216|secondary": {
+      "group_a_count": 6,
+      "group_b_count": 6,
+      "has_both": true
+    },
+    "\u0634\u0627\u0631\u0639 153|tertiary": {
+      "group_a_count": 4,
+      "group_b_count": 0,
+      "has_both": false
+    },
+    "\u0645\u064a\u062f\u0627\u0646 \u0633\u0648\u0627\u0631\u0633|tertiary": {
+      "group_a_count": 4,
+      "group_b_count": 3,
+      "has_both": true
+    },
+    "\u0634\u0627\u0631\u0639 \u0627\u062d\u0645\u062f \u0632\u0643\u064a|tertiary": {
+      "group_a_count": 47,
+      "group_b_count": 24,
+      "has_both": true
+    },
+    "\u0634\u0627\u0631\u0639 151|tertiary": {
+      "group_a_count": 10,
+      "group_b_count": 0,
+      "has_both": false
+    },
+    "\u0634\u0627\u0631\u0639 \u0627\u0644\u0646\u0647\u0636\u0647|tertiary": {
+      "group_a_count": 2,
+      "group_b_count": 1,
+      "has_both": true
+    },
+    "\u0634\u0627\u0631\u0639 \u0627\u0644\u0644\u0627\u0633\u0644\u0643\u064a|secondary": {
+      "group_a_count": 17,
+      "group_b_count": 26,
+      "has_both": true
+    },
+    "\u0634\u0627\u0631\u0639 250|tertiary": {
+      "group_a_count": 5,
+      "group_b_count": 0,
+      "has_both": false
+    },
+    "\u0634\u0627\u0631\u0639 \u0641\u0644\u0633\u0637\u064a\u0646|tertiary": {
+      "group_a_count": 12,
+      "group_b_count": 13,
+      "has_both": true
+    },
+    "\u0634\u0627\u0631\u0639 \u0627\u0644\u062c\u0632\u0627\u0626\u0631|tertiary": {
+      "group_a_count": 15,
+      "group_b_count": 13,
+      "has_both": true
+    },
+    "\u0634\u0627\u0631\u0639 \u0627\u0644\u0632\u0647\u0631\u0627\u0621|secondary": {
+      "group_a_count": 13,
+      "group_b_count": 10,
+      "has_both": true
+    },
+    "\u0634\u0627\u0631\u0639 \u0628\u0648\u0631\u0633\u0639\u064a\u062f|secondary": {
+      "group_a_count": 3,
+      "group_b_count": 4,
+      "has_both": true
+    },
+    "\u0637\u0631\u064a\u0642 \u0637\u0631\u0647|secondary": {
+      "group_a_count": 23,
+      "group_b_count": 18,
+      "has_both": true
+    },
+    "\u0634\u0627\u0631\u0639 \u0645\u0627\u0647\u0631 \u0627\u0628\u0627\u0638\u0647|tertiary": {
+      "group_a_count": 4,
+      "group_b_count": 4,
+      "has_both": true
+    },
+    "\u0645\u064a\u062f\u0627\u0646 \u0627\u0644\u062d\u0631\u064a\u0647|tertiary": {
+      "group_a_count": 2,
+      "group_b_count": 6,
+      "has_both": true
+    },
+    "\u0634\u0627\u0631\u0639 101|tertiary": {
+      "group_a_count": 7,
+      "group_b_count": 3,
+      "has_both": true
+    },
+    "\u0645\u064a\u062f\u0627\u0646 \u0641\u0643\u062a\u0648\u0631\u064a\u0627|secondary": {
+      "group_a_count": 6,
+      "group_b_count": 6,
+      "has_both": true
+    },
+    "\u0634\u0627\u0631\u0639 257|tertiary": {
+      "group_a_count": 3,
+      "group_b_count": 0,
+      "has_both": false
+    },
+    "\u0634\u0627\u0631\u0639 \u0632\u0647\u0631\u0627\u0621 \u0627\u0644\u0645\u0639\u0627\u062f\u064a|secondary": {
+      "group_a_count": 4,
+      "group_b_count": 1,
+      "has_both": true
+    },
+    "\u0634\u0627\u0631\u0639 \u0627\u0644\u0646\u0635\u0631|secondary": {
+      "group_a_count": 4,
+      "group_b_count": 2,
+      "has_both": true
+    },
+    "\u0637\u0631\u064a\u0642 \u0645\u0635\u0631 \u062d\u0644\u0648\u0627\u0646 \u0627\u0644\u0632\u0631\u0627\u0639\u064a|secondary": {
+      "group_a_count": 7,
+      "group_b_count": 20,
+      "has_both": true
+    },
+    "\u0627\u0645\u062a\u062f\u0627\u062f \u0634\u0627\u0631\u0639 \u0641\u0644\u0633\u0637\u064a\u0646|tertiary": {
+      "group_a_count": 5,
+      "group_b_count": 2,
+      "has_both": true
+    },
+    "\u0645\u064a\u062f\u0627\u0646 \u0627\u0644\u062d\u0631\u064a\u0647 2|tertiary": {
+      "group_a_count": 4,
+      "group_b_count": 2,
+      "has_both": true
+    },
+    "\u0643\u0648\u0628\u0631\u064a \u0637\u0631\u0647|secondary": {
+      "group_a_count": 4,
+      "group_b_count": 0,
+      "has_both": false
+    }
+  }
+}

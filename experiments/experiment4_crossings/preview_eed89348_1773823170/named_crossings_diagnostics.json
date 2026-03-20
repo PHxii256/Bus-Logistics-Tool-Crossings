@@ -1,0 +1,23 @@
+{
+  "input": "/home/hero/studies/SafeRoute/Bus-Logistics-Tool/experiments/experiment4_crossings/input.json",
+  "output_html": "/home/hero/studies/SafeRoute/Bus-Logistics-Tool/experiments/experiment4_crossings/preview_eed89348_1773823170/named_crossings_preview.html",
+  "crossings_count": 52,
+  "diagnostics": {
+    "strategy": "named_opposite_secondary_tertiary",
+    "candidate_drive_edges": 354,
+    "candidate_walk_nodes": 5824,
+    "roads_found": 33,
+    "roads_with_both_directions": 17,
+    "walk_nodes_checked": 294,
+    "valid_pairs_found": 52,
+    "rejected_existing_edge": 73,
+    "rejected_distance": 113,
+    "rejected_spacing": 128,
+    "rejected_bad_angle": 87,
+    "rejected_no_projection": 0,
+    "synthetic_created": 118,
+    "added": 52,
+    "synthetic_nodes_created": 118
+  },
+  "debug_edges_count": 203
+}

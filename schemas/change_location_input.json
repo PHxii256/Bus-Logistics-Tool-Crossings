@@ -1,0 +1,121 @@
+{
+  "_description": "Mode 2: Change Student Location — Input Schema",
+  "_notes": [
+    "Used when a student requests a pickup location change.",
+    "change_type: 'temporary' (date-ranged) or 'permanent' (update home address).",
+    "algorithm.method options:",
+    "  - 'cheapest_insertion': Fastest (~ms). Finds best position for the new stop. Default for temporary.",
+    "  - '2opt': Fast (~100ms). Inserts then locally reorders stops to shorten the route.",
+    "  - 'alns': Slower (~5s). Full re-optimization. Use for permanent changes or batch updates.",
+    "routes: The current route state in the unified schema format."
+  ],
+
+  "mode": "change_location",
+
+  "student_id": "S1",
+
+  "new_location": {
+    "latitude": 29.962,
+    "longitude": 31.272,
+    "reason": "Visiting grandparent"
+  },
+
+  "change_type": "temporary",
+  "valid_from": "2026-02-18",
+  "valid_until": "2026-02-18",
+
+  "algorithm": {
+    "method": "cheapest_insertion"
+  },
+
+  "school": {
+    "name": "Victory College School",
+    "latitude": 29.964406,
+    "longitude": 31.270319
+  },
+
+  "buses": [
+    {
+      "id": "BUS_1",
+      "type": "Small",
+      "capacity": 20,
+      "fixed_cost": 50.0,
+      "var_cost_km": 5.0
+    },
+    {
+      "id": "BUS_2",
+      "type": "Large",
+      "capacity": 90,
+      "fixed_cost": 80.0,
+      "var_cost_km": 7.0
+    }
+  ],
+
+  "routes": [
+    {
+      "_note": "This would be the full routes array from the unified schema (routes_schema.json). Abbreviated here for readability.",
+      "id": "R1",
+      "bus_id": "BUS_1",
+      "route_tmax": 90,
+      "total_distance_km": 16.12,
+      "total_time_minutes": 74.45,
+      "detour_time_used_today": 0.0,
+      "path": [
+        {
+          "node_id": 2208869932,
+          "latitude": 29.9644413,
+          "longitude": 31.270124,
+          "type": "school",
+          "students": []
+        },
+        {
+          "node_id": 9992996016131269820,
+          "latitude": 29.960181,
+          "longitude": 31.269975,
+          "type": "pickup",
+          "students": [
+            {
+              "id": "S6",
+              "home_latitude": 29.960161,
+              "home_longitude": 31.269820,
+              "school_stage": "ELEMENTARY",
+              "age": 10,
+              "fee": 100.0,
+              "assignment": "permanent",
+              "valid_from": null,
+              "valid_until": null,
+              "walk_distance": 15.2
+            }
+          ]
+        },
+        {
+          "node_id": 9992995850631276834,
+          "latitude": 29.958653,
+          "longitude": 31.276961,
+          "type": "pickup",
+          "students": [
+            {
+              "id": "S1",
+              "home_latitude": 29.958506,
+              "home_longitude": 31.276834,
+              "school_stage": "ELEMENTARY",
+              "age": 10,
+              "fee": 100.0,
+              "assignment": "permanent",
+              "valid_from": null,
+              "valid_until": null,
+              "walk_distance": 20.5
+            }
+          ]
+        },
+        {
+          "node_id": 2208869932,
+          "latitude": 29.9644413,
+          "longitude": 31.270124,
+          "type": "school",
+          "students": []
+        }
+      ]
+    }
+  ]
+}

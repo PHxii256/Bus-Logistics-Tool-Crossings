@@ -1,0 +1,376 @@
+{
+  "meta": {
+    "mode": "generate_routes",
+    "city": "Cairo",
+    "description": "Synthetic dataset - 40 students, seed 46",
+    "constraints": {
+      "ride_time_multiplier": 2.5,
+      "floor_minutes": 45,
+      "ceiling_minutes": 60,
+      "daily_detour_budget_minutes": 5
+    },
+    "algorithm": {
+      "method": "alns",
+      "iterations": 200
+    }
+  },
+  "data": {
+    "school": {
+      "name": "Victory College School",
+      "latitude": 29.964406,
+      "longitude": 31.270319
+    },
+    "buses": [
+      {
+        "id": "BUS_1",
+        "type": "Standard",
+        "capacity": 60,
+        "fixed_cost": 50,
+        "var_cost_km": 1.0
+      },
+      {
+        "id": "BUS_2",
+        "type": "Standard",
+        "capacity": 60,
+        "fixed_cost": 50,
+        "var_cost_km": 1.0
+      },
+      {
+        "id": "BUS_3",
+        "type": "Standard",
+        "capacity": 60,
+        "fixed_cost": 50,
+        "var_cost_km": 1.0
+      },
+      {
+        "id": "BUS_4",
+        "type": "Standard",
+        "capacity": 60,
+        "fixed_cost": 50,
+        "var_cost_km": 1.0
+      }
+    ],
+    "students": [
+      {
+        "id": "S001",
+        "latitude": 29.9555208,
+        "longitude": 31.2787179,
+        "age": 8,
+        "school_stage": "ELEMENTARY",
+        "fee": 100.0
+      },
+      {
+        "id": "S002",
+        "latitude": 29.9609372,
+        "longitude": 31.2539557,
+        "age": 17,
+        "school_stage": "HIGH",
+        "fee": 100.0
+      },
+      {
+        "id": "S003",
+        "latitude": 29.9669254,
+        "longitude": 31.2864806,
+        "age": 6,
+        "school_stage": "KG",
+        "fee": 100.0
+      },
+      {
+        "id": "S004",
+        "latitude": 29.9658269,
+        "longitude": 31.2768094,
+        "age": 13,
+        "school_stage": "MIDDLE",
+        "fee": 100.0
+      },
+      {
+        "id": "S005",
+        "latitude": 29.9592951,
+        "longitude": 31.3022111,
+        "age": 17,
+        "school_stage": "HIGH",
+        "fee": 100.0
+      },
+      {
+        "id": "S006",
+        "latitude": 29.9724493,
+        "longitude": 31.2824089,
+        "age": 16,
+        "school_stage": "HIGH",
+        "fee": 100.0
+      },
+      {
+        "id": "S007",
+        "latitude": 29.9672565,
+        "longitude": 31.256294,
+        "age": 6,
+        "school_stage": "KG",
+        "fee": 100.0
+      },
+      {
+        "id": "S008",
+        "latitude": 29.9695543,
+        "longitude": 31.2491337,
+        "age": 16,
+        "school_stage": "HIGH",
+        "fee": 100.0
+      },
+      {
+        "id": "S009",
+        "latitude": 29.9780653,
+        "longitude": 31.2721499,
+        "age": 13,
+        "school_stage": "MIDDLE",
+        "fee": 100.0
+      },
+      {
+        "id": "S010",
+        "latitude": 29.970327,
+        "longitude": 31.2523417,
+        "age": 16,
+        "school_stage": "HIGH",
+        "fee": 100.0
+      },
+      {
+        "id": "S011",
+        "latitude": 29.9779981,
+        "longitude": 31.2581188,
+        "age": 6,
+        "school_stage": "KG",
+        "fee": 100.0
+      },
+      {
+        "id": "S012",
+        "latitude": 29.9705693,
+        "longitude": 31.2624586,
+        "age": 10,
+        "school_stage": "ELEMENTARY",
+        "fee": 100.0
+      },
+      {
+        "id": "S013",
+        "latitude": 29.944207,
+        "longitude": 31.2737499,
+        "age": 8,
+        "school_stage": "ELEMENTARY",
+        "fee": 100.0
+      },
+      {
+        "id": "S014",
+        "latitude": 29.9626636,
+        "longitude": 31.2980399,
+        "age": 16,
+        "school_stage": "HIGH",
+        "fee": 100.0
+      },
+      {
+        "id": "S015",
+        "latitude": 29.9573478,
+        "longitude": 31.2685419,
+        "age": 15,
+        "school_stage": "HIGH",
+        "fee": 100.0
+      },
+      {
+        "id": "S016",
+        "latitude": 29.9529876,
+        "longitude": 31.2756087,
+        "age": 10,
+        "school_stage": "ELEMENTARY",
+        "fee": 100.0
+      },
+      {
+        "id": "S017",
+        "latitude": 29.9596749,
+        "longitude": 31.2482589,
+        "age": 10,
+        "school_stage": "ELEMENTARY",
+        "fee": 100.0
+      },
+      {
+        "id": "S018",
+        "latitude": 29.9604609,
+        "longitude": 31.2662934,
+        "age": 7,
+        "school_stage": "ELEMENTARY",
+        "fee": 100.0
+      },
+      {
+        "id": "S019",
+        "latitude": 29.9490804,
+        "longitude": 31.2670281,
+        "age": 8,
+        "school_stage": "ELEMENTARY",
+        "fee": 100.0
+      },
+      {
+        "id": "S020",
+        "latitude": 29.9475516,
+        "longitude": 31.286252,
+        "age": 7,
+        "school_stage": "ELEMENTARY",
+        "fee": 100.0
+      },
+      {
+        "id": "S021",
+        "latitude": 29.9578022,
+        "longitude": 31.2782781,
+        "age": 11,
+        "school_stage": "ELEMENTARY",
+        "fee": 100.0
+      },
+      {
+        "id": "S022",
+        "latitude": 29.9660518,
+        "longitude": 31.2796782,
+        "age": 15,
+        "school_stage": "HIGH",
+        "fee": 100.0
+      },
+      {
+        "id": "S023",
+        "latitude": 29.9817038,
+        "longitude": 31.2719978,
+        "age": 6,
+        "school_stage": "KG",
+        "fee": 100.0
+      },
+      {
+        "id": "S024",
+        "latitude": 29.9689874,
+        "longitude": 31.2833923,
+        "age": 12,
+        "school_stage": "MIDDLE",
+        "fee": 100.0
+      },
+      {
+        "id": "S025",
+        "latitude": 29.9745918,
+        "longitude": 31.2574433,
+        "age": 17,
+        "school_stage": "HIGH",
+        "fee": 100.0
+      },
+      {
+        "id": "S026",
+        "latitude": 29.9544215,
+        "longitude": 31.2820265,
+        "age": 9,
+        "school_stage": "ELEMENTARY",
+        "fee": 100.0
+      },
+      {
+        "id": "S027",
+        "latitude": 29.9485079,
+        "longitude": 31.2652183,
+        "age": 7,
+        "school_stage": "ELEMENTARY",
+        "fee": 100.0
+      },
+      {
+        "id": "S028",
+        "latitude": 29.9567788,
+        "longitude": 31.272558,
+        "age": 15,
+        "school_stage": "HIGH",
+        "fee": 100.0
+      },
+      {
+        "id": "S029",
+        "latitude": 29.968554,
+        "longitude": 31.2883753,
+        "age": 5,
+        "school_stage": "KG",
+        "fee": 100.0
+      },
+      {
+        "id": "S030",
+        "latitude": 29.9855045,
+        "longitude": 31.2784589,
+        "age": 6,
+        "school_stage": "KG",
+        "fee": 100.0
+      },
+      {
+        "id": "S031",
+        "latitude": 29.9541685,
+        "longitude": 31.2627162,
+        "age": 16,
+        "school_stage": "HIGH",
+        "fee": 100.0
+      },
+      {
+        "id": "S032",
+        "latitude": 29.9439077,
+        "longitude": 31.2833968,
+        "age": 13,
+        "school_stage": "MIDDLE",
+        "fee": 100.0
+      },
+      {
+        "id": "S033",
+        "latitude": 29.984966,
+        "longitude": 31.2708187,
+        "age": 11,
+        "school_stage": "ELEMENTARY",
+        "fee": 100.0
+      },
+      {
+        "id": "S034",
+        "latitude": 29.9647651,
+        "longitude": 31.2512993,
+        "age": 9,
+        "school_stage": "ELEMENTARY",
+        "fee": 100.0
+      },
+      {
+        "id": "S035",
+        "latitude": 29.9578034,
+        "longitude": 31.2813472,
+        "age": 10,
+        "school_stage": "ELEMENTARY",
+        "fee": 100.0
+      },
+      {
+        "id": "S036",
+        "latitude": 29.9564623,
+        "longitude": 31.2856444,
+        "age": 15,
+        "school_stage": "HIGH",
+        "fee": 100.0
+      },
+      {
+        "id": "S037",
+        "latitude": 29.9605552,
+        "longitude": 31.2649029,
+        "age": 16,
+        "school_stage": "HIGH",
+        "fee": 100.0
+      },
+      {
+        "id": "S038",
+        "latitude": 29.9514928,
+        "longitude": 31.2984422,
+        "age": 12,
+        "school_stage": "MIDDLE",
+        "fee": 100.0
+      },
+      {
+        "id": "S039",
+        "latitude": 29.9547883,
+        "longitude": 31.2611299,
+        "age": 13,
+        "school_stage": "MIDDLE",
+        "fee": 100.0
+      },
+      {
+        "id": "S040",
+        "latitude": 29.933536,
+        "longitude": 31.2955776,
+        "age": 6,
+        "school_stage": "KG",
+        "fee": 100.0
+      }
+    ]
+  }
+}

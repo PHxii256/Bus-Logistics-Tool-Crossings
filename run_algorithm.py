@@ -1,0 +1,634 @@
+﻿"""
+Safety-Aware Bus Optimization  Main Entry Point
+
+Dispatches based on the 'mode' field in the input JSON:
+  - generate_routes : Full ALNS optimization from scratch
+  - change_location : Insert/move a single student into existing routes
+"""
+
+import sys
+import os
+import json
+import time as _t
+import hashlib
+import shutil
+import osmnx as ox
+import networkx as nx
+import argparse
+
+from data_loader import (
+    load_json, load_mode1_input, load_mode2_input,
+    serialize_routes, print_input_summary
+)
+import detour_engine as _det_eng
+from detour_engine import (
+    calculate_route_distance, calculate_route_time,
+    cheapest_insertion, process_detour_request, insert_with_2opt,
+    snap_address_to_edge, precalculate_distance_matrix,
+    find_safe_nodes_within_radius, find_shortest_path_with_turns, _get_walk_graph,
+    get_walk_absolute_max, haversine_walk_distance,
+    _MATRIX_CACHE, _MATRIX_CACHE_LENGTH, _path_cache
+)
+from visualization import create_route_map
+from solution_state import ServiceSolution
+from alns_engine import ALNSEngine
+from entities import Student, School_Stage
+
+# ============================================================================
+# DEFAULT WALK LIMITS PER SCHOOL STAGE  (metres)
+# ============================================================================
+DEFAULT_STAGE_WALK_LIMITS = {
+    "KG":         0,
+    "ELEMENTARY": 0,
+    "MIDDLE":     150,
+    "HIGH":       200,
+}
+
+# ============================================================================
+# RUN HISTORY: Save each run to runs_history/{mode}_{school}_{hash8}/
+# ============================================================================
+
+def _input_hash(data: dict) -> str:
+    """Stable 8-char hash of the input so same input  same folder."""
+    canonical = json.dumps(data, sort_keys=True, ensure_ascii=True)
+    return hashlib.md5(canonical.encode()).hexdigest()[:8]
+
+def save_run(input_data: dict, output_data: dict, report_data: dict,
+            map_files: dict = None):
+    run_hash = _input_hash(input_data)
+    run_dir  = os.path.join('runs_history', run_hash)
+    os.makedirs(run_dir, exist_ok=True)
+    with open(os.path.join(run_dir, 'input.json'),  'w') as f:
+        json.dump(input_data,  f, indent=2)
+    with open(os.path.join(run_dir, 'output.json'), 'w') as f:
+        json.dump(output_data, f, indent=2)
+    with open(os.path.join(run_dir, 'report.json'), 'w') as f:
+        json.dump(report_data, f, indent=2)
+    if map_files:
+        for dest_name, src_path in map_files.items():
+            if os.path.exists(src_path):
+                shutil.copy2(src_path, os.path.join(run_dir, dest_name))
+    print(f"  Run saved to '{run_dir}/'")
+    return run_dir
+
+# ============================================================================
+# GRAPH SETUP
+# ============================================================================
+
+_DEFAULT_BBOX = [31.229084, 29.925630, 31.331909, 29.991682]
+_ROAD_SPEEDS_CONFIG_PATH = 'road_speeds_config.json'
+
+def _load_road_speeds(override: dict = None) -> dict:
+    builtin = {
+        'default_speed_kph': 30,
+        'road_types': {
+            'primary':       {'speed_multiplier': 0.8, 'safe_to_cross': False},
+            'trunk':         {'speed_multiplier': 0.8, 'safe_to_cross': False},
+            'secondary':     {'speed_multiplier': 0.6, 'safe_to_cross': False},
+            'tertiary':      {'speed_multiplier': 0.6, 'safe_to_cross': True},
+            'residential':   {'speed_multiplier': 0.3, 'safe_to_cross': True},
+            'living_street': {'speed_multiplier': 0.3, 'safe_to_cross': True},
+            'default':       {'speed_multiplier': 0.2, 'safe_to_cross': True},
+        }
+    }
+    try:
+        with open(_ROAD_SPEEDS_CONFIG_PATH) as f:
+            file_cfg = json.load(f)
+        builtin.update({k: v for k, v in file_cfg.items() if not k.startswith('_')})
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+    if override:
+        builtin.update(override)
+    return builtin
+
+def setup_graph(meta: dict = None, unconstrained: bool = False):
+    graph_cfg    = (meta or {}).get('graph', {})
+    bbox         = graph_cfg.get('bbox', _DEFAULT_BBOX)
+    
+    # Simple hash of bbox for caching
+    bbox_hash = hashlib.md5(str(bbox).encode()).hexdigest()[:8]
+    cache_dir   = 'cache'
+    pkl_file    = os.path.join(cache_dir, f"graph_{bbox_hash}.pkl")
+    cache_file  = os.path.join(cache_dir, f"graph_{bbox_hash}.graphml")
+    os.makedirs(cache_dir, exist_ok=True)
+
+    if os.path.exists(pkl_file):
+        import pickle
+        print(f"Loading cached road network (pickle): {pkl_file}")
+        with open(pkl_file, 'rb') as fh:
+            G = pickle.load(fh)
+    elif os.path.exists(cache_file):
+        print(f"Loading cached road network: {cache_file}")
+        G = ox.load_graphml(cache_file)
+        # Save as pickle for faster future loads
+        import pickle
+        print(f"Saving pickle cache for faster future loads...")
+        with open(pkl_file, 'wb') as fh:
+            pickle.dump(G, fh, protocol=pickle.HIGHEST_PROTOCOL)
+    else:
+        print("Downloading road network...")
+        north, south, east, west = bbox[3], bbox[1], bbox[2], bbox[0]
+        # OSMnx 2.0+ expects a single tuple (north, south, east, west)
+        G = ox.graph_from_bbox((north, south, east, west), network_type='drive')
+        ox.save_graphml(G, cache_file)
+        import pickle
+        with open(pkl_file, 'wb') as fh:
+            pickle.dump(G, fh, protocol=pickle.HIGHEST_PROTOCOL)
+
+    road_cfg     = _load_road_speeds((meta or {}).get('road_speeds'))
+    road_types   = road_cfg['road_types']
+    default_spd  = road_cfg.get('default_speed_kph', 30)
+
+    print("Applying road speed config...")
+    for u, v, k, data in G.edges(keys=True, data=True):
+        maxspeed = data.get('maxspeed', default_spd)
+        if isinstance(maxspeed, list):
+            try:    base_speed = float(maxspeed[0])
+            except: base_speed = default_spd
+        else:
+            try:    base_speed = float(maxspeed)
+            except: base_speed = default_spd
+        highway = data.get('highway', 'unclassified')
+        if isinstance(highway, list): highway = highway[0]
+        cfg = road_types.get(highway, road_types.get('default', {'speed_multiplier': 0.2, 'safe_to_cross': True}))
+        data['speed_kph']       = base_speed * cfg['speed_multiplier']
+        data['is_safe_to_cross'] = True if unconstrained else cfg['safe_to_cross']
+        meters_per_min = (data['speed_kph'] * 1000) / 60
+        data['travel_time'] = data['length'] / meters_per_min
+    print("Adding edge bearings for turn-penalty calculations...")
+    G = ox.bearing.add_edge_bearings(G)
+    print(f"Graph ready: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges\n")
+    return G
+
+
+def setup_walk_graph(meta: dict = None, center: tuple = None, radius_m: float = None):
+    """Build/load a walking graph (pedestrian network).
+
+    This is cached separately from the drive graph so it can be reused
+    across runs and used for walk-path visualization or walking BFS.
+    """
+    graph_cfg = (meta or {}).get('graph', {})
+    bbox = graph_cfg.get('bbox', _DEFAULT_BBOX)
+    if center is not None and radius_m is not None:
+        cache_seed = f"center={center}|radius={int(radius_m)}"
+    else:
+        cache_seed = str(bbox)
+    bbox_hash = hashlib.md5(cache_seed.encode()).hexdigest()[:8]
+    cache_dir = 'cache'
+    pkl_file = os.path.join(cache_dir, f"graph_walk_{bbox_hash}.pkl")
+    cache_file = os.path.join(cache_dir, f"graph_walk_{bbox_hash}.graphml")
+    os.makedirs(cache_dir, exist_ok=True)
+
+    if os.path.exists(pkl_file):
+        import pickle
+        print(f"Loading cached walking network (pickle): {pkl_file}")
+        with open(pkl_file, 'rb') as fh:
+            G_walk = pickle.load(fh)
+    elif os.path.exists(cache_file):
+        print(f"Loading cached walking network: {cache_file}")
+        G_walk = ox.load_graphml(cache_file)
+        import pickle
+        print("Saving walk pickle cache for faster future loads...")
+        with open(pkl_file, 'wb') as fh:
+            pickle.dump(G_walk, fh, protocol=pickle.HIGHEST_PROTOCOL)
+    else:
+        print("Downloading walking network...")
+        if center is not None and radius_m is not None:
+            # Radius-based walk graph is much smaller than full-bbox graph.
+            G_walk = ox.graph_from_point(center, dist=radius_m, network_type='walk', simplify=True)
+        else:
+            north, south, east, west = bbox[3], bbox[1], bbox[2], bbox[0]
+            G_walk = ox.graph_from_bbox((north, south, east, west), network_type='walk')
+        ox.save_graphml(G_walk, cache_file)
+        import pickle
+        with open(pkl_file, 'wb') as fh:
+            pickle.dump(G_walk, fh, protocol=pickle.HIGHEST_PROTOCOL)
+
+    print(f"Walk graph ready: {G_walk.number_of_nodes()} nodes, {G_walk.number_of_edges()} edges\n")
+    return G_walk
+
+# ============================================================================
+# MATRIX PRECOMPUTATION
+# ============================================================================
+
+def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
+                      max_candidates=15):
+    """Build the distance matrix for ALNS.
+
+    Parameters
+    ----------
+    G       : graph used for walking BFS (may be constrained)
+    G_drive : graph used for bus driving distances (should always be the
+              full unconstrained network).  Falls back to *G* if not given,
+              preserving backward-compatibility.
+    max_candidates : int
+        Include up to this many walk-reachable candidate nodes per student
+        in the precomputed matrix.  Should match or exceed
+        ``max_candidates_per_student`` used by the ALNS engine (default 15)
+        so that insertion-cost checks never fall back to A*.
+    """
+    if G_drive is None:
+        G_drive = G
+    print("[Optimization] Preparing distance matrix...")
+    critical_nodes = set()
+    student_frontages = {}
+    # Collect ALL candidate nodes ALNS will actually use so the precomputed
+    # matrix covers every node the optimizer can insert at.  The old [:5]
+    # limit caused massive A* fallback spikes on 600K-node graphs.
+    for s in students:
+        node_id, _ = snap_address_to_edge(s.coords, G)
+        critical_nodes.add(node_id)
+        student_frontages[s.id] = node_id
+        if s.walk_radius > 0:
+            walk_g = _get_walk_graph(G)  # Use walk graph with crossings if available
+            safe_nodes = find_safe_nodes_within_radius(s.coords, G, 500, s.walk_radius, walk_graph=walk_g)
+            for safe_node_id, _ in safe_nodes[:max_candidates]:
+                critical_nodes.add(safe_node_id)
+    school_node = None
+    for route in routes:
+        for stop in route.stops:
+            if stop.node_id in G_drive:
+                critical_nodes.add(stop.node_id)
+                if school_node is None: school_node = stop.node_id
+            else:
+                nearest = _det_eng.fast_nearest_node(G_drive, stop.coords[1], stop.coords[0])
+                stop.node_id = nearest
+                stop.coords = (G_drive.nodes[nearest]['y'], G_drive.nodes[nearest]['x'])
+                critical_nodes.add(nearest)
+                if school_node is None: school_node = nearest
+    # Auto-select fast mode for large graphs (>50K nodes) to avoid minutes-long precomputes
+    if fast_mode is None:
+        fast_mode = G_drive.number_of_nodes() > 50_000
+    # Bus distance matrix ALWAYS uses the full driving graph
+    # precalculate_distance_matrix(G_drive, list(critical_nodes), fast_mode=fast_mode)
+    
+    # OSRM-based precomputation: much faster on large graphs, but requires a local OSRM instance running with the same graph data.  Falls back to in-memory if OSRM fails for any reason (e.g. not running, different graph, etc.) — in that case a warning is printed and the function behaves like the old version, precomputing only the critical nodes with in-memory Dijkstra.
+    from detour_engine import precalculate_distance_matrix_osrm
+    precalculate_distance_matrix_osrm(G_drive, list(critical_nodes))
+    return critical_nodes, student_frontages
+
+# ============================================================================
+# MODE 1: generate_routes
+# ============================================================================
+
+def run_generate_routes(data, G, input_file_path):
+    _run_start = _t.time()
+    students, buses, routes, school_coords, constraints, algo_config = load_mode1_input(data, G)
+    print_input_summary(students, buses, routes, school_coords)
+    precompute_matrix(students, routes, G)
+    print(f"\nRUNNING ALNS OPTIMIZATION ({algo_config.get('iterations', 60)} iters)")
+    cap_penalty = (constraints or {}).get('cap_penalty_per_minute', 0.0)
+    initial_sol = ServiceSolution(students, routes, G, cap_penalty_per_minute=cap_penalty)
+    optimizer = ALNSEngine(initial_sol, iterations=algo_config.get('iterations', 60))
+    _alns_start = _t.time()
+    best_sol = optimizer.run()
+    _alns_elapsed = _t.time() - _alns_start
+    for r in best_sol.routes:
+        r.total_distance = calculate_route_distance(r, G)
+        r.total_time = calculate_route_time(r, G)
+    routes_with_students = [r for r in best_sol.routes if r.get_student_count() > 0]
+    if routes_with_students:
+        create_route_map(G, routes_with_students, all_students=best_sol.students,
+                         school_coords=school_coords, output_file='route_map.html',
+                         solution=best_sol, show_crossing_usage=True)
+    unserved = [s for s in best_sol.students if not s.is_served]
+    output = serialize_routes(best_sol.routes, buses, school_coords, unserved, G)
+    output["meta"] = {
+        "students_served": len(best_sol.students) - len(unserved),
+        "total_time_minutes": sum(r.total_time for r in best_sol.routes),
+        "objective": round(best_sol.calculate_objective(), 2)
+    }
+    with open('output_data.json', 'w') as f: json.dump(output, f, indent=2)
+    _te = _t.time() - _run_start
+    report = {
+        "mode": "generate_routes", "input_file": input_file_path,
+        "total_runtime_seconds": round(_te, 2), "optimization_time_seconds": round(_alns_elapsed, 2),
+        "students_total": len(best_sol.students), "students_served": len(best_sol.students) - len(unserved),
+        "routes_created": len(routes_with_students), "final_objective": round(best_sol.calculate_objective(), 2),
+    }
+    save_run(data, output, report, map_files={'route_map.html': 'route_map.html'})
+    return output
+
+
+# ============================================================================
+# CALLABLE API  (used by experiments/comparison/run_comparison.py)
+# ============================================================================
+
+def run_algorithm(data: dict, G, iterations: int = None,
+                  stage_walk_limits: dict = None, save=False,
+                  G_drive=None, time_budget_seconds: float = None):
+    """Run ALNS on *data* using graph *G* and return (best_solution, stats_dict, school_coords).
+
+    Parameters
+    ----------
+    data : dict            – standard input dict  ({"meta": …, "data": …})
+    G    : networkx.Graph  – graph for **walking BFS** (may be constrained)
+    G_drive : networkx.Graph – graph for **bus driving** distances (should be
+                               the full unconstrained network).  Falls back to
+                               *G* when not given, preserving backward compat.
+    iterations : int       – override ALNS iterations (None = use data["meta"]["algorithm"]["iterations"])
+    stage_walk_limits : dict – override walk limits *after* students are created
+                               e.g. {"KG": 0, "MIDDLE": 150, "HIGH": 200}
+    save : bool            – persist run artefacts to runs_history/
+
+    Returns
+    -------
+    tuple : (ServiceSolution, stats_dict, school_coords_dict)
+    """
+    if G_drive is None:
+        G_drive = G
+    import time as _time
+    students, buses, routes, school_coords, constraints, algo_cfg = load_mode1_input(data, G)
+
+    # Apply stage-specific walk limits if provided
+    if stage_walk_limits:
+        _stage_map = {
+            "KG":         School_Stage.KG,
+            "ELEMENTARY": School_Stage.ELEMENTARY,
+            "MIDDLE":     School_Stage.MIDDLE,
+            "HIGH":       School_Stage.HIGH,
+        }
+        for s in students:
+            stage_name = s.school_stage.name
+            if stage_name in stage_walk_limits:
+                s.walk_radius = stage_walk_limits[stage_name]
+
+    iters  = iterations or algo_cfg.get("iterations", 60)
+    budget = time_budget_seconds or algo_cfg.get("time_budget_seconds", None)
+    max_cands = algo_cfg.get("max_candidates_per_student", 15)
+    # Walking BFS uses G (may be constrained); bus routing uses G_drive (unconstrained)
+    precompute_matrix(students, routes, G, G_drive=G_drive, max_candidates=max_cands)
+
+    cap_penalty = (constraints or {}).get('cap_penalty_per_minute', 0.0)
+    initial = ServiceSolution(students, routes, G_drive, cap_penalty_per_minute=cap_penalty)
+    engine  = ALNSEngine(initial, iterations=iters, time_budget_seconds=budget,
+                         max_candidates_per_student=max_cands)
+    t0      = _time.time()
+    best    = engine.run()
+    elapsed = _time.time() - t0
+
+    for r in best.routes:
+        from detour_engine import (
+            calculate_route_time_from_matrix,
+            calculate_route_distance_from_matrix,
+        )
+        t = calculate_route_time_from_matrix(r.stops, G_drive)
+        r.total_time = t if t is not None else 0.0
+        d = calculate_route_distance_from_matrix(r.stops, G_drive)
+        r.total_distance = d if d is not None else 0.0
+
+    served = sum(1 for s in best.students if s.is_served)
+    total  = len(best.students)
+    active = [r for r in best.routes if r.get_student_count() > 0]
+    total_time = sum(r.total_time for r in active)
+    total_dist = sum(r.total_distance for r in active)
+
+    stats = {
+        "served": served, "total": total,
+        "routes": len(active),
+        "total_time": round(total_time, 2),
+        "total_dist": round(total_dist, 2),
+        "objective": round(best.calculate_objective(), 2),
+        "runtime": round(elapsed, 2),
+    }
+
+    return best, stats, school_coords
+
+
+def find_minimum_fleet(data: dict, G, iterations: int = None,
+                       stage_walk_limits: dict = None,
+                       G_drive=None, time_budget_seconds: float = None):
+    """Search for the smallest fleet size that can serve every student.
+
+    Iterates from the theoretical minimum number of buses (⌈students/capacity⌉)
+    upward, stopping as soon as a fleet size achieves 100 % service rate.  If no
+    fleet size within the available buses serves everyone, the result with the
+    highest service count is kept.
+
+    Parameters
+    ----------
+    data : dict   – standard input dict; ``data["data"]["buses"]`` is sliced to
+                    select fleet size.
+    G / G_drive   – passed through to :func:`run_algorithm`.
+    iterations, stage_walk_limits, time_budget_seconds – passed through.
+
+    Returns
+    -------
+    tuple : (best_k, ServiceSolution, stats_dict, school_coords)
+        ``best_k`` is the minimum fleet size found.
+        ``stats["buses_used"]`` is set to *best_k*.
+    """
+    import copy as _copy
+
+    base_buses  = data["data"]["buses"]
+    n_students  = len(data["data"]["students"])
+    capacity    = base_buses[0].get("capacity", 60) if base_buses else 60
+    k_max       = len(base_buses)
+    # Ceiling division without math module
+    k_min = max(1, -(-n_students // capacity))
+
+    best_k, best_sol, best_stats, best_school = k_max, None, None, None
+
+    print(f"\n[FleetSearch] {n_students} students, capacity {capacity}, "
+          f"searching k={k_min}..{k_max}")
+
+    constraints = data.get("meta", {}).get("constraints", {})
+    fleet_log   = []
+
+    for k in range(k_min, k_max + 1):
+        trial = _copy.deepcopy(data)
+        trial["data"]["buses"] = trial["data"]["buses"][:k]
+
+        sol, stats, school = run_algorithm(
+            trial, G,
+            iterations=iterations,
+            stage_walk_limits=stage_walk_limits,
+            G_drive=G_drive,
+            time_budget_seconds=time_budget_seconds,
+        )
+
+        served  = stats["served"]
+        total   = stats["total"]
+        capacity_k = trial["data"]["buses"][0].get("capacity", 60)
+
+        unserved_students = [s for s in sol.students if not s.is_served]
+        reasons = _diagnose_unserved(unserved_students, sol, capacity_k, constraints)
+
+        fleet_log.append({
+            "k":                k,
+            "served":           served,
+            "unserved":         total - served,
+            "feasible":         served == total,
+            "runtime_s":        stats["runtime"],
+            "rejection_reasons": reasons,
+        })
+
+        diag = "  ".join(f"{r}: {c}" for r, c in reasons.items()) if reasons else "—"
+        print(f"  Fleet {k}: {served}/{total} served  [{diag}]")
+
+        if best_sol is None or served > best_stats["served"]:
+            best_k, best_sol, best_stats, best_school = k, sol, stats, school
+
+        if served == total:
+            print(f"  → All students served with {k} bus(es) — minimum found.")
+            break
+
+    best_stats["buses_used"]           = best_k
+    best_stats["fleet_search_log"]     = fleet_log
+    best_stats["fleet_search_summary"] = _summarise_fleet_search(fleet_log)
+    return best_k, best_sol, best_stats, best_school
+
+
+def _diagnose_unserved(unserved_students, sol, capacity, constraints):
+    """Categorise why each unserved student wasn't placed.
+    Returns {reason_key: count} with zero-count keys omitted.
+    """
+    import math as _math
+    if not unserved_students:
+        return {}
+
+    con     = constraints or {}
+    enabled = bool(con.get("enabled", True))
+    k_mult  = float(con.get("ride_time_multiplier", 2.5))
+    fl      = float(con.get("floor_minutes", 45))
+    ce      = float(con.get("ceiling_minutes", 60))
+
+    all_full = all(r.get_student_count() >= capacity for r in sol.routes)
+
+    reasons = {}
+    for s in unserved_students:
+        if all_full:
+            reasons["all_routes_at_capacity"] = reasons.get("all_routes_at_capacity", 0) + 1
+            continue
+
+        if enabled:
+            dt = getattr(s, "direct_time_to_school", None)
+            if dt is not None and _math.isfinite(dt) and dt > 0:
+                cap = max(fl, min(k_mult * dt, dt + ce))
+                if cap < 20:
+                    reasons["ride_time_cap_too_tight"] = reasons.get("ride_time_cap_too_tight", 0) + 1
+                    continue
+
+        if getattr(s, "walk_radius", 0) == 0:
+            reasons["zero_walk_radius_no_candidates"] = reasons.get("zero_walk_radius_no_candidates", 0) + 1
+            continue
+
+        reasons["search_budget_exhausted"] = reasons.get("search_budget_exhausted", 0) + 1
+
+    return {k: v for k, v in reasons.items() if v > 0}
+
+
+def _summarise_fleet_search(fleet_log):
+    """Human-readable explanation of the fleet search outcome."""
+    if not fleet_log:
+        return "no search performed"
+
+    feasible = [e for e in fleet_log if e["feasible"]]
+    if feasible:
+        k = feasible[0]["k"]
+        if len(fleet_log) == 1 and fleet_log[0]["feasible"]:
+            return f"k={k} is the theoretical minimum and already serves all students"
+        return f"k={k} is the minimum feasible fleet size"
+
+    last  = max(fleet_log, key=lambda e: e["served"])
+    parts = [
+        f"No fleet size in range {fleet_log[0]['k']}..{fleet_log[-1]['k']} served all students. "
+        f"Best: k={last['k']} with {last['served']}/{last['served'] + last['unserved']} served, "
+        f"{last['unserved']} unserved."
+    ]
+    reasons = last.get("rejection_reasons", {})
+    if reasons.get("ride_time_cap_too_tight"):
+        n = reasons["ride_time_cap_too_tight"]
+        parts.append(
+            f"{n} student(s) have ride-time caps too tight to fit into any multi-stop route — "
+            f"early-boarding students accumulate too much ride time at this fleet size."
+        )
+    if reasons.get("all_routes_at_capacity"):
+        n = reasons["all_routes_at_capacity"]
+        parts.append(
+            f"{n} student(s) could not be placed because all routes were at seating capacity."
+        )
+    if reasons.get("zero_walk_radius_no_candidates"):
+        n = reasons["zero_walk_radius_no_candidates"]
+        parts.append(
+            f"{n} student(s) have walk_radius=0 with no candidate stop found."
+        )
+    if reasons.get("search_budget_exhausted"):
+        n = reasons["search_budget_exhausted"]
+        parts.append(
+            f"{n} student(s) likely unserved due to ALNS budget exhaustion — "
+            f"try increasing time_budget_seconds."
+        )
+    return " ".join(parts)
+
+
+# ============================================================================
+# MODE 2: change_location
+# ============================================================================
+
+def run_change_location(data, G, input_file_path):
+    _run_start = _t.time()
+    (student_id, new_coords, change_type, valid_from, valid_until,
+     algo_config, routes, all_students, buses, school_coords) = load_mode2_input(data, G)
+    method = algo_config.get('method', 'cheapest_insertion')
+    daily_budget = data.get('constraints', {}).get('daily_detour_budget_minutes', 5)
+    target_student = next((s for s in all_students if s.id == student_id), None)
+    if target_student and target_student.is_served:
+        if target_student.assigned_stop: target_student.assigned_stop.remove_student(target_student)
+    if not target_student:
+        from data_loader import school_stage_from_string
+        new_loc = data.get('new_location', {})
+        target_student = Student(id=student_id, lat=new_coords[0], lon=new_coords[1],
+            age=new_loc.get('age', 10), school_stage=school_stage_from_string(new_loc.get('school_stage', 'ELEMENTARY')),
+            fee=new_loc.get('fee', 100), assignment=change_type, valid_from=valid_from, valid_until=valid_until)
+    else:
+        target_student.coords = new_coords
+        target_student.assignment = change_type
+    precompute_matrix([target_student], routes, G)
+    if method == '2opt': success, updated_route, message = insert_with_2opt(target_student, routes, G, change_type, daily_budget)
+    elif method == 'alns':
+        if target_student not in all_students: all_students.append(target_student)
+        cap_penalty = data.get('meta', {}).get('constraints', {}).get('cap_penalty_per_minute', 0.0)
+        optimizer = ALNSEngine(ServiceSolution(all_students, routes, G, cap_penalty_per_minute=cap_penalty), iterations=algo_config.get('iterations', 30))
+        best_sol = optimizer.run()
+        routes = best_sol.routes
+        target = next((s for s in best_sol.students if s.id == student_id), None)
+        success = target and target.is_served
+        message = f"ALNS: {'placed' if success else 'failed'}"
+        updated_route = next((r for r in routes if any(any(st.id == student_id for st in stp.students) for stp in r.stops)), None)
+    else: success, updated_route, message = process_detour_request(target_student, routes, G, change_type, daily_budget)
+    for r in routes: r.total_distance = calculate_route_distance(r, G); r.total_time = calculate_route_time(r, G)
+    if os.path.exists('route_map.html'): shutil.copy2('route_map.html', 'route_map_old.html')
+    if success:
+        create_route_map(G, [r for r in routes if r.get_student_count() > 0], all_students=all_students,
+                         school_coords=school_coords, output_file='route_map_new.html',
+                         solution=None, show_crossing_usage=False)
+    unserved = [s for s in all_students if not s.is_served]
+    output = serialize_routes(routes, buses, school_coords, unserved, G)
+    if not success: output = {"status": "failed", "student_id": student_id, "reason": message}
+    with open('output_data.json', 'w') as f: json.dump(output, f, indent=2)
+    report = {"mode": "change_location", "status": output.get('status', 'success'), "students_total": len(all_students)}
+    save_run(data, output, report, map_files={'route_map_old.html': 'route_map_old.html', 'route_map_new.html': 'route_map_new.html'})
+    return output
+
+# ============================================================================
+# MAIN
+# ============================================================================
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Safety-Aware Bus Optimization")
+    parser.add_argument('input', nargs='?', default='api_requests/generate_routes_input.json', help="Input JSON")
+    parser.add_argument('--unconstrained', action='store_true', help="Disable safety constraints")
+    parser.add_argument('--iterations', type=int, default=None, help="Override ALNS iters")
+    args = parser.parse_args()
+    data = load_json(args.input)
+    if args.unconstrained:
+        if 'data' in data and 'students' in data['data']:
+            for s in data['data']['students']: s['walk_radius_override'] = 400
+        if 'meta' in data:
+            if 'constraints' not in data['meta']: data['meta']['constraints'] = {}
+            data['meta']['constraints'].update({"ride_time_multiplier": 999, "floor_minutes": 999, "ceiling_minutes": 999})
+    if args.iterations: data['meta'].setdefault('algorithm', {})['iterations'] = args.iterations
+    G = setup_graph(data['meta'], unconstrained=args.unconstrained)
+    if data['meta']['mode'] == 'generate_routes': run_generate_routes(data, G, args.input)
+    else: run_change_location(data, G, args.input)

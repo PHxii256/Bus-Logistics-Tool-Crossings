@@ -1,0 +1,46 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Pytest
+.pytest_cache/
+
+# Cache directories
+cache/
+
+# Temporary files
+tempCodeRunnerFile.py
+temp*.py
+
+# Generated output files (optional - comment out if you want to track these)
+# output_data.json
+# route_map.html
+
+# Environment variables
+.env
+.env.local
+
+
+osrm/
+*.osrm*

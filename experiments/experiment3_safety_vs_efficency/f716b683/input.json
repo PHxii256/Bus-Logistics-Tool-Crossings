@@ -1,0 +1,55 @@
+{
+  "_comment": "Controllable comparison experiment config. Edit this to change what gets compared.",
+
+  "school": {
+    "name": "Victory College School",
+    "latitude": 29.964406,
+    "longitude": 31.270319
+  },
+
+  "n_students": 60,
+  "seed": 42,
+
+  "stage_distribution": {
+    "_comment": "Fraction of students per school stage. Must sum to 1.0. Set KG/ELEM to 0 for a fair constrained-vs-unconstrained comparison (they have walk_radius=0 which is effectively door-to-door).",
+    "KG": 0.0,
+    "ELEMENTARY": 0.0,
+    "MIDDLE": 0.5,
+    "HIGH": 0.5
+  },
+
+  "stage_walk_limits": {
+    "_comment": "Override walk radius (metres) per stage. Must match unconstrained (400 m) for a fair comparison — only the safety constraint differs, not the walk budget.",
+    "KG": 0,
+    "ELEMENTARY": 0,
+    "MIDDLE": 400,
+    "HIGH": 400
+  },
+
+  "buses": {
+    "count": 4,
+    "capacity": 20
+  },
+
+  "constraints": {
+    "enabled": false,
+    "_comment_enabled": "Set to false to disable all ride-time caps (effectively uncaps routes for raw comparison).",
+    "ride_time_multiplier": 2.5,
+    "floor_minutes": 45,
+    "ceiling_minutes": 60,
+    "daily_detour_budget_minutes": 5
+  },
+
+  "algorithm": {
+    "iterations": 30
+  },
+
+  "annulus": {
+    "peak_km": 2.0,
+    "sigma_km": 1.0,
+    "min_km": 0.4,
+    "max_km": 5.0
+  },
+
+  "output": "comparison_map.html"
+}

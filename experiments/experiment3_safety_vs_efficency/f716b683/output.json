@@ -1,0 +1,85 @@
+{
+  "generated_at": "2026-02-23T15:24:42",
+  "config": {
+    "n_students": 60,
+    "seed": 42,
+    "iterations": 30,
+    "buses_capacity": 20,
+    "stage_walk_limits": {
+      "KG": 0,
+      "ELEMENTARY": 0,
+      "MIDDLE": 400,
+      "HIGH": 400
+    },
+    "stage_distribution": {
+      "KG": 0.0,
+      "ELEMENTARY": 0.0,
+      "MIDDLE": 0.5,
+      "HIGH": 0.5
+    }
+  },
+  "modes": {
+    "constrained": {
+      "routes_created": 3,
+      "students_served": 60,
+      "students_unserved": 0,
+      "total_route_time_min": 338.11,
+      "total_route_dist_km": 169.06,
+      "avg_route_time_min": 112.7,
+      "runtime_seconds": 1.76,
+      "unsafe_crossings": 0,
+      "walk_stats": {
+        "avg_walk_dist_m": 69.4,
+        "median_walk_dist_m": 66.1,
+        "max_walk_dist_m": 312.4,
+        "min_walk_dist_m": 0.0,
+        "avg_walk_time_min": 0.87,
+        "avg_walk_utilisation_pct": 17.3
+      }
+    },
+    "unconstrained": {
+      "routes_created": 3,
+      "students_served": 60,
+      "students_unserved": 0,
+      "total_route_time_min": 349.04,
+      "total_route_dist_km": 174.52,
+      "avg_route_time_min": 116.35,
+      "runtime_seconds": 1.55,
+      "unsafe_crossings": 1,
+      "walk_stats": {
+        "avg_walk_dist_m": 65.2,
+        "median_walk_dist_m": 52.2,
+        "max_walk_dist_m": 312.4,
+        "min_walk_dist_m": 0.0,
+        "avg_walk_time_min": 0.81,
+        "avg_walk_utilisation_pct": 16.3
+      }
+    },
+    "door_to_door": {
+      "routes_created": 3,
+      "students_served": 58,
+      "students_unserved": 2,
+      "total_route_time_min": 316.74,
+      "total_route_dist_km": 158.37,
+      "avg_route_time_min": 105.58,
+      "runtime_seconds": 0.44,
+      "unsafe_crossings": 0,
+      "walk_stats": {
+        "avg_walk_dist_m": 15.3,
+        "median_walk_dist_m": 0.0,
+        "max_walk_dist_m": 147.8,
+        "min_walk_dist_m": 0.0,
+        "avg_walk_time_min": 0.19,
+        "avg_walk_utilisation_pct": null
+      }
+    }
+  },
+  "comparison": {
+    "efficiency_gain_vs_d2d_pct": -6.7,
+    "safety_cost_vs_unconstrained_pct": -3.1,
+    "crossings_eliminated_vs_unconstrained": 1,
+    "constrained_total_time_min": 338.11,
+    "unconstrained_total_time_min": 349.04,
+    "door_to_door_total_time_min": 316.74
+  }
+}

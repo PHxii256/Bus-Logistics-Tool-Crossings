@@ -1,0 +1,7 @@
+{
+  "_description": "Mode 2: Change Student Location — Output Schema (Failure)",
+
+  "status": "failed",
+  "student_id": "S1",
+  "reason": "Detour exceeds daily budget: 6.2 > 5.0 min (only 3.1 min remaining)"
+}

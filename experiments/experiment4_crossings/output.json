@@ -1,0 +1,270 @@
+{
+  "generated_at": "20/03/26 04:43 pm",
+  "total_wall_time_seconds": 296.03,
+  "debug_stats": {
+    "step_times": {
+      "generate_dataset_s": 25.51,
+      "build_constrained_graph_s": 18.39,
+      "build_unconstrained_graph_s": 19.15,
+      "build_walk_graph_s": 0.36,
+      "build_map_s": 18.27
+    },
+    "mode_breakdown": {
+      "A": {
+        "mode_wall_time_s": 193.33,
+        "alns_solve_s": 183.27,
+        "setup_and_overhead_s": 10.06,
+        "alns_iterations": null,
+        "n_candidates_per_student": 1.0
+      },
+      "B": {
+        "mode_wall_time_s": 12.88,
+        "alns_solve_s": 0.06,
+        "setup_and_overhead_s": 12.82,
+        "alns_iterations": null,
+        "n_candidates_per_student": 1.0
+      },
+      "C": {
+        "mode_wall_time_s": 8.15,
+        "alns_solve_s": 0.05,
+        "setup_and_overhead_s": 8.1,
+        "alns_iterations": null,
+        "n_candidates_per_student": 1.0
+      }
+    },
+    "synthetic_crossings": {
+      "strategy": "per_drive_node",
+      "checked_drive_nodes": 0,
+      "candidate_pairs_checked": 0,
+      "rejected_existing_edge": 0,
+      "rejected_distance": 0,
+      "rejected_lane_pair": 0,
+      "rejected_unsafe_road": 0,
+      "rejected_missing_cross_bearing": 0,
+      "rejected_not_perpendicular": 0,
+      "rejected_existing_walk_short": 0,
+      "added": 0
+    }
+  },
+  "config": {
+    "n_students": 60,
+    "seed": 1000,
+    "iterations": 1,
+    "buses_count": 4,
+    "buses_capacity": 22,
+    "minimize_buses": true,
+    "force_fleet_size": null,
+    "constraints_enabled": true,
+    "soft_ride_caps": false,
+    "time_budget_seconds": 60,
+    "max_candidates_per_student": 4,
+    "stage_walk_limits": {
+      "KG": 0,
+      "ELEMENTARY": 0,
+      "MIDDLE": 400,
+      "HIGH": 400
+    },
+    "stage_distribution": {
+      "KG": 0.0,
+      "ELEMENTARY": 0.0,
+      "MIDDLE": 0.5,
+      "HIGH": 0.5
+    },
+    "constraints": {
+      "enabled": true,
+      "soft_ride_caps": false,
+      "cap_penalty_per_minute": null,
+      "ride_time_multiplier": 3,
+      "floor_minutes": 30,
+      "ceiling_minutes": 60,
+      "bidirectional_check": true
+    },
+    "algorithm": {
+      "time_budget_seconds": 60,
+      "max_candidates_per_student": 4,
+      "minimize_buses": true,
+      "force_fleet_size": null
+    }
+  },
+  "modes": {
+    "constrained": {
+      "routes_created": 0,
+      "students_served": 0,
+      "students_unserved": 60,
+      "total_route_time_min": 0,
+      "total_route_dist_km": 0,
+      "avg_route_time_min": 0,
+      "alns_runtime_seconds": 183.27,
+      "mode_wall_time_seconds": null,
+      "unsafe_crossings": 0,
+      "walk_stats": {
+        "avg_walk_dist_m": 0,
+        "median_walk_dist_m": 0,
+        "max_walk_dist_m": 0,
+        "min_walk_dist_m": 0,
+        "avg_walk_time_min": 0,
+        "avg_walk_utilisation_pct": null
+      },
+      "students": [],
+      "buses_available": 4,
+      "bus_capacity": 22,
+      "buses_used": 3,
+      "ride_cap_violations_am": 0,
+      "ride_cap_checked_am": 0,
+      "ride_cap_violation_pct_am": null,
+      "ride_cap_violations_pm": 0,
+      "ride_cap_checked_pm": 0,
+      "ride_cap_violation_pct_pm": null,
+      "total_walk_time_min": 0,
+      "total_time_with_walks_min": 0,
+      "fleet_search": {
+        "buses_used": 3,
+        "summary": "No fleet size in range 3..4 served all students. Best: k=3 with 0/60 served, 60 unserved. 60 student(s) likely unserved due to ALNS budget exhaustion — try increasing time_budget_seconds.",
+        "search_log": [
+          {
+            "k": 3,
+            "served": 0,
+            "unserved": 60,
+            "feasible": false,
+            "runtime_s": 183.27,
+            "rejection_reasons": {
+              "search_budget_exhausted": 60
+            }
+          },
+          {
+            "k": 4,
+            "served": 0,
+            "unserved": 60,
+            "feasible": false,
+            "runtime_s": 0.0,
+            "rejection_reasons": {
+              "search_budget_exhausted": 60
+            }
+          }
+        ]
+      }
+    },
+    "unconstrained": {
+      "routes_created": 0,
+      "students_served": 0,
+      "students_unserved": 60,
+      "total_route_time_min": 0,
+      "total_route_dist_km": 0,
+      "avg_route_time_min": 0,
+      "alns_runtime_seconds": 0.06,
+      "mode_wall_time_seconds": null,
+      "unsafe_crossings": 0,
+      "walk_stats": {
+        "avg_walk_dist_m": 0,
+        "median_walk_dist_m": 0,
+        "max_walk_dist_m": 0,
+        "min_walk_dist_m": 0,
+        "avg_walk_time_min": 0,
+        "avg_walk_utilisation_pct": null
+      },
+      "students": [],
+      "buses_available": 4,
+      "bus_capacity": 22,
+      "buses_used": 3,
+      "ride_cap_violations_am": 0,
+      "ride_cap_checked_am": 0,
+      "ride_cap_violation_pct_am": null,
+      "ride_cap_violations_pm": 0,
+      "ride_cap_checked_pm": 0,
+      "ride_cap_violation_pct_pm": null,
+      "total_walk_time_min": 0,
+      "total_time_with_walks_min": 0,
+      "fleet_search": {
+        "buses_used": 3,
+        "summary": "No fleet size in range 3..4 served all students. Best: k=3 with 0/60 served, 60 unserved. 60 student(s) likely unserved due to ALNS budget exhaustion — try increasing time_budget_seconds.",
+        "search_log": [
+          {
+            "k": 3,
+            "served": 0,
+            "unserved": 60,
+            "feasible": false,
+            "runtime_s": 0.06,
+            "rejection_reasons": {
+              "search_budget_exhausted": 60
+            }
+          },
+          {
+            "k": 4,
+            "served": 0,
+            "unserved": 60,
+            "feasible": false,
+            "runtime_s": 0.0,
+            "rejection_reasons": {
+              "search_budget_exhausted": 60
+            }
+          }
+        ]
+      }
+    },
+    "door_to_door": {
+      "routes_created": 0,
+      "students_served": 0,
+      "students_unserved": 60,
+      "total_route_time_min": 0,
+      "total_route_dist_km": 0,
+      "avg_route_time_min": 0,
+      "alns_runtime_seconds": 0.05,
+      "mode_wall_time_seconds": null,
+      "unsafe_crossings": 0,
+      "walk_stats": {
+        "avg_walk_dist_m": 0,
+        "median_walk_dist_m": 0,
+        "max_walk_dist_m": 0,
+        "min_walk_dist_m": 0,
+        "avg_walk_time_min": 0,
+        "avg_walk_utilisation_pct": null
+      },
+      "students": [],
+      "buses_available": 4,
+      "bus_capacity": 22,
+      "buses_used": 3,
+      "ride_cap_violations_am": 0,
+      "ride_cap_checked_am": 0,
+      "ride_cap_violation_pct_am": null,
+      "ride_cap_violations_pm": 0,
+      "ride_cap_checked_pm": 0,
+      "ride_cap_violation_pct_pm": null,
+      "total_walk_time_min": 0,
+      "total_time_with_walks_min": 0,
+      "fleet_search": {
+        "buses_used": 3,
+        "summary": "No fleet size in range 3..4 served all students. Best: k=3 with 0/60 served, 60 unserved. 60 student(s) have walk_radius=0 with no candidate stop found.",
+        "search_log": [
+          {
+            "k": 3,
+            "served": 0,
+            "unserved": 60,
+            "feasible": false,
+            "runtime_s": 0.05,
+            "rejection_reasons": {
+              "zero_walk_radius_no_candidates": 60
+            }
+          },
+          {
+            "k": 4,
+            "served": 0,
+            "unserved": 60,
+            "feasible": false,
+            "runtime_s": 0.0,
+            "rejection_reasons": {
+              "zero_walk_radius_no_candidates": 60
+            }
+          }
+        ]
+      }
+    }
+  },
+  "comparison": {
+    "efficiency_gain_vs_d2d_pct": null,
+    "safety_cost_vs_unconstrained_pct": null,
+    "crossings_eliminated_vs_unconstrained": 0,
+    "constrained_total_time_min": 0,
+    "unconstrained_total_time_min": 0,
+    "door_to_door_total_time_min": 0
+  }
+}
