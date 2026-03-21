@@ -11,8 +11,8 @@ student can reach on foot without crossing a dangerous road.
 
 Modes
 -----
-  A  Constrained   – walking BFS avoids primary/trunk/secondary; same walk radius as B
-  B  Unconstrained – walking BFS uses all edges; same walk radius as A
+    A  Strictly Constrained – walking BFS avoids primary/trunk/secondary; same walk radius as B
+    B  Weakly Constrained   – walking BFS uses all edges; same walk radius as A
   C  Door-to-Door  – walk_radius=0 for all (bus visits every home)
 
 Usage (from the repo root):
@@ -232,6 +232,38 @@ def _reset_caches(keep_matrix=False, keep_walk=False):
         _eng._WALK_DIST_CACHE.clear()
         _eng._safe_nodes_cache.clear()
     _eng._STUDENT_NODE_CACHE.clear()
+
+
+def _apply_dwell_time_to_stats(sol, stats, dwell_seconds_per_stop):
+    """Add dwell-time to reporting totals (does not affect optimization).
+
+    Dwell is applied per non-school stop and stored in the stats dict so both
+    HTML and JSON outputs can render consistent totals.
+    """
+    dwell_sec = float(dwell_seconds_per_stop or 0.0)
+    base_total = float(stats.get("total_time", 0.0) or 0.0)
+    stats["base_total_time"] = round(base_total, 2)
+    stats["dwell_time_per_stop_seconds"] = dwell_sec
+
+    if dwell_sec <= 0:
+        stats["total_dwell_time_min"] = 0.0
+        stats["route_dwell_time_min"] = {}
+        return stats
+
+    route_dwell = {}
+    total_dwell_min = 0.0
+    for route in sol.routes:
+        if route.get_student_count() <= 0:
+            continue
+        pickup_stops = sum(1 for stop in route.stops if getattr(stop, "stop_type", None) != "school")
+        dwell_min = (pickup_stops * dwell_sec) / 60.0
+        route_dwell[route.route_id] = round(dwell_min, 2)
+        total_dwell_min += dwell_min
+
+    stats["route_dwell_time_min"] = route_dwell
+    stats["total_dwell_time_min"] = round(total_dwell_min, 2)
+    stats["total_time"] = round(base_total + total_dwell_min, 2)
+    return stats
 
 
 def _prebuild_ball_tree(G):
@@ -478,8 +510,8 @@ _ICON_COLORS = {
     "C": ["orange", "red",       "darkred",   "beige"],
 }
 _MODE_NAMES = {
-    "A": "Constrained (Safe Walking)",
-    "B": "Unconstrained (Any Walking)",
+    "A": "Strictly Constrained (Safe Walking)",
+    "B": "Weakly Constrained (Any Walking)",
     "C": "Door-to-Door (No Walking)",
 }
 
@@ -1357,7 +1389,7 @@ def _add_crossing_usage_layers(m, solutions_dict, G_walk, G_drive):
             if not crossing_usage:
                 continue
 
-            mode_label = {"A": "Constrained", "B": "Unconstrained", "C": "Door-to-Door"}.get(mode_key, mode_key)
+            mode_label = {"A": "Strictly Constrained", "B": "Weakly Constrained", "C": "Door-to-Door"}.get(mode_key, mode_key)
             fg = FeatureGroup(name=f"Crossing Usage – Mode {mode_key} ({len(crossing_usage)})", show=False)
 
             for (u, v), usage_data in crossing_usage.items():
@@ -1456,8 +1488,8 @@ def _build_custom_layer_control_js(
 
     unserved_rows = ""
     for fg_u, label in [
-        (fg_unserved_a, 'Constrained – Unserved'),
-        (fg_unserved_b, 'Unconstrained – Unserved'),
+        (fg_unserved_a, 'Strictly Constrained – Unserved'),
+        (fg_unserved_b, 'Weakly Constrained – Unserved'),
         (fg_unserved_c, 'Door-to-Door – Unserved'),
     ]:
         if fg_u is not None:
@@ -1469,8 +1501,8 @@ def _build_custom_layer_control_js(
 
     candidate_rows = ""
     for fg_c2, label in [
-        (fg_cands_a, 'Constrained – Candidate Stops'),
-        (fg_cands_b, 'Unconstrained – Candidate Stops'),
+        (fg_cands_a, 'Strictly Constrained – Candidate Stops'),
+        (fg_cands_b, 'Weakly Constrained – Candidate Stops'),
         (fg_cands_c, 'Door-to-Door – Candidate Stops'),
     ]:
         if fg_c2 is not None:
@@ -1482,8 +1514,8 @@ def _build_custom_layer_control_js(
 
     usage_rows = ""
     for fg_u, label in [
-        (fg_usage_a, 'Constrained – Crossing Usage'),
-        (fg_usage_b, 'Unconstrained – Crossing Usage'),
+        (fg_usage_a, 'Strictly Constrained – Crossing Usage'),
+        (fg_usage_b, 'Weakly Constrained – Crossing Usage'),
         (fg_usage_c, 'Door-to-Door – Crossing Usage'),
     ]:
         if fg_u is not None:
@@ -1538,9 +1570,9 @@ def _build_custom_layer_control_js(
                     span.textContent = label;
                     lbl.appendChild(span);
                 }}
-                row('Constrained (Safe Walking)',
+                row('Strictly Constrained (Safe Walking)',
                     [{va_r}, {va_w}], map.hasLayer({va_r}));
-                row('Unconstrained (Any Walking)',
+                row('Weakly Constrained (Any Walking)',
                     [{vb_r}, {vb_w}], map.hasLayer({vb_r}));
                 row('Direct (No Walking)',
                     [{vc_r}, {vc_w}], map.hasLayer({vc_r}));
@@ -1666,7 +1698,7 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
               <tr>
                 <td style="{td_l}">{route.route_id}</td>
                 <td style="{td_r}">{route.total_distance:.1f}</td>
-                <td style="{td_r}">{route.total_time:.0f}</td>
+                                <td style="{td_r}">{(route.total_time + s.get('route_dwell_time_min', {}).get(route.route_id, 0.0)):.0f}</td>
                 <td style="{td_r}">{sc}/{cap_r}</td>
                 <td style="{td_r}">{sat_r}/{sc}</td>
               </tr>"""
@@ -1786,8 +1818,8 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                    step_times=None, mode_wall_times=None):
     """Assemble the full metrics dict that will be written to metrics.json."""
     mode_map = {
-        "constrained":   ("A", sol_a),
-        "unconstrained": ("B", sol_b),
+        "strictly_constrained":   ("A", sol_a),
+        "weakly_constrained": ("B", sol_b),
         "door_to_door":  ("C", sol_c),
     }
     modes_out = {}
@@ -1859,6 +1891,9 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "students_served":      s["served"],
             "students_unserved":    s["total"] - s["served"],
             "total_route_time_min": round(s["total_time"], 2),
+            "base_route_time_min": round(s.get("base_total_time", s["total_time"]), 2),
+            "total_dwell_time_min": round(s.get("total_dwell_time_min", 0.0), 2),
+            "dwell_time_per_stop_seconds": s.get("dwell_time_per_stop_seconds", 0.0),
             "total_route_dist_km":  round(s["total_dist"],  2),
             "avg_route_time_min":   round(s["total_time"] / n_routes, 2) if n_routes else 0,
             "alns_runtime_seconds": round(s["runtime"],     2),
@@ -1902,15 +1937,15 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         entry = modes_out.get(mode_key, {})
         return entry.get(field, default) if not entry.get("skipped") else default
 
-    t_con  = _mget("constrained",   "total_route_time_min", 0)
-    t_unc  = _mget("unconstrained", "total_route_time_min", 0)
+    t_con  = _mget("strictly_constrained",   "total_route_time_min", 0)
+    t_unc  = _mget("weakly_constrained", "total_route_time_min", 0)
     t_d2d  = _mget("door_to_door",  "total_route_time_min", 0)
-    cx_con = _mget("constrained",   "unsafe_crossings", 0)
-    cx_unc = _mget("unconstrained", "unsafe_crossings", 0)
+    cx_con = _mget("strictly_constrained",   "unsafe_crossings", 0)
+    cx_unc = _mget("weakly_constrained", "unsafe_crossings", 0)
 
     # Build per-mode debug breakdown
     _dbg_modes = {}
-    for _mk, _sk, _sol in [("A", "constrained", sol_a), ("B", "unconstrained", sol_b), ("C", "door_to_door", sol_c)]:
+    for _mk, _sk, _sol in [("A", "strictly_constrained", sol_a), ("B", "weakly_constrained", sol_b), ("C", "door_to_door", sol_c)]:
         _s = all_stats.get(_mk)
         _wt = (mode_wall_times or {}).get(_mk)
         if _s and _wt is not None:
@@ -1968,6 +2003,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                 "max_candidates_per_student": meta.get("algorithm", {}).get("max_candidates_per_student"),
                 "minimize_buses": meta.get("algorithm", {}).get("minimize_buses", False),
                 "force_fleet_size": meta.get("algorithm", {}).get("force_fleet_size"),
+                "dwell_time_seconds_per_stop": meta.get("algorithm", {}).get("dwell_time_seconds_per_stop", 30),
             },
         },
         "modes": modes_out,
@@ -1975,12 +2011,12 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "efficiency_gain_vs_d2d_pct": (
                 round((t_d2d - t_con) / t_d2d * 100, 1) if t_d2d else None
             ),
-            "safety_cost_vs_unconstrained_pct": (
+            "safety_cost_vs_weakly_constrained_pct": (
                 round((t_con - t_unc) / t_unc * 100, 1) if t_unc else None
             ),
-            "crossings_eliminated_vs_unconstrained": cx_unc - cx_con,
-            "constrained_total_time_min":   t_con,
-            "unconstrained_total_time_min": t_unc,
+            "crossings_eliminated_vs_weakly_constrained": cx_unc - cx_con,
+            "strictly_constrained_total_time_min":   t_con,
+            "weakly_constrained_total_time_min": t_unc,
             "door_to_door_total_time_min":  t_d2d,
         },
     }
@@ -2023,6 +2059,7 @@ def run(input_path=None, output_path=None, iterations=None):
     iters          = iterations or algo_cfg.get("iterations", 30)
     minimize_buses = algo_cfg.get("minimize_buses", False)
     force_k        = algo_cfg.get("force_fleet_size")
+    dwell_time_seconds_per_stop = float(algo_cfg.get("dwell_time_seconds_per_stop", 30.0) or 0.0)
 
     # ── Debug / partial-run flags ──
     _dbg       = meta.get("debug", {})
@@ -2053,7 +2090,8 @@ def run(input_path=None, output_path=None, iterations=None):
     print(f"  Stages   : {meta['stage_distribution']}")
     print(f"  Walk lim : {stage_walk}")
     print(f"  Iters    : {iters}")
-    _mode_labels = {"A": "Constrained", "B": "Unconstrained", "C": "Door-to-Door"}
+    print(f"  Dwell    : {dwell_time_seconds_per_stop:.0f}s per pickup stop")
+    _mode_labels = {"A": "Strictly Constrained", "B": "Weakly Constrained", "C": "Door-to-Door"}
     _skipped = [m for m in ("A", "B", "C") if m not in _active_modes]
     _mode_wall_times = {}
     _step_times: dict = {}
@@ -2082,17 +2120,17 @@ def run(input_path=None, output_path=None, iterations=None):
         stage_counts[s["school_stage"]] = stage_counts.get(s["school_stage"], 0) + 1
     print(f"  Stage breakdown: {stage_counts}")
 
-    # ── 2. Constrained graph ──
-    print("\n[2/7] Building CONSTRAINED graph …")
+    # ── 2. Strictly constrained graph ──
+    print("\n[2/7] Building STRICTLY CONSTRAINED graph …")
     _t0 = _wtime.time()
     G_con = setup_graph(base_data["meta"], unconstrained=False)
     _prebuild_ball_tree(G_con)
     _step_times["build_constrained_graph_s"] = round(_wtime.time() - _t0, 2)
 
-    # ── 3. Unconstrained graph ──
+    # ── 3. Weakly constrained graph ──
     # NOTE: setup_graph() always loads a fresh graph from pickle — G_unc and
     # G_con are fully independent objects.  No deepcopy of G_con is needed.
-    print("[3/7] Building UNCONSTRAINED graph …")
+    print("[3/7] Building WEAKLY CONSTRAINED graph …")
     _t0 = _wtime.time()
     G_unc = setup_graph(base_data["meta"], unconstrained=True)
     _eng._BALL_TREE = None
@@ -2167,7 +2205,7 @@ def run(input_path=None, output_path=None, iterations=None):
         _eng.set_walk_graph(None, synthetic_cfg={"enabled": False})
         _clean_walk_graph = None
 
-    # ── 4. Mode A: Constrained ──
+    # ── 4. Mode A: Strictly Constrained ──
     # Walking BFS uses G_con (safety-restricted edges).
     # Bus driving distances ALWAYS use G_unc (full road network).
     # NOTE: For Mode A, we use the walk graph WITHOUT synthetic crossings.
@@ -2180,7 +2218,7 @@ def run(input_path=None, output_path=None, iterations=None):
     _ride_caps_on = meta.get("constraints", {}).get("enabled", True)
     _t_a = _wtime.time()
     print("\n" + "-" * 50)
-    print("MODE A: Constrained (safety ON, stage walk radii)")
+    print("MODE A: Strictly Constrained (safety ON, stage walk radii)")
     print("-" * 50)
     data_a = _make_constrained(base_data)
     if not _ride_caps_on:
@@ -2214,6 +2252,7 @@ def run(input_path=None, output_path=None, iterations=None):
         stats_a["buses_used"] = int(force_k)
     if "buses_used" not in stats_a:
         stats_a["buses_used"] = meta.get("buses", {}).get("count")
+    _apply_dwell_time_to_stats(sol_a, stats_a, dwell_time_seconds_per_stop)
     # Snapshot candidate data before caches are cleared for next mode
     cands_a    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
     cand_dist_a = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
@@ -2222,14 +2261,14 @@ def run(input_path=None, output_path=None, iterations=None):
           f"routes={stats_a['routes']} | time={stats_a['total_time']:.1f} min | "
           f"{stats_a['runtime']:.1f}s")
 
-    # ── 5. Mode B: Unconstrained ──
+    # ── 5. Mode B: Weakly Constrained ──
     # Restore walk graph with crossings for Mode B - crossings help in unconstrained mode
     if _saved_walk_graph is not None:
         _eng._WALK_GRAPH = _saved_walk_graph
         print("  [Mode B] Restored walk graph WITH synthetic crossings")
     _t_b = _wtime.time()
     print("\n" + "-" * 50)
-    print("MODE B: Unconstrained (all safe, same walk radius)")
+    print("MODE B: Weakly Constrained (all safe, same walk radius)")
     print("-" * 50)
     data_b = _make_unconstrained(base_data)
     if not _ride_caps_on:
@@ -2265,6 +2304,7 @@ def run(input_path=None, output_path=None, iterations=None):
         stats_b["buses_used"] = int(force_k)
     if "buses_used" not in stats_b:
         stats_b["buses_used"] = meta.get("buses", {}).get("count")
+    _apply_dwell_time_to_stats(sol_b, stats_b, dwell_time_seconds_per_stop)
     cands_b    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
     cand_dist_b = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
     _mode_wall_times["B"] = round(_wtime.time() - _t_b, 2)
@@ -2310,6 +2350,7 @@ def run(input_path=None, output_path=None, iterations=None):
         stats_c["buses_used"] = int(force_k)
     if "buses_used" not in stats_c:
         stats_c["buses_used"] = meta.get("buses", {}).get("count")
+    _apply_dwell_time_to_stats(sol_c, stats_c, dwell_time_seconds_per_stop)
     cands_c    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
     cand_dist_c = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
     _mode_wall_times["C"] = round(_wtime.time() - _t_c, 2)

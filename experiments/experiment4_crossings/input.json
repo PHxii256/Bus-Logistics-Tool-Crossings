@@ -72,6 +72,7 @@
     "iterations": 60,
     "time_budget_seconds": 60,
     "max_candidates_per_student": 4,
+    "dwell_time_seconds_per_stop": 30,
     "minimize_buses": true
   },
 
