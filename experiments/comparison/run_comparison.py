@@ -1213,10 +1213,31 @@ def _add_synthetic_crossing_markers(m, crossings_list, show_only_used=False, use
             derived.append({"lat": mid_lat, "lon": mid_lon, "length_m": float(data.get("length", 0.0))})
 
     all_markers = list(crossings_list or []) + derived
+
+    def _marker_lat_lon(cx):
+        if not isinstance(cx, dict):
+            return None
+        if "lat" in cx and "lon" in cx:
+            try:
+                return float(cx.get("lat", 0.0)), float(cx.get("lon", 0.0))
+            except Exception:
+                return None
+        if all(k in cx for k in ("lat_a", "lon_a", "lat_b", "lon_b")):
+            try:
+                lat = (float(cx["lat_a"]) + float(cx["lat_b"])) / 2.0
+                lon = (float(cx["lon_a"]) + float(cx["lon_b"])) / 2.0
+                return lat, lon
+            except Exception:
+                return None
+        return None
+
     seen = set()
     uniq = []
     for cx in all_markers:
-        lk = (round(float(cx.get("lat", 0.0)), 6), round(float(cx.get("lon", 0.0)), 6))
+        lat_lon = _marker_lat_lon(cx)
+        if lat_lon is None:
+            continue
+        lk = (round(lat_lon[0], 6), round(lat_lon[1], 6))
         if lk in seen:
             continue
         seen.add(lk)
@@ -1229,9 +1250,13 @@ def _add_synthetic_crossing_markers(m, crossings_list, show_only_used=False, use
         folium.PolyLine(seg, color="#c2185b", weight=5, opacity=0.95).add_to(fg)
 
     for cx in uniq:
+        lat_lon = _marker_lat_lon(cx)
+        if lat_lon is None:
+            continue
+        lat, lon = lat_lon
         length_m = float(cx.get("length_m", 0.0))
         folium.CircleMarker(
-            location=(cx["lat"], cx["lon"]), radius=8,
+            location=(lat, lon), radius=8,
             color="#4a148c", fill=True, fillColor="#ffeb3b", fillOpacity=0.95, weight=2,
             tooltip=f"Synthetic crossing ({length_m:.1f} m)",
         ).add_to(fg)

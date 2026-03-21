@@ -927,7 +927,11 @@ def build_drive_node_crossings(
 
         # Add to crossings list
         final_crossing_type = "real_to_synthetic" if created_synthetic else "real_to_real"
+        mid_lat = (float(source_node["lat"]) + float(target_node["lat"])) / 2.0
+        mid_lon = (float(source_node["lon"]) + float(target_node["lon"])) / 2.0
         crossings.append({
+            "lat": mid_lat,
+            "lon": mid_lon,
             "node_a": n1,
             "node_b": n2,
             "lat_a": source_node["lat"],
