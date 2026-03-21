@@ -1759,9 +1759,6 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
     algo_lines.append(f"SoftCaps: {'ON' if soft_caps else 'OFF'}")
     algo_lines.append(f"MinFleet: {'ON' if minimize_buses else 'OFF'}")
     algo_lines.append(f"Crossings: {'ON' if crossings_enabled else 'OFF'}")
-    cap_penalty = (constraints or {}).get("cap_penalty_per_minute", None)
-    if cap_penalty is not None:
-        algo_lines.append(f"CapPenalty: {cap_penalty}/min")
     if time_budget is not None:
         algo_lines.append(f"Budget: {time_budget}s")
     if max_cands is not None:
@@ -2028,7 +2025,6 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "constraints": {
                 "enabled": meta.get("constraints", {}).get("enabled", True),
                 "soft_ride_caps": meta.get("constraints", {}).get("soft_ride_caps", False),
-                "cap_penalty_per_minute": meta.get("constraints", {}).get("cap_penalty_per_minute"),
                 "ride_time_multiplier": meta.get("constraints", {}).get("ride_time_multiplier"),
                 "floor_minutes": meta.get("constraints", {}).get("floor_minutes"),
                 "ceiling_minutes": meta.get("constraints", {}).get("ceiling_minutes"),

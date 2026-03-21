@@ -277,8 +277,7 @@ def run_generate_routes(data, G, input_file_path):
     print_input_summary(students, buses, routes, school_coords)
     precompute_matrix(students, routes, G)
     print(f"\nRUNNING ALNS OPTIMIZATION ({algo_config.get('iterations', 60)} iters)")
-    cap_penalty = (constraints or {}).get('cap_penalty_per_minute', 0.0)
-    initial_sol = ServiceSolution(students, routes, G, cap_penalty_per_minute=cap_penalty)
+    initial_sol = ServiceSolution(students, routes, G)
     optimizer = ALNSEngine(initial_sol, iterations=algo_config.get('iterations', 60))
     _alns_start = _t.time()
     best_sol = optimizer.run()
@@ -359,8 +358,7 @@ def run_algorithm(data: dict, G, iterations: int = None,
     # Walking BFS uses G (may be constrained); bus routing uses G_drive (unconstrained)
     precompute_matrix(students, routes, G, G_drive=G_drive, max_candidates=max_cands)
 
-    cap_penalty = (constraints or {}).get('cap_penalty_per_minute', 0.0)
-    initial = ServiceSolution(students, routes, G_drive, cap_penalty_per_minute=cap_penalty)
+    initial = ServiceSolution(students, routes, G_drive)
     engine  = ALNSEngine(initial, iterations=iters, time_budget_seconds=budget,
                          max_candidates_per_student=max_cands)
     t0      = _time.time()
@@ -588,8 +586,7 @@ def run_change_location(data, G, input_file_path):
     if method == '2opt': success, updated_route, message = insert_with_2opt(target_student, routes, G, change_type, daily_budget)
     elif method == 'alns':
         if target_student not in all_students: all_students.append(target_student)
-        cap_penalty = data.get('meta', {}).get('constraints', {}).get('cap_penalty_per_minute', 0.0)
-        optimizer = ALNSEngine(ServiceSolution(all_students, routes, G, cap_penalty_per_minute=cap_penalty), iterations=algo_config.get('iterations', 30))
+        optimizer = ALNSEngine(ServiceSolution(all_students, routes, G), iterations=algo_config.get('iterations', 30))
         best_sol = optimizer.run()
         routes = best_sol.routes
         target = next((s for s in best_sol.students if s.id == student_id), None)
