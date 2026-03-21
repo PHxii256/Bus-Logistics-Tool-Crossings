@@ -77,6 +77,101 @@ def worst_cost_removal(solution, n):
         _remove_student_from_solution(solution, student)
     return removed
 
+
+def _haversine_m(a, b):
+    lat1, lon1 = a
+    lat2, lon2 = b
+    r = 6371000.0
+    p1 = math.radians(lat1)
+    p2 = math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlmb = math.radians(lon2 - lon1)
+    x = math.sin(dphi / 2.0) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlmb / 2.0) ** 2
+    return r * (2.0 * math.atan2(math.sqrt(x), math.sqrt(max(1e-12, 1.0 - x))))
+
+
+def _build_student_route_map(solution):
+    out = {}
+    for route in solution.routes:
+        for stop in route.stops:
+            if stop.stop_type == 'school':
+                continue
+            for student in stop.students:
+                out[student.id] = route.route_id
+    return out
+
+
+def shaw_related_removal(solution, n):
+    """R13-style removal: pick a seed student and remove related students.
+
+    Relatedness combines pickup proximity, same-route affinity, and stage similarity.
+    """
+    served_students = [s for s in solution.students if s.is_served and s.assigned_stop is not None]
+    n = min(n, len(served_students))
+    if n == 0:
+        return []
+
+    route_of = _build_student_route_map(solution)
+    seed = random.choice(served_students)
+    seed_route = route_of.get(seed.id)
+    seed_stage = getattr(seed.school_stage, 'name', str(seed.school_stage))
+    seed_xy = seed.assigned_stop.coords
+
+    ranked = []
+    for s in served_students:
+        if s.id == seed.id or s.assigned_stop is None:
+            continue
+        dist = _haversine_m(seed_xy, s.assigned_stop.coords)
+        same_route_bonus = 250.0 if route_of.get(s.id) == seed_route else 0.0
+        stage_bonus = 50.0 if getattr(s.school_stage, 'name', str(s.school_stage)) == seed_stage else 0.0
+        relatedness = dist - same_route_bonus - stage_bonus
+        ranked.append((relatedness, s))
+
+    ranked.sort(key=lambda x: x[0])
+    removed = [seed]
+    for _, s in ranked:
+        if len(removed) >= n:
+            break
+        removed.append(s)
+
+    for student in removed:
+        _remove_student_from_solution(solution, student)
+    return removed
+
+
+def sequence_removal(solution, n):
+    """Sequence-based removal: remove students from a contiguous stop subsequence."""
+    active_routes = [r for r in solution.routes if r.get_student_count() > 0]
+    if not active_routes or n <= 0:
+        return []
+
+    removed = []
+    attempts = 0
+    max_attempts = max(3, len(active_routes) * 2)
+
+    while len(removed) < n and attempts < max_attempts:
+        attempts += 1
+        route = random.choice(active_routes)
+        pickup_stops = [s for s in route.stops if s.stop_type != 'school' and len(s.students) > 0]
+        if not pickup_stops:
+            continue
+
+        max_seq = min(len(pickup_stops), max(1, n - len(removed)))
+        seq_len = random.randint(1, max_seq)
+        start = random.randint(0, len(pickup_stops) - seq_len)
+        seq = pickup_stops[start:start + seq_len]
+
+        for stop in seq:
+            for student in list(stop.students):
+                if len(removed) >= n:
+                    break
+                _remove_student_from_solution(solution, student)
+                removed.append(student)
+            if len(removed) >= n:
+                break
+
+    return removed
+
 def route_merge_removal(solution, n):
     """Empties the least-populated active route so ALNS must consolidate
     its students into the remaining routes.  Drives fleet reduction without
@@ -134,13 +229,33 @@ def _remove_student_from_solution(solution, student):
 #             _apply_insertion(solution, student, result)
 
 
+def random_order_best_repair(solution):
+    """I5-style insertion: random customer order, best insertion position."""
+    unassigned = [s for s in solution.students if not s.is_served]
+    if not unassigned:
+        return
+
+    random.shuffle(unassigned)
+
+    student_frontages = {}
+    for s in unassigned:
+        student_frontages[s.id] = snap_address_to_edge(s.coords, solution.graph)
+
+    for student in unassigned:
+        all_options = []
+        for route in solution.routes:
+            all_options.extend(
+                _get_insertions_for_route(student, route, solution.graph, student_frontages[student.id])
+            )
+        if not all_options:
+            continue
+        best = min(all_options, key=lambda x: x['insertion_cost_minutes'])
+        _apply_insertion(solution, student, best)
+
+
 def greedy_repair(solution):
-    """
-    Inserts all unassigned students using the cheapest available insertion point.
-    (Redirected to regret_repair(k=1) to force the use of the OSRM Matrix Cache
-    and prevent the legacy A* Death Spiral).
-    """
-    regret_repair(solution, k=1)
+    """Backwards-compatible alias for the random-order best-position insertion."""
+    random_order_best_repair(solution)
 
 def regret_repair(solution, k=2):
     """Inserts students with the highest 'regret' cost between best and k-best options.
@@ -446,8 +561,14 @@ class ALNSEngine:
         self.freeze_temp_threshold = float(freeze_temp_threshold)
         self.freeze_patience = int(freeze_patience) if freeze_patience else None
         
-        self.destroy_ops = [random_removal, worst_cost_removal, route_merge_removal]
-        self.repair_ops = [greedy_repair, regret_repair]
+        self.destroy_ops = [
+            random_removal,
+            worst_cost_removal,
+            shaw_related_removal,
+            sequence_removal,
+            route_merge_removal,
+        ]
+        self.repair_ops = [random_order_best_repair, regret_repair]
         
         # Weights for operator selection
         self.d_weights = np.ones(len(self.destroy_ops))
