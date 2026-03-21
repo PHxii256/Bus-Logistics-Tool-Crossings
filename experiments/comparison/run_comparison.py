@@ -2066,6 +2066,7 @@ def run(input_path=None, output_path=None, iterations=None):
     run_mode_a = bool(_dbg.get("run_mode_a", True))
     run_mode_b = bool(_dbg.get("run_mode_b", True))
     run_mode_c = bool(_dbg.get("run_mode_c", True))
+    run_build_map = bool(_dbg.get("run_build_map", True))
     _active_modes = [m for m, en in [("A", run_mode_a), ("B", run_mode_b), ("C", run_mode_c)] if en]
 
     # Resolve where to write the map
@@ -2091,6 +2092,7 @@ def run(input_path=None, output_path=None, iterations=None):
     print(f"  Walk lim : {stage_walk}")
     print(f"  Iters    : {iters}")
     print(f"  Dwell    : {dwell_time_seconds_per_stop:.0f}s per pickup stop")
+    print(f"  BuildMap : {'ON' if run_build_map else 'OFF'}")
     _mode_labels = {"A": "Strictly Constrained", "B": "Weakly Constrained", "C": "Door-to-Door"}
     _skipped = [m for m in ("A", "B", "C") if m not in _active_modes]
     _mode_wall_times = {}
@@ -2358,65 +2360,19 @@ def run(input_path=None, output_path=None, iterations=None):
           f"routes={stats_c['routes']} | time={stats_c['total_time']:.1f} min | "
           f"{stats_c['runtime']:.1f}s")
 
-    # ── 7. Build map ──
-    _t0 = _wtime.time()
-    print("\n" + "-" * 50)
-    print("BUILDING COMPARISON MAP")
-    print("-" * 50)
-
-    center = (school_cfg["latitude"], school_cfg["longitude"])
-    m = folium.Map(location=center, zoom_start=14, tiles="OpenStreetMap")
-
-    # School marker
-    folium.Marker(
-        location=center, popup="<b>SCHOOL</b>", tooltip="School",
-        icon=folium.Icon(color="darkgreen", icon="graduation-cap", prefix="fa"),
-    ).add_to(m)
-
-    # Dangerous roads layer
-    fg_danger = FeatureGroup(name="Dangerous Roads (unsafe to cross)", show=True)
-    danger_segs = _extract_segments(G_con, center[0], center[1], "dangerous")
-    for seg in danger_segs:
-        folium.PolyLine(seg, color="#e74c3c", weight=3, opacity=0.45,
-                        dash_array="6,4").add_to(fg_danger)
-    fg_danger.add_to(m)
-    print(f"  Dangerous-road segments: {len(danger_segs)}")
-
-    # Unclassified roads layer
-    fg_unclass = FeatureGroup(name="Unclassified Roads (no student placement)", show=False)
-    unclass_segs = _extract_segments(G_con, center[0], center[1], "unclassified")
-    for seg in unclass_segs:
-        folium.PolyLine(seg, color="#7f8c8d", weight=2, opacity=0.5,
-                        dash_array="3,5", tooltip="Unclassified road").add_to(fg_unclass)
-    fg_unclass.add_to(m)
-    print(f"  Unclassified-road segments: {len(unclass_segs)}")
-
-    # Walk network layer
+    # Build mode aggregates once (used by map and output metrics).
     crossings_dict, occupancies_dict, all_stats = {}, {}, {}
-
-    # Clear path cache so rendering computes fresh turn-aware paths on G_unc
-    _eng._path_cache.clear()
-    _eng._MATRIX_CACHE.clear()
-    _eng._MATRIX_CACHE_LENGTH.clear()
-
-    # Bus routes are always rendered with G_unc (the bus drives on all roads)
-    fgs = {}          # mk -> (fg_routes, fg_walks)
-    fgs_unserved = {}  # mk -> fg_unserved
     for mk, sol, stats in [(mk, sol, st) for mk, sol, st in [
         ("A", sol_a, stats_a),
         ("B", sol_b, stats_b),
         ("C", sol_c, stats_c),
     ] if sol is not None]:
-        print(f"  Drawing Mode {mk} …")
-        fg_r, fg_w, occ = _add_route_layer(m, G_unc, sol, mk, G_con,
-                           constraints=meta.get("constraints"))
-        fgs[mk] = (fg_r, fg_w)
         crossings_dict[mk] = []
-        occupancies_dict[mk] = occ
+        occupancies_dict[mk] = [r.get_student_count() for r in sol.routes if r.get_student_count() > 0]
         all_stats[mk] = stats
         _sat_by_route = _count_satisfied_per_route(sol, G_unc, meta.get("constraints", {}))
-        all_stats[mk]["satisfied"]     = sum(_sat_by_route.values())
-        all_stats[mk]["sat_by_route"]  = _sat_by_route
+        all_stats[mk]["satisfied"] = sum(_sat_by_route.values())
+        all_stats[mk]["sat_by_route"] = _sat_by_route
         if "cap_violations_am" not in all_stats[mk]:
             cv = _count_cap_violations(sol, G_unc, meta.get("constraints", {}))
             all_stats[mk]["cap_violations_am"] = cv["am"]
@@ -2425,7 +2381,72 @@ def run(input_path=None, output_path=None, iterations=None):
             all_stats[mk]["cap_violations_pm"] = cv["pm"]
             all_stats[mk]["cap_checked_pm"] = cv["pm_checked"]
             all_stats[mk]["cap_violation_pct_pm"] = cv["pm_pct"]
-        fgs_unserved[mk] = _add_unserved_layer(m, sol, mk)
+
+    # Crossings shown in the stats table: synthetic crossings actually used by each mode.
+    # Mode A is constrained with synthetic crossings disabled by design.
+    used_crossings_count = {"A": 0, "B": 0, "C": 0}
+    try:
+        from detour_engine import get_crossing_usage_from_solution as _get_mode_usage
+        _walk_for_usage = _eng._WALK_GRAPH or _eng._get_walk_graph(G_unc)
+        for _mk, _sol in (("B", sol_b), ("C", sol_c)):
+            if _sol is None:
+                continue
+            used_crossings_count[_mk] = len(_get_mode_usage(_sol, G_unc, _walk_for_usage))
+    except Exception:
+        pass
+
+    if run_build_map:
+        # ── 7. Build map ──
+        _t0 = _wtime.time()
+        print("\n" + "-" * 50)
+        print("BUILDING COMPARISON MAP")
+        print("-" * 50)
+
+        center = (school_cfg["latitude"], school_cfg["longitude"])
+        m = folium.Map(location=center, zoom_start=14, tiles="OpenStreetMap")
+
+        # School marker
+        folium.Marker(
+            location=center, popup="<b>SCHOOL</b>", tooltip="School",
+            icon=folium.Icon(color="darkgreen", icon="graduation-cap", prefix='fa'),
+        ).add_to(m)
+
+        # Dangerous roads layer
+        fg_danger = FeatureGroup(name="Dangerous Roads (unsafe to cross)", show=True)
+        danger_segs = _extract_segments(G_con, center[0], center[1], "dangerous")
+        for seg in danger_segs:
+            folium.PolyLine(seg, color="#e74c3c", weight=3, opacity=0.45,
+                            dash_array="6,4").add_to(fg_danger)
+        fg_danger.add_to(m)
+        print(f"  Dangerous-road segments: {len(danger_segs)}")
+
+        # Unclassified roads layer
+        fg_unclass = FeatureGroup(name="Unclassified Roads (no student placement)", show=False)
+        unclass_segs = _extract_segments(G_con, center[0], center[1], "unclassified")
+        for seg in unclass_segs:
+            folium.PolyLine(seg, color="#7f8c8d", weight=2, opacity=0.5,
+                            dash_array="3,5", tooltip="Unclassified road").add_to(fg_unclass)
+        fg_unclass.add_to(m)
+        print(f"  Unclassified-road segments: {len(unclass_segs)}")
+
+    # Clear path cache so rendering computes fresh turn-aware paths on G_unc
+    _eng._path_cache.clear()
+    _eng._MATRIX_CACHE.clear()
+    _eng._MATRIX_CACHE_LENGTH.clear()
+
+        # Bus routes are always rendered with G_unc (the bus drives on all roads)
+        fgs = {}          # mk -> (fg_routes, fg_walks)
+        fgs_unserved = {}  # mk -> fg_unserved
+        for mk, sol in [(mk, sol) for mk, sol in [
+            ("A", sol_a),
+            ("B", sol_b),
+            ("C", sol_c),
+        ] if sol is not None]:
+            print(f"  Drawing Mode {mk} …")
+            fg_r, fg_w, _ = _add_route_layer(m, G_unc, sol, mk, G_con,
+                               constraints=meta.get("constraints"))
+            fgs[mk] = (fg_r, fg_w)
+            fgs_unserved[mk] = _add_unserved_layer(m, sol, mk)
 
     # Candidate stop inspector layers (one per mode, hidden by default)
     cand_data = {mk: cd for mk, cd in {
@@ -2470,19 +2491,6 @@ def run(input_path=None, output_path=None, iterations=None):
         print(f"  Warning: Could not add crossing usage visualization: {e}")
         fgs_crossing_usage = {}
 
-    # Crossings shown in the stats table: synthetic crossings actually used by each mode.
-    # Mode A is constrained with synthetic crossings disabled by design.
-    used_crossings_count = {"A": 0, "B": 0, "C": 0}
-    try:
-        from detour_engine import get_crossing_usage_from_solution as _get_mode_usage
-        for _mk, _sol in (("B", sol_b), ("C", sol_c)):
-            if _sol is None:
-                continue
-            used_crossings_count[_mk] = len(_get_mode_usage(_sol, G_unc, G_walk))
-    except Exception:
-        # Keep zeros if extraction fails; do not break map generation.
-        pass
-
     # Print crossing BFS statistics
     crossing_stats = get_crossing_bfs_stats()
     if crossing_stats["students_checked"] > 0:
@@ -2491,43 +2499,46 @@ def run(input_path=None, output_path=None, iterations=None):
         print(f"    Candidates enabled by crossings: {crossing_stats['candidates_via_crossing']}")
         print(f"    Students benefiting from crossings: {crossing_stats['students_with_crossing_benefit']}")
 
-    # Fill in empty FeatureGroups for any skipped modes so the layer control doesn't crash
-    for _mk in ("A", "B", "C"):
-        if _mk not in fgs:
-            _emp = FeatureGroup(name=f"Mode {_mk} (skipped)", show=False)
-            fgs[_mk] = (_emp, _emp)
+        # Fill in empty FeatureGroups for any skipped modes so the layer control doesn't crash
+        for _mk in ("A", "B", "C"):
+            if _mk not in fgs:
+                _emp = FeatureGroup(name=f"Mode {_mk} (skipped)", show=False)
+                fgs[_mk] = (_emp, _emp)
 
-    # Custom grouped layer control (title + 3 mode checkboxes, no radio buttons)
-    map_var = f"map_{m._id}"
-    ctrl_js = _build_custom_layer_control_js(
-        map_var, fg_danger, fg_unclass, fg_syn,
-        fgs["A"], fgs["B"], fgs["C"],
-        fg_injected=fg_injected,
-        syn_label=_syn_label,
-        injected_label=_injected_label,
-        fg_unserved_a=fgs_unserved.get("A"),
-        fg_unserved_b=fgs_unserved.get("B"),
-        fg_unserved_c=fgs_unserved.get("C"),
-        fg_cands_a=fgs_cands.get("A"),
-        fg_cands_b=fgs_cands.get("B"),
-        fg_cands_c=fgs_cands.get("C"),
-        fg_usage_a=fgs_crossing_usage.get("A"),
-        fg_usage_b=fgs_crossing_usage.get("B"),
-        fg_usage_c=fgs_crossing_usage.get("C"),
-    )
-    m.get_root().script.add_child(folium.Element(ctrl_js))
+        # Custom grouped layer control (title + 3 mode checkboxes, no radio buttons)
+        map_var = f"map_{m._id}"
+        ctrl_js = _build_custom_layer_control_js(
+            map_var, fg_danger, fg_unclass, fg_syn,
+            fgs["A"], fgs["B"], fgs["C"],
+            fg_injected=fg_injected,
+            syn_label=_syn_label,
+            injected_label=_injected_label,
+            fg_unserved_a=fgs_unserved.get("A"),
+            fg_unserved_b=fgs_unserved.get("B"),
+            fg_unserved_c=fgs_unserved.get("C"),
+            fg_cands_a=fgs_cands.get("A"),
+            fg_cands_b=fgs_cands.get("B"),
+            fg_cands_c=fgs_cands.get("C"),
+            fg_usage_a=fgs_crossing_usage.get("A"),
+            fg_usage_b=fgs_crossing_usage.get("B"),
+            fg_usage_c=fgs_crossing_usage.get("C"),
+        )
+        m.get_root().script.add_child(folium.Element(ctrl_js))
 
-    m.get_root().html.add_child(folium.Element(
-        _build_stats_html(all_stats, used_crossings_count, occupancies_dict,
-                          solutions_dict={"A": sol_a, "B": sol_b, "C": sol_c},
-                          G=G_unc,
-                          constraints=meta.get("constraints", {}),
-                          meta=meta)))
+        m.get_root().html.add_child(folium.Element(
+            _build_stats_html(all_stats, used_crossings_count, occupancies_dict,
+                              solutions_dict={"A": sol_a, "B": sol_b, "C": sol_c},
+                              G=G_unc,
+                              constraints=meta.get("constraints", {}),
+                              meta=meta)))
 
-    m.save(output)
-    fsize_kb = os.path.getsize(output) / 1024
-    _step_times["build_map_s"] = round(_wtime.time() - _t0, 2)
-    print(f"\n  Map saved: {output}  ({fsize_kb:.0f} KB)")
+        m.save(output)
+        fsize_kb = os.path.getsize(output) / 1024
+        _step_times["build_map_s"] = round(_wtime.time() - _t0, 2)
+        print(f"\n  Map saved: {output}  ({fsize_kb:.0f} KB)")
+    else:
+        _step_times["build_map_s"] = 0.0
+        print("\n[7/7] Map generation skipped (debug.run_build_map=false)")
 
     # ── Metrics JSON ──
     _total_wall = round(_wtime.time() - _run_start, 2)
@@ -2563,7 +2574,10 @@ def run(input_path=None, output_path=None, iterations=None):
     print(f"Total wall-clock:     {_total_wall:.1f}s")
     print(f"\nStage distribution used: { {k:v for k,v in meta['stage_distribution'].items() if k != '_comment'} }")
     print(f"Walk limits used: {stage_walk}")
-    print(f"\nOpen '{output}' in a browser to explore.")
+    if run_build_map:
+        print(f"\nOpen '{output}' in a browser to explore.")
+    else:
+        print("\nHTML map was not generated (debug.run_build_map=false).")
 
 
 # ────────────────────────────────────────────────────────────────────

@@ -11,17 +11,17 @@
   "seed": 1000,
 
   "stage_distribution": {
-    "KG": 0.0,
-    "ELEMENTARY": 0.0,
-    "MIDDLE": 0.5,
-    "HIGH": 0.5
+    "KG": 0.25,
+    "ELEMENTARY": 0.25,
+    "MIDDLE": 0.25,
+    "HIGH": 0.25
   },
 
   "stage_walk_limits": {
     "KG": 0,
     "ELEMENTARY": 0,
-    "MIDDLE": 400,
-    "HIGH": 400
+    "MIDDLE": 250,
+    "HIGH": 500
   },
 
   "buses": {
@@ -34,10 +34,10 @@
     "ride_time_multiplier": 3,
     "floor_minutes": 30,
     "ceiling_minutes": 60,
-    "daily_detour_budget_minutes": 5,
+    "daily_detour_budget_minutes": 10,
     "bidirectional_check": true
   },
-
+    
   "walk_graph": {
     "enabled": true,
     "radius_km": 2.0
@@ -69,10 +69,9 @@
   },
 
   "algorithm": {
-    "iterations": 60,
+    "iterations": 100,
     "time_budget_seconds": 60,
-    "max_candidates_per_student": 4,
-    "dwell_time_seconds_per_stop": 30,
+    "max_candidates_per_student": 6,
     "minimize_buses": true
   },
 
@@ -88,6 +87,7 @@
   "debug": {
     "run_mode_a": true,
     "run_mode_b": true,
-    "run_mode_c": true
+    "run_mode_c": true,
+    "run_build_map": true
   }
 }
