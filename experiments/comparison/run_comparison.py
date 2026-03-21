@@ -89,6 +89,35 @@ def _resolve_injection_pkl_path(injection_cfg, input_path):
     return os.path.abspath(os.path.join(base, raw))
 
 
+def _resolve_matrix_cache_pkl_path(matrix_cfg, input_path, output_path):
+    if not isinstance(matrix_cfg, dict):
+        return None
+    enabled = bool(matrix_cfg.get("enabled", False))
+    raw = matrix_cfg.get("pkl_path")
+    if not enabled and not raw:
+        return None
+    if raw:
+        if os.path.isabs(raw):
+            return raw
+        bases = []
+        if input_path:
+            input_dir = os.path.dirname(input_path)
+            bases.append(input_dir)
+            bases.append(os.path.dirname(input_dir))
+        bases.extend([_SCRIPT_DIR, _ROOT])
+        for base in bases:
+            if not base:
+                continue
+            candidate = os.path.abspath(os.path.join(base, raw))
+            if os.path.exists(candidate):
+                return candidate
+        base = os.path.dirname(input_path) if input_path else _SCRIPT_DIR
+        return os.path.abspath(os.path.join(base, raw))
+
+    # Enabled with no explicit path: default to the run output directory.
+    return os.path.join(os.path.dirname(output_path), "distance_matrix_cache.pkl")
+
+
 def _load_crossings_injection_payload(pkl_path):
     with open(pkl_path, "rb") as f:
         payload = pickle.load(f)
@@ -186,6 +215,94 @@ def _inject_crossings_into_walk_graph(walk_graph, payload):
         "edge_pairs": edge_pairs,
         "added_edges": added_edges,
     }
+
+
+def _build_crossings_injection_payload_from_walk_graph(walk_graph, synth_cfg=None):
+    edge_pairs = []
+    nodes_by_id = {}
+    seen_undirected = set()
+
+    for u, v, data in walk_graph.edges(data=True):
+        if not (data.get("synthetic_crossing") or data.get("injected_crossing")):
+            continue
+        key = tuple(sorted((u, v), key=lambda x: str(x)))
+        if key in seen_undirected:
+            continue
+        seen_undirected.add(key)
+
+        try:
+            y_u = float(walk_graph.nodes[u].get("y"))
+            x_u = float(walk_graph.nodes[u].get("x"))
+            y_v = float(walk_graph.nodes[v].get("y"))
+            x_v = float(walk_graph.nodes[v].get("x"))
+        except Exception:
+            continue
+
+        nodes_by_id[u] = {"node_id": u, "lat": y_u, "lon": x_u}
+        nodes_by_id[v] = {"node_id": v, "lat": y_v, "lon": x_v}
+
+        edge_pairs.append({
+            "node_a": u,
+            "node_b": v,
+            "length_m": float(data.get("length", 0.0) or 0.0),
+            "crossing_type": data.get("crossing_subtype", "real_to_real"),
+            "road_name": data.get("road_name", "?"),
+        })
+
+    crossings = []
+    markers = _eng.get_synthetic_crossings()
+    if isinstance(markers, list) and markers:
+        for c in markers:
+            try:
+                crossings.append({
+                    "lat_a": float(c.get("lat_a")),
+                    "lon_a": float(c.get("lon_a")),
+                    "lat_b": float(c.get("lat_b")),
+                    "lon_b": float(c.get("lon_b")),
+                    "length_m": float(c.get("length_m", 0.0) or 0.0),
+                    "crossing_type": c.get("crossing_type", "real_to_real"),
+                    "road_name": c.get("road_name", "?"),
+                    "node_a": c.get("node_a"),
+                    "node_b": c.get("node_b"),
+                })
+            except Exception:
+                continue
+    else:
+        for e in edge_pairs:
+            a = nodes_by_id.get(e["node_a"])
+            b = nodes_by_id.get(e["node_b"])
+            if not a or not b:
+                continue
+            crossings.append({
+                "lat_a": a["lat"],
+                "lon_a": a["lon"],
+                "lat_b": b["lat"],
+                "lon_b": b["lon"],
+                "length_m": e.get("length_m", 0.0),
+                "crossing_type": e.get("crossing_type", "real_to_real"),
+                "road_name": e.get("road_name", "?"),
+                "node_a": e["node_a"],
+                "node_b": e["node_b"],
+            })
+
+    return {
+        "nodes": list(nodes_by_id.values()),
+        "edge_pairs": edge_pairs,
+        "crossings": crossings,
+        "metadata": {
+            "strategy": str((synth_cfg or {}).get("strategy", "drive_node_crossings")),
+            "created_unix": time.time(),
+            "source": "run_comparison_autosave",
+        },
+    }
+
+
+def _save_crossings_injection_payload(payload, pkl_path):
+    folder = os.path.dirname(pkl_path)
+    if folder:
+        os.makedirs(folder, exist_ok=True)
+    with open(pkl_path, "wb") as f:
+        pickle.dump(payload, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 # ────────────────────────────────────────────────────────────────────
@@ -1898,6 +2015,8 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "avg_route_time_min":   round(s["total_time"] / n_routes, 2) if n_routes else 0,
             "alns_runtime_seconds": round(s["runtime"],     2),
             "mode_wall_time_seconds": s.get("mode_wall_time"),
+            "matrix_precompute": s.get("matrix_precompute"),
+            "synthetic_edges_timing": s.get("synthetic_edges_timing"),
             "unsafe_crossings":     cx,
             "walk_stats":           walk,
             "students":             students_list,
@@ -1950,11 +2069,23 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         _wt = (mode_wall_times or {}).get(_mk)
         if _s and _wt is not None:
             _alns_t = round(_s.get("runtime", 0), 2)
+            _mx = _s.get("matrix_precompute") or {}
+            _syn = _s.get("synthetic_edges_timing") or {}
             _dbg_modes[_mk] = {
                 "mode_wall_time_s":        _wt,
                 "alns_solve_s":            _alns_t,
                 "setup_and_overhead_s":    round(_wt - _alns_t, 2),
                 "alns_iterations":         _s.get("iterations"),
+                "matrix_precompute_total_s": _mx.get("total_time_s"),
+                "matrix_precompute_source": _mx.get("source"),
+                "matrix_precompute_load_s": _mx.get("load_time_s"),
+                "matrix_precompute_compute_s": _mx.get("compute_time_s"),
+                "matrix_precompute_save_s": _mx.get("save_time_s"),
+                "synthetic_edges_source": _syn.get("source"),
+                "synthetic_edges_prepare_s": _syn.get("prepare_time_s"),
+                "synthetic_edges_pkl_load_s": _syn.get("pkl_load_time_s"),
+                "synthetic_edges_generate_s": _syn.get("generate_time_s"),
+                "synthetic_edges_auto_save_pkl_s": _syn.get("auto_save_pkl_time_s"),
                 "n_candidates_per_student": round(
                     sum(len(v) for v in (getattr(_alns, '_student_candidate_cache', None) or {}).values())
                     / max(1, _s.get("total", 1)), 1
@@ -2076,6 +2207,19 @@ def run(input_path=None, output_path=None, iterations=None):
         rel = meta.get("output", "comparison_map.html")
         base = os.path.dirname(input_path) if input_path else _SCRIPT_DIR
         output = rel if os.path.isabs(rel) else os.path.join(base, rel)
+    output_dir = os.path.dirname(output) or "."
+    os.makedirs(output_dir, exist_ok=True)
+
+    matrix_cache_cfg = (
+        meta.get("distance_matrix_cache")
+        or meta.get("algorithm", {}).get("distance_matrix_cache")
+        or {}
+    )
+    matrix_cache_pkl_path = _resolve_matrix_cache_pkl_path(
+        matrix_cache_cfg, input_path, output
+    )
+    if matrix_cache_pkl_path:
+        print(f"  Matrix cache pkl: {matrix_cache_pkl_path}")
 
     school_cfg = meta["school"]
     raw_walk = meta.get("stage_walk_limits", DEFAULT_STAGE_WALK_LIMITS)
@@ -2147,6 +2291,14 @@ def run(input_path=None, output_path=None, iterations=None):
     injection_enabled = bool(injection_cfg.get("enabled", False))
     injection_strict = bool(injection_cfg.get("strict_validation", False))
     injection_pkl_path = _resolve_injection_pkl_path(injection_cfg, input_path)
+    synthetic_edges_timing = {
+        "source": "none",
+        "prepare_time_s": 0.0,
+        "pkl_load_time_s": 0.0,
+        "generate_time_s": 0.0,
+        "auto_save_pkl_time_s": 0.0,
+        "pkl_path": injection_pkl_path,
+    }
     synth_cfg = (meta.get("synthetic_crossings") if isinstance(meta, dict) else None) or {
         "enabled": False,
         "strategy": "per_drive_node",
@@ -2181,10 +2333,13 @@ def run(input_path=None, output_path=None, iterations=None):
         if injection_enabled and injection_pkl_path:
             print(f"  [Crossings Injection] Loading: {injection_pkl_path}")
             try:
+                _tpkl = _wtime.time()
                 injected_payload = _load_crossings_injection_payload(injection_pkl_path)
                 _validate_crossings_injection_payload(injected_payload, synth_cfg)
+                synthetic_edges_timing["pkl_load_time_s"] = round(_wtime.time() - _tpkl, 4)
                 _eng.set_walk_graph(G_walk, synthetic_cfg={"enabled": False})
                 injected_result = _inject_crossings_into_walk_graph(G_walk, injected_payload)
+                synthetic_edges_timing["source"] = "injection_pkl"
                 _eng._SYNTHETIC_CROSSINGS = list(injected_result.get("markers", []))
                 syn_list = list(injected_result.get("markers", []))
                 print(
@@ -2197,15 +2352,48 @@ def run(input_path=None, output_path=None, iterations=None):
                 print(f"  [Crossings Injection] Warning: {e}. Falling back to synthetic generation.")
                 injected_payload = None
                 injected_result = None
+                _tgen = _wtime.time()
                 syn_list = _eng.set_walk_graph(G_walk, synthetic_cfg=synth_cfg, drive_graph=G_con)
+                synthetic_edges_timing["source"] = "generated_synthetic"
+                synthetic_edges_timing["generate_time_s"] = round(_wtime.time() - _tgen, 4)
         else:
+            _tgen = _wtime.time()
             syn_list = _eng.set_walk_graph(G_walk, synthetic_cfg=synth_cfg, drive_graph=G_con)
+            synthetic_edges_timing["source"] = "generated_synthetic"
+            synthetic_edges_timing["generate_time_s"] = round(_wtime.time() - _tgen, 4)
 
+        if use_walk_graph and not injection_pkl_path:
+            auto_inj_path = os.path.join(
+                output_dir,
+                "crossings_nodes_injection.pkl",
+            )
+            try:
+                _tsave = _wtime.time()
+                auto_payload = _build_crossings_injection_payload_from_walk_graph(G_walk, synth_cfg=synth_cfg)
+                if auto_payload.get("edge_pairs"):
+                    _save_crossings_injection_payload(auto_payload, auto_inj_path)
+                    synthetic_edges_timing["auto_save_pkl_time_s"] = round(_wtime.time() - _tsave, 4)
+                    print(
+                        f"  [Crossings Injection] Auto-saved PKL: {auto_inj_path} "
+                        f"({len(auto_payload.get('edge_pairs', []))} edges)"
+                    )
+                else:
+                    synthetic_edges_timing["auto_save_pkl_time_s"] = round(_wtime.time() - _tsave, 4)
+                    print("  [Crossings Injection] Auto-save skipped: no synthetic/injected crossing edges found.")
+            except Exception as e:
+                print(f"  [Crossings Injection] Warning: could not auto-save PKL: {e}")
+
+        synthetic_edges_timing["prepare_time_s"] = round(_wtime.time() - _t0, 4)
         _step_times["build_walk_graph_s"] = round(_wtime.time() - _t0, 2)
+        _step_times["synthetic_edges_prepare_s"] = synthetic_edges_timing["prepare_time_s"]
+        _step_times["synthetic_edges_generate_s"] = synthetic_edges_timing["generate_time_s"]
+        _step_times["synthetic_edges_pkl_load_s"] = synthetic_edges_timing["pkl_load_time_s"]
+        _step_times["synthetic_edges_auto_save_pkl_s"] = synthetic_edges_timing["auto_save_pkl_time_s"]
     else:
         print("[3b/7] Walking graph disabled (meta.walk_graph.enabled=false)")
         _eng.set_walk_graph(None, synthetic_cfg={"enabled": False})
         _clean_walk_graph = None
+        synthetic_edges_timing["source"] = "walk_graph_disabled"
 
     # ── 4. Mode A: Strictly Constrained ──
     # Walking BFS uses G_con (safety-restricted edges).
@@ -2237,10 +2425,12 @@ def run(input_path=None, output_path=None, iterations=None):
     if minimize_a:
         print("  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode A")
         _, sol_a, stats_a, school_a = find_minimum_fleet(
-            data_a, G_con, iterations=iters, stage_walk_limits=stage_walk, G_drive=G_unc)
+            data_a, G_con, iterations=iters, stage_walk_limits=stage_walk, G_drive=G_unc,
+            matrix_cache_pkl_path=matrix_cache_pkl_path)
     else:
         sol_a, stats_a, school_a = run_algorithm(
-            data_a, G_con, iterations=iters, stage_walk_limits=stage_walk, G_drive=G_unc)
+            data_a, G_con, iterations=iters, stage_walk_limits=stage_walk, G_drive=G_unc,
+            matrix_cache_pkl_path=matrix_cache_pkl_path)
     stats_a["label"] = "Mode-A"
     if "cap_violations_am" not in stats_a:
         cv = _count_cap_violations(sol_a, G_unc, meta.get("constraints", {}))
@@ -2255,6 +2445,7 @@ def run(input_path=None, output_path=None, iterations=None):
     if "buses_used" not in stats_a:
         stats_a["buses_used"] = meta.get("buses", {}).get("count")
     _apply_dwell_time_to_stats(sol_a, stats_a, dwell_time_seconds_per_stop)
+    stats_a["synthetic_edges_timing"] = dict(synthetic_edges_timing)
     # Snapshot candidate data before caches are cleared for next mode
     cands_a    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
     cand_dist_a = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
@@ -2290,9 +2481,12 @@ def run(input_path=None, output_path=None, iterations=None):
     if minimize_b:
         print("  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode B")
         _, sol_b, stats_b, school_b = find_minimum_fleet(
-            data_b, G_unc, iterations=iters, G_drive=G_unc)
+            data_b, G_unc, iterations=iters, G_drive=G_unc,
+            matrix_cache_pkl_path=matrix_cache_pkl_path)
     else:
-        sol_b, stats_b, school_b = run_algorithm(data_b, G_unc, iterations=iters, G_drive=G_unc)
+        sol_b, stats_b, school_b = run_algorithm(
+            data_b, G_unc, iterations=iters, G_drive=G_unc,
+            matrix_cache_pkl_path=matrix_cache_pkl_path)
     stats_b["label"] = "Mode-B"
     if "cap_violations_am" not in stats_b:
         cv = _count_cap_violations(sol_b, G_unc, meta.get("constraints", {}))
@@ -2307,6 +2501,7 @@ def run(input_path=None, output_path=None, iterations=None):
     if "buses_used" not in stats_b:
         stats_b["buses_used"] = meta.get("buses", {}).get("count")
     _apply_dwell_time_to_stats(sol_b, stats_b, dwell_time_seconds_per_stop)
+    stats_b["synthetic_edges_timing"] = dict(synthetic_edges_timing)
     cands_b    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
     cand_dist_b = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
     _mode_wall_times["B"] = round(_wtime.time() - _t_b, 2)
@@ -2336,9 +2531,12 @@ def run(input_path=None, output_path=None, iterations=None):
     if minimize_c:
         print("  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode C")
         _, sol_c, stats_c, school_c = find_minimum_fleet(
-            data_c, G_unc, iterations=iters, G_drive=G_unc)
+            data_c, G_unc, iterations=iters, G_drive=G_unc,
+            matrix_cache_pkl_path=matrix_cache_pkl_path)
     else:
-        sol_c, stats_c, school_c = run_algorithm(data_c, G_unc, iterations=iters, G_drive=G_unc)
+        sol_c, stats_c, school_c = run_algorithm(
+            data_c, G_unc, iterations=iters, G_drive=G_unc,
+            matrix_cache_pkl_path=matrix_cache_pkl_path)
     stats_c["label"] = "Mode-C"
     if "cap_violations_am" not in stats_c:
         cv = _count_cap_violations(sol_c, G_unc, meta.get("constraints", {}))
@@ -2353,6 +2551,7 @@ def run(input_path=None, output_path=None, iterations=None):
     if "buses_used" not in stats_c:
         stats_c["buses_used"] = meta.get("buses", {}).get("count")
     _apply_dwell_time_to_stats(sol_c, stats_c, dwell_time_seconds_per_stop)
+    stats_c["synthetic_edges_timing"] = dict(synthetic_edges_timing)
     cands_c    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
     cand_dist_c = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
     _mode_wall_times["C"] = round(_wtime.time() - _t_c, 2)
@@ -2553,6 +2752,26 @@ def run(input_path=None, output_path=None, iterations=None):
     with open(metrics_path, "w", encoding="utf-8") as f:
         json.dump(_sanitise_floats(metrics), f, indent=2, ensure_ascii=False)
     print(f"  Metrics  : {metrics_path}")
+
+    # ── ALNS iteration logs (every 10 iterations) ──
+    logs_dir = os.path.dirname(output)
+    for mk in _active_modes:
+        st = all_stats.get(mk) or {}
+        iter_log = st.get("alns_iteration_log") or []
+        log_payload = {
+            "mode": mk,
+            "mode_name": _MODE_NAMES.get(mk, mk),
+            "buses_used": st.get("buses_used"),
+            "iterations_configured": iters,
+            "log_interval_iterations": 10,
+            "matrix_precompute": st.get("matrix_precompute"),
+            "synthetic_edges_timing": st.get("synthetic_edges_timing"),
+            "entries": iter_log,
+        }
+        log_path = os.path.join(logs_dir, f"alns_log_mode_{mk.lower()}.json")
+        with open(log_path, "w", encoding="utf-8") as f:
+            json.dump(_sanitise_floats(log_payload), f, indent=2, ensure_ascii=False)
+        print(f"  ALNS log : {log_path}")
 
     # ── Summary ──
     print("\n" + "=" * 60)

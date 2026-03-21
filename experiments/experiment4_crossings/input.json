@@ -68,11 +68,20 @@
     "strict_validation": false
   },
 
+  "distance_matrix_cache": {
+    "enabled": true,
+    "pkl_path": ""
+  },
+
   "algorithm": {
-    "iterations": 100,
+    "iterations": 1000,
     "time_budget_seconds": 60,
     "max_candidates_per_student": 6,
-    "minimize_buses": true
+    "minimize_buses": true,
+    "early_stop_patience": 100,
+    "early_stop_min_improvement": 0.1,
+    "early_stop_freeze_temp": 0.1,
+    "early_stop_freeze_patience": 20
   },
 
   "annulus": {

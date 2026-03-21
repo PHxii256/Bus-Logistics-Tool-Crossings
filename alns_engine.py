@@ -421,7 +421,9 @@ def _apply_insertion(solution, student, result):
 
 class ALNSEngine:
     def __init__(self, initial_solution, iterations=100, temp=1000, cooling=0.98,
-                 time_budget_seconds=None, max_candidates_per_student=None):
+                 time_budget_seconds=None, max_candidates_per_student=None,
+                 early_stop_patience=None, min_improvement=1e-6,
+                 freeze_temp_threshold=0.05, freeze_patience=None):
         # Configure module-level candidate settings.
         # NOTE: do NOT clear _student_candidate_cache here — the cache is
         # keyed by student-id and stays valid across fleet-search iterations
@@ -439,6 +441,10 @@ class ALNSEngine:
         self.temp = temp
         self.cooling = cooling
         self.time_budget_seconds = time_budget_seconds  # wall-clock budget (None = use iterations only)
+        self.early_stop_patience = int(early_stop_patience) if early_stop_patience else None
+        self.min_improvement = float(min_improvement) if min_improvement is not None else 1e-6
+        self.freeze_temp_threshold = float(freeze_temp_threshold)
+        self.freeze_patience = int(freeze_patience) if freeze_patience else None
         
         self.destroy_ops = [random_removal, worst_cost_removal, route_merge_removal]
         self.repair_ops = [greedy_repair, regret_repair]
@@ -459,6 +465,8 @@ class ALNSEngine:
         t = self.temp
         start_time = time.time()
         block_start_time = start_time
+        best_obj = self.best_sol.calculate_objective()
+        no_improve_iters = 0
 
         if self.time_budget_seconds:
             print(f"Starting ALNS Optimization (time budget: {self.time_budget_seconds}s, "
@@ -488,14 +496,16 @@ class ALNSEngine:
             # Score calculation
             new_obj = new_sol.calculate_objective()
             curr_obj = self.curr_sol.calculate_objective()
-            best_obj = self.best_sol.calculate_objective()
+            improved_best = False
             
             reward = 0
-            if new_obj > best_obj:
+            if new_obj > best_obj + self.min_improvement:
                 self.best_sol = new_sol.clone()
                 self.curr_sol = new_sol
+                best_obj = new_obj
                 reward = self.s1
-            elif new_obj > curr_obj:
+                improved_best = True
+            elif new_obj > curr_obj + self.min_improvement:
                 self.curr_sol = new_sol
                 reward = self.s2
             else:
@@ -511,8 +521,31 @@ class ALNSEngine:
             alpha = 0.7
             self.d_weights[d_idx] = alpha * self.d_weights[d_idx] + (1-alpha) * reward
             self.r_weights[r_idx] = alpha * self.r_weights[r_idx] + (1-alpha) * reward
+
+            if improved_best:
+                no_improve_iters = 0
+            else:
+                no_improve_iters += 1
             
             t *= self.cooling
+
+            if self.early_stop_patience and no_improve_iters >= self.early_stop_patience:
+                print(
+                    f"  Early stop: no best-objective improvement for "
+                    f"{no_improve_iters} iterations."
+                )
+                break
+
+            if (
+                self.freeze_patience
+                and t <= self.freeze_temp_threshold
+                and no_improve_iters >= self.freeze_patience
+            ):
+                print(
+                    f"  Early stop: temperature <= {self.freeze_temp_threshold:g} and "
+                    f"no improvement for {no_improve_iters} iterations."
+                )
+                break
             
             if (i+1) % 10 == 0:
                 block_end_time = time.time()
@@ -520,6 +553,8 @@ class ALNSEngine:
                 print(f"Iteration {i+1}: Best Obj = {best_obj:.2f}, Temp = {t:.1f}, Last 10 iter: {block_elapsed:.2f}s")
                 self.iteration_log.append({
                     "iteration":             i + 1,
+                    "temperature":           round(float(t), 6),
+                    "objective_value":       round(float(best_obj), 2),
                     "best_objective":        round(best_obj, 2),
                     "students_served":       sum(1 for s in self.best_sol.students if s.is_served),
                     "block_elapsed_seconds": round(block_elapsed, 3)
