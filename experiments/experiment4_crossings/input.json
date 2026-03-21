@@ -45,7 +45,7 @@
 
   "synthetic_crossings": {
     "enabled": true,
-    "strategy": "named_opposite_secondary_tertiary",
+    "strategy": "drive_node_crossings",
     "min_dist_m": 0.0,
     "max_dist_m": 60.0,
     "min_opposite_bearing_deg": 70.0,
