@@ -460,6 +460,49 @@ class ALNSEngine:
 
         # Iteration diagnostics — populated during run()
         self.iteration_log = []
+        self.operator_stats = {
+            "destroy": {op.__name__: self._new_op_stats() for op in self.destroy_ops},
+            "repair": {op.__name__: self._new_op_stats() for op in self.repair_ops},
+        }
+        self.operator_stats_summary = {}
+
+    @staticmethod
+    def _new_op_stats():
+        return {
+            "count": 0,
+            "total_time_s": 0.0,
+            "min_time_s": None,
+            "max_time_s": None,
+        }
+
+    def _record_op_timing(self, family, op_name, elapsed_s):
+        stats = self.operator_stats.get(family, {}).get(op_name)
+        if stats is None:
+            return
+        stats["count"] += 1
+        stats["total_time_s"] += float(elapsed_s)
+        if stats["min_time_s"] is None or elapsed_s < stats["min_time_s"]:
+            stats["min_time_s"] = float(elapsed_s)
+        if stats["max_time_s"] is None or elapsed_s > stats["max_time_s"]:
+            stats["max_time_s"] = float(elapsed_s)
+
+    def _finalize_operator_stats(self, executed_iterations):
+        out = {"executed_iterations": int(executed_iterations), "destroy": {}, "repair": {}}
+        denom = max(1, int(executed_iterations))
+        for family in ("destroy", "repair"):
+            for op_name, st in self.operator_stats.get(family, {}).items():
+                count = int(st.get("count", 0))
+                total = float(st.get("total_time_s", 0.0))
+                avg = (total / count) if count > 0 else 0.0
+                out[family][op_name] = {
+                    "count": count,
+                    "frequency_pct": round((count / denom) * 100.0, 2),
+                    "avg_time_s": round(avg, 6),
+                    "best_time_s": round(float(st.get("min_time_s", 0.0) or 0.0), 6),
+                    "worst_time_s": round(float(st.get("max_time_s", 0.0) or 0.0), 6),
+                    "total_time_s": round(total, 6),
+                }
+        self.operator_stats_summary = out
         
     def run(self):
         t = self.temp
@@ -467,6 +510,7 @@ class ALNSEngine:
         block_start_time = start_time
         best_obj = self.best_sol.calculate_objective()
         no_improve_iters = 0
+        executed_iters = 0
 
         if self.time_budget_seconds:
             print(f"Starting ALNS Optimization (time budget: {self.time_budget_seconds}s, "
@@ -483,15 +527,20 @@ class ALNSEngine:
             # Selection
             d_idx = self._select_op(self.d_weights)
             r_idx = self._select_op(self.r_weights)
+            executed_iters = i + 1
             
             new_sol = self.curr_sol.clone()
             
             # Destroy: Remove between 5% and 25% of students
             n_remove = max(1, int(len(new_sol.students) * random.uniform(0.05, 0.25)))
+            _td = time.time()
             self.destroy_ops[d_idx](new_sol, n_remove)
+            self._record_op_timing("destroy", self.destroy_ops[d_idx].__name__, time.time() - _td)
             
             # Repair
+            _tr = time.time()
             self.repair_ops[r_idx](new_sol)
+            self._record_op_timing("repair", self.repair_ops[r_idx].__name__, time.time() - _tr)
             
             # Score calculation
             new_obj = new_sol.calculate_objective()
@@ -576,6 +625,8 @@ class ALNSEngine:
                 print(f"  Repair pass rescued {rescued} student(s).")
             else:
                 print(f"  Repair pass: no additional students could be inserted.")
+
+        self._finalize_operator_stats(executed_iters)
 
         return self.best_sol
 

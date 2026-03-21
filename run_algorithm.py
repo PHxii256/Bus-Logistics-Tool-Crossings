@@ -559,6 +559,7 @@ def run_algorithm(data: dict, G, iterations: int = None,
         "objective": round(best.calculate_objective(), 2),
         "runtime": round(elapsed, 2),
         "alns_iteration_log": list(getattr(engine, "iteration_log", [])),
+        "operator_performance": dict(getattr(engine, "operator_stats_summary", {})),
         "matrix_precompute": matrix_precompute,
     }
 

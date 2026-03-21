@@ -2015,6 +2015,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "avg_route_time_min":   round(s["total_time"] / n_routes, 2) if n_routes else 0,
             "alns_runtime_seconds": round(s["runtime"],     2),
             "mode_wall_time_seconds": s.get("mode_wall_time"),
+            "operator_performance": s.get("operator_performance"),
             "matrix_precompute": s.get("matrix_precompute"),
             "synthetic_edges_timing": s.get("synthetic_edges_timing"),
             "unsafe_crossings":     cx,
@@ -2071,11 +2072,13 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             _alns_t = round(_s.get("runtime", 0), 2)
             _mx = _s.get("matrix_precompute") or {}
             _syn = _s.get("synthetic_edges_timing") or {}
+            _ops = _s.get("operator_performance") or {}
             _dbg_modes[_mk] = {
                 "mode_wall_time_s":        _wt,
                 "alns_solve_s":            _alns_t,
                 "setup_and_overhead_s":    round(_wt - _alns_t, 2),
                 "alns_iterations":         _s.get("iterations"),
+                "operator_performance": _ops,
                 "matrix_precompute_total_s": _mx.get("total_time_s"),
                 "matrix_precompute_source": _mx.get("source"),
                 "matrix_precompute_load_s": _mx.get("load_time_s"),
@@ -2764,6 +2767,7 @@ def run(input_path=None, output_path=None, iterations=None):
             "buses_used": st.get("buses_used"),
             "iterations_configured": iters,
             "log_interval_iterations": 10,
+            "operator_performance": st.get("operator_performance"),
             "matrix_precompute": st.get("matrix_precompute"),
             "synthetic_edges_timing": st.get("synthetic_edges_timing"),
             "entries": iter_log,
