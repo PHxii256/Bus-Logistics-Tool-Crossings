@@ -216,6 +216,53 @@ _student_candidate_dist   = {}  # student_id -> {node_id: walk_dist_m}  (0 for f
 # Candidate configuration set by ALNSEngine before each run (max_candidates_per_student, etc.)
 _alns_candidate_cfg = {}
 
+
+def _reorder_candidates_with_shared_boost(student_id, candidate_nodes):
+    """Promote nodes that appear in candidate lists of multiple students.
+
+    If a node is present for at least two different students, it gets a shared
+    boost and is moved ahead of non-shared nodes. This encourages ALNS to
+    consider common pickup nodes earlier, improving consolidation potential.
+    """
+    if not candidate_nodes:
+        return candidate_nodes
+
+    # Build node -> set(student_ids) from cached students, then include current.
+    node_students = {}
+    for sid, nodes in _student_candidate_cache.items():
+        for nid, _ in nodes:
+            node_students.setdefault(nid, set()).add(sid)
+
+    for nid, _ in candidate_nodes:
+        node_students.setdefault(nid, set()).add(student_id)
+
+    popularity = {nid: len(sids) for nid, sids in node_students.items()}
+
+    def _boost_sort(nodes):
+        # Stable sort: shared first, then by popularity, then original order.
+        ranked = list(enumerate(nodes))
+        ranked.sort(
+            key=lambda item: (
+                -int(popularity.get(item[1][0], 0) >= 2),
+                -popularity.get(item[1][0], 0),
+                item[0],
+            )
+        )
+        return [node for _, node in ranked]
+
+    boosted_current = _boost_sort(candidate_nodes)
+
+    # Also boost previously cached students that share any of these now-shared nodes.
+    shared_nodes = {nid for nid, _ in candidate_nodes if popularity.get(nid, 0) >= 2}
+    if shared_nodes:
+        for sid, nodes in list(_student_candidate_cache.items()):
+            if sid == student_id:
+                continue
+            if any(nid in shared_nodes for nid, _ in nodes):
+                _student_candidate_cache[sid] = _boost_sort(nodes)
+
+    return boosted_current
+
 def _get_insertions_for_route(student, route, graph, frontage_info):
     """Helper to find all possible valid insertion points for a student in ONE route.
     Tries both the frontage node AND walk/reachability candidates.
@@ -290,6 +337,8 @@ def _get_insertions_for_route(student, route, graph, frontage_info):
                             if new_dist <= max_walk:
                                 bfs_queue.append((predecessor, new_dist))
         
+        # Shared-node boost: if a node appears for multiple students, prioritize it.
+        candidate_nodes = _reorder_candidates_with_shared_boost(student.id, candidate_nodes)
         candidate_nodes = candidate_nodes[:max_k]
         _student_candidate_cache[student.id] = candidate_nodes
         _student_candidate_dist[student.id]   = dist_map
