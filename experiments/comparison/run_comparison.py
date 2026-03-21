@@ -656,7 +656,7 @@ def _dir_cap_html(label, ride, direct, cap, k):
 
 
 def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
-    """Add route + walk FeatureGroups for one mode.  Returns (fg_routes, fg_walks, crossings, occupancies)."""
+    """Add route + walk FeatureGroups for one mode.  Returns (fg_routes, fg_walks, occupancies)."""
     con = constraints or {}
     ride_k       = float(con.get("ride_time_multiplier", 2.5))
     floor_min    = float(con.get("floor_minutes",        45))
@@ -808,10 +808,9 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
 
         occupancies.append(student_count)
 
-    crossings = _count_unsafe_crossings(sol, G_con, G)
     fg_routes.add_to(m)
     fg_walks.add_to(m)
-    return fg_routes, fg_walks, crossings, occupancies
+    return fg_routes, fg_walks, occupancies
 
 
 def _count_satisfied_per_route(sol, G, constraints):
@@ -1424,9 +1423,8 @@ def _add_crossing_usage_layers(m, solutions_dict, G_walk, G_drive):
 
 
 def _build_custom_layer_control_js(
-    map_var, fg_danger, fg_unclass, fg_walknet, fg_syn_cross,
+    map_var, fg_danger, fg_unclass, fg_syn_cross,
     fgs_a, fgs_b, fgs_c,
-    fg_crossings,
     fg_injected=None,
     syn_label=None,
     injected_label=None,
@@ -1444,7 +1442,6 @@ def _build_custom_layer_control_js(
     vc_r, vc_w = fgs_c[0].get_name(), fgs_c[1].get_name()
     v_danger  = fg_danger.get_name()
     v_unclass = fg_unclass.get_name()
-    v_walknet = fg_walknet.get_name()
     v_syn = fg_syn_cross.get_name()
     syn_label = syn_label or "Synthetic Crossings"
     injected_label = injected_label or "Injected Crossings"
@@ -1456,14 +1453,6 @@ def _build_custom_layer_control_js(
                 row('{injected_label}',
                     [{vi}],
                     map.hasLayer({vi}));"""
-
-    crossings_row = ""
-    if fg_crossings is not None:
-        vc = fg_crossings.get_name()
-        crossings_row = f"""
-                row('Unsafe Crossings',
-                    [{vc}],
-                    map.hasLayer({vc}));"""
 
     unserved_rows = ""
     for fg_u, label in [
@@ -1560,10 +1549,8 @@ def _build_custom_layer_control_js(
                     [{v_danger}], map.hasLayer({v_danger}));
                 row('Unclassified Roads (no student placement)',
                     [{v_unclass}], map.hasLayer({v_unclass}));
-                row('Safe Walking Network (cyan streets)',
-                    [{v_walknet}], map.hasLayer({v_walknet}));
                 row('{syn_label}',
-                    [{v_syn}], map.hasLayer({v_syn}));{injected_row}{crossings_row}{usage_rows}{unserved_rows}
+                    [{v_syn}], map.hasLayer({v_syn}));{injected_row}{usage_rows}{unserved_rows}
                 sep();
                 var hdr2 = L.DomUtil.create('div', '', c);
                 hdr2.textContent = 'Candidate Stop Inspector';
@@ -1578,7 +1565,7 @@ def _build_custom_layer_control_js(
     """
 
 
-def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
+def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
                       solutions_dict=None, G=None, constraints=None,
                       meta=None):
     now    = datetime.datetime.now()
@@ -1588,15 +1575,8 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
 
     algo = (meta or {}).get("algorithm", {}) if meta else {}
     buses_cfg = (meta or {}).get("buses", {}) if meta else {}
-    synth_cfg = (meta or {}).get("synthetic_crossings", {}) if meta else {}
-    caps_on = (constraints or {}).get("enabled", True)
-    soft_caps = (constraints or {}).get("soft_ride_caps", False)
-    crossings_enabled = bool(synth_cfg.get("enabled", False))
-    time_budget = algo.get("time_budget_seconds", None)
-    max_cands = algo.get("max_candidates_per_student", None)
     buses_count = buses_cfg.get("count", None)
     bus_capacity = buses_cfg.get("capacity", None)
-    minimize_buses = bool(algo.get("minimize_buses", False))
 
     blocks = ""
     _build_stats_html._mode_tables = ""   # accumulator for side-by-side mode tables
@@ -1615,7 +1595,7 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
         </div>"""
             continue
         s   = all_stats[mk]
-        cx  = len(crossings_dict.get(mk, []))
+        cx  = int(crossings_count_dict.get(mk, 0))
         occ = occupancies_dict.get(mk, [])
         cx_color = "#c0392b" if cx > 0 else "#27ae60"
         mc = _ROUTE_COLORS[mk][0]
@@ -1633,39 +1613,12 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
 
         sat_by_route = s.get("sat_by_route", {})
 
-        fleet_summary = s.get("fleet_search_summary")
         buses_used = s.get("buses_used")
-        fleet_line = ""
-        if buses_used is not None and buses_count is not None:
-            cap_str = f" (cap {bus_capacity})" if bus_capacity is not None else ""
-            fleet_line = f"<div style=\"font-size:11px; color:#666;\">Fleet: used {buses_used}/{buses_count} buses{cap_str}</div>"
-        elif buses_count is not None:
-            cap_str = f" (cap {bus_capacity})" if bus_capacity is not None else ""
-            fleet_line = f"<div style=\"font-size:11px; color:#666;\">Fleet: {buses_count} buses{cap_str}</div>"
-        fleet_note = f"<div style=\"font-size:11px; color:#777; margin-top:2px;\">{fleet_summary}</div>" if fleet_summary else ""
         fleet_cell = "-"
         if buses_used is not None and buses_count is not None:
             fleet_cell = f"{buses_used}/{buses_count}"
         elif buses_count is not None:
             fleet_cell = f"{buses_count}"
-        
-        cap_viol = s.get("cap_violations_am")
-        cap_checked = s.get("cap_checked_am")
-        cap_pct = s.get("cap_violation_pct_am")
-        cap_pm_viol = s.get("cap_violations_pm")
-        cap_pm_checked = s.get("cap_checked_pm")
-        cap_pm_pct = s.get("cap_violation_pct_pm")
-        cap_line = ""
-        if cap_viol is not None or cap_pm_viol is not None:
-            am_pct_str = f" ({cap_pct}%)" if cap_pct is not None else ""
-            pm_pct_str = f" ({cap_pm_pct}%)" if cap_pm_pct is not None else ""
-            am_str = f"AM {cap_viol}/{cap_checked}{am_pct_str}" if cap_viol is not None else "AM —"
-            pm_str = f"PM {cap_pm_viol}/{cap_pm_checked}{pm_pct_str}" if cap_pm_viol is not None else "PM —"
-            cap_line = (
-                f"<div style=\"font-size:11px; color:#777; margin-top:2px;\">"
-                f"Cap violations: {am_str} | {pm_str}"
-                f"</div>"
-            )
 
         blocks += f"""
         <div style="margin-bottom:8px; padding-bottom:8px;
@@ -1678,7 +1631,7 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
             <tr style="color:#555;">
               <td style="text-align:left; padding:1px 4px;">Routes</td>
               <td style="text-align:left; padding:1px 4px;">Fleet</td>
-              <td style="text-align:left; padding:1px 4px;">Time (Bus+Walk)</td>
+              <td style="text-align:left; padding:1px 4px;">Total Time</td>
               <td style="text-align:left; padding:1px 4px;">Distance</td>
               <td style="text-align:left; padding:1px 4px;">Avg Occ.</td>
               <td style="text-align:left; padding:1px 4px;">Served</td>
@@ -1688,7 +1641,7 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
             <tr style="font-weight:bold;">
               <td style="padding:1px 4px;">{s['routes']}</td>
               <td style="padding:1px 4px;">{fleet_cell}</td>
-              <td style="padding:1px 4px;">{s['total_time']:.0f}+{s.get('walk_stats', {}).get('avg_walk_time_min', 0) * s['served']:.0f} min</td>
+                            <td style="padding:1px 4px;">{s['total_time']:.0f} min</td>
               <td style="padding:1px 4px;">{s['total_dist']:.1f} km</td>
               <td style="padding:1px 4px;">{avg_occ_str}</td>
               <td style="padding:1px 4px;">{s['served']}/{s['total']}</td>
@@ -1696,9 +1649,6 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
               <td style="padding:1px 4px; color:{cx_color};">{cx}</td>
             </tr>
           </table>
-          {fleet_line}
-          {fleet_note}
-          {cap_line}
         </div>"""
 
         # Per-mode mini-table for the side-by-side horizontal layout
@@ -1754,20 +1704,6 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
         </div>
       </div>"""
 
-    algo_lines = []
-    algo_lines.append(f"Caps: {'ON' if caps_on else 'OFF'}")
-    algo_lines.append(f"SoftCaps: {'ON' if soft_caps else 'OFF'}")
-    algo_lines.append(f"MinFleet: {'ON' if minimize_buses else 'OFF'}")
-    algo_lines.append(f"Crossings: {'ON' if crossings_enabled else 'OFF'}")
-    if time_budget is not None:
-        algo_lines.append(f"Budget: {time_budget}s")
-    if max_cands is not None:
-        algo_lines.append(f"Candidates: {max_cands}")
-    if buses_count is not None:
-        cap_str = f" (cap {bus_capacity})" if bus_capacity is not None else ""
-        algo_lines.append(f"Fleet: {buses_count}{cap_str}")
-    algo_line = " | ".join(algo_lines)
-
     return f"""
     <div style="position:fixed; bottom:15px; right:15px; width:430px;
                 max-height:260px; overflow-y:auto;
@@ -1778,9 +1714,6 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
                   padding-bottom:6px; border-bottom:2px solid #ccc;">
         Three-Mode Routing Comparison
       </div>
-            <div style="font-size:11px; color:#666; margin-bottom:8px;">
-                {algo_line}
-            </div>
       {blocks}
       {route_table}
       <div style="font-size:10px; color:#888; margin-top:6px;">
@@ -2418,14 +2351,6 @@ def run(input_path=None, output_path=None, iterations=None):
     print(f"  Unclassified-road segments: {len(unclass_segs)}")
 
     # Walk network layer
-    fg_walknet = FeatureGroup(name="Safe Walking Network", show=False)
-    walk_segs = _extract_walk_segments(G_con, center[0], center[1], radius_km=4.0, safe_only=True)
-    for seg in walk_segs:
-        folium.PolyLine(seg, color="#ffffff", weight=4, opacity=0.45).add_to(fg_walknet)
-        folium.PolyLine(seg, color="#00acc1", weight=2.5, opacity=0.9).add_to(fg_walknet)
-    fg_walknet.add_to(m)
-    print(f"  Safe walk-network segments: {len(walk_segs)}")
-
     crossings_dict, occupancies_dict, all_stats = {}, {}, {}
 
     # Clear path cache so rendering computes fresh turn-aware paths on G_unc
@@ -2442,10 +2367,10 @@ def run(input_path=None, output_path=None, iterations=None):
         ("C", sol_c, stats_c),
     ] if sol is not None]:
         print(f"  Drawing Mode {mk} …")
-        fg_r, fg_w, cx, occ = _add_route_layer(m, G_unc, sol, mk, G_con,
-                                                 constraints=meta.get("constraints"))
+        fg_r, fg_w, occ = _add_route_layer(m, G_unc, sol, mk, G_con,
+                           constraints=meta.get("constraints"))
         fgs[mk] = (fg_r, fg_w)
-        crossings_dict[mk] = cx
+        crossings_dict[mk] = []
         occupancies_dict[mk] = occ
         all_stats[mk] = stats
         _sat_by_route = _count_satisfied_per_route(sol, G_unc, meta.get("constraints", {}))
@@ -2471,8 +2396,6 @@ def run(input_path=None, output_path=None, iterations=None):
     for mk, (sol, cds, cdst, G_mk) in cand_data.items():
         fgs_cands[mk] = _add_candidate_layer(m, G_mk, mk, sol, cds, cdst)
 
-    _rej_syn_unsafe = _eng.get_synthetic_rejected_unsafe()
-    fg_crossings = _add_crossing_markers(m, crossings_dict, rejected_unsafe=_rej_syn_unsafe)
     _syn_markers = _eng.get_synthetic_crossings()
     _show_only_used_syn = bool(synth_cfg.get("show_only_used", True))
     _used_syn_edges = _collect_used_synthetic_edge_keys([sol_a, sol_b, sol_c], G_unc) if _show_only_used_syn else set()
@@ -2490,7 +2413,6 @@ def run(input_path=None, output_path=None, iterations=None):
         print(f"  Synthetic crossings (used edges): {len(_used_syn_edges)}")
     if injected_result is not None:
         print(f"  Injected crossings (edges): {len(injected_result.get('edge_pairs', []))}")
-    print(f"  Rejected synthetic (unsafe-road): {len(_rej_syn_unsafe)}")
     if len(_syn_markers) == 0:
         print("  WARNING: zero synthetic crossings were generated with current thresholds.")
 
@@ -2506,6 +2428,19 @@ def run(input_path=None, output_path=None, iterations=None):
     except Exception as e:
         print(f"  Warning: Could not add crossing usage visualization: {e}")
         fgs_crossing_usage = {}
+
+    # Crossings shown in the stats table: synthetic crossings actually used by each mode.
+    # Mode A is constrained with synthetic crossings disabled by design.
+    used_crossings_count = {"A": 0, "B": 0, "C": 0}
+    try:
+        from detour_engine import get_crossing_usage_from_solution as _get_mode_usage
+        for _mk, _sol in (("B", sol_b), ("C", sol_c)):
+            if _sol is None:
+                continue
+            used_crossings_count[_mk] = len(_get_mode_usage(_sol, G_unc, G_walk))
+    except Exception:
+        # Keep zeros if extraction fails; do not break map generation.
+        pass
 
     # Print crossing BFS statistics
     crossing_stats = get_crossing_bfs_stats()
@@ -2524,9 +2459,8 @@ def run(input_path=None, output_path=None, iterations=None):
     # Custom grouped layer control (title + 3 mode checkboxes, no radio buttons)
     map_var = f"map_{m._id}"
     ctrl_js = _build_custom_layer_control_js(
-        map_var, fg_danger, fg_unclass, fg_walknet, fg_syn,
+        map_var, fg_danger, fg_unclass, fg_syn,
         fgs["A"], fgs["B"], fgs["C"],
-        fg_crossings,
         fg_injected=fg_injected,
         syn_label=_syn_label,
         injected_label=_injected_label,
@@ -2543,7 +2477,7 @@ def run(input_path=None, output_path=None, iterations=None):
     m.get_root().script.add_child(folium.Element(ctrl_js))
 
     m.get_root().html.add_child(folium.Element(
-        _build_stats_html(all_stats, crossings_dict, occupancies_dict,
+        _build_stats_html(all_stats, used_crossings_count, occupancies_dict,
                           solutions_dict={"A": sol_a, "B": sol_b, "C": sol_c},
                           G=G_unc,
                           constraints=meta.get("constraints", {}),
