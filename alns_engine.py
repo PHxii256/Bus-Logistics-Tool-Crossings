@@ -708,7 +708,7 @@ class ALNSEngine:
                 capacity = self.best_sol.routes[0].bus.capacity
                 theoretical_min_buses = math.ceil(total_students / capacity)
                 
-            active_buses = sum(1 for r in self.best_sol.routes if r.students)
+            active_buses = sum(1 for r in self.best_sol.routes if r.get_student_count() > 0)
             
             # Use 30 iterations for polishing if we've successfully reached the theoretical optimum
             if served_count == total_students and active_buses <= theoretical_min_buses:
