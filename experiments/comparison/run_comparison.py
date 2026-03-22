@@ -2654,8 +2654,8 @@ def run(input_path=None, output_path=None, iterations=None):
         if sol is None:
             continue
         print(f"  Drawing Mode {mk} …")
-        fg_r, fgw,  = _add_route_layer(m, G_unc, sol, mk, G_con,
-                           constraints=meta.get("constraints"))
+        fg_r, fg_w, _ = _add_route_layer(m, G_unc, sol, mk, G_con,
+                            constraints=meta.get("constraints"))
         fgs[mk] = (fg_r, fg_w)
         fgs_unserved[mk] = _add_unserved_layer(m, sol, mk)
 

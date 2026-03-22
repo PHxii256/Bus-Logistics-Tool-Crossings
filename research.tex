@@ -101,20 +101,7 @@ Traditional SBRP models typically enforce service quality through a static, unif
 
 
 
-To address this, we replace the static $T_{max}$ with a \textit{Dynamic Proportional Cap} anchored to each student's direct travel time ($T_{direct}$). The maximum allowable ride time $T_s$ is governed by:
-
-\begin{equation}
-T_s \le \max\left( \text{floor}, \min(k \cdot T_{direct}, T_{direct} + \text{ceiling}) \right)
-\end{equation}
-
-
-
-This logic establishes a ``feasibility corridor'' serving three objectives:
-\begin{enumerate}
-    \item \textbf{The Floor (Operational Efficiency):} Sets a minimum baseline (e.g., 45 mins) to ensure the system remains efficient for local students.
-    \item \textbf{The Multiplier ($k$):} Maintains a consistent service quality ratio for the median student population.
-    \item \textbf{The Additive Ceiling (Student Comfort):} Imposes an absolute cap on the additional ``time tax'' for long-distance commutes.
-\end{enumerate}
+To address this, we propose a \textit{Dynamic Proportional Cap} (formulated in Section III-B) which scales the allowable ride time to the student's direct distance, ensuring equity between short and long commutes.
 
 \subsection{Metaheuristic Solution Approaches}
 Given the NP-hard nature of SBRP \cite{c2}, metaheuristics dominate the landscape. Adaptive Large Neighbourhood Search (ALNS) has emerged as an effective approach for complex SBRP sub-classes. Its success is due to the adaptive selection of operators \cite{c7}, which allow the algorithm to target specific constraint violations through various destroy-and-repair mechanisms.
@@ -168,11 +155,17 @@ The WA-SBRP transforms welfare into geographic and temporal constraints with a h
 \begin{enumerate}
     \item \textbf{School-Stage-Tiered Network Permeability (Safety):} For each student $s$, the pedestrian exploration graph is filtered by road safety permissions defined for their school stage.
     \item \textbf{School-Stage Walking Eligibility:} A stop $p$ is a feasible candidate for student $s$ only if pedestrian distance in the filtered graph satisfies $d_{walk}(s,p)\le W_{stage(s)}$.
-    \item \textbf{Dynamic Proportional Ride-Time Cap:} For each student, the personalized cap is
+    \item \textbf{Dynamic Proportional Ride-Time Cap:} To prevent specific geographical discrimination, we define a feasibility corridor for the maximum ride time $T^{\max}_s$:
     \begin{equation}
     T^{\max}_s = \max\left(\tau_{\mathrm{min}},\min\left(k\,T^{direct}_s,\;T^{direct}_s+\tau_{\mathrm{add}}\right)\right)
     \end{equation}
-    with defaults $k=2.5$, $\tau_{\mathrm{min}}=45$ minutes, and $\tau_{\mathrm{add}}=60$ minutes.
+    
+This logic establishes a ``feasibility corridor'' serving three objectives:
+\begin{enumerate}
+    \item \textbf{The Floor (Operational Efficiency):} Sets a minimum baseline enrolling students can expect (e.g., 45 min) to ensure the system remains efficient without constraining the optimization too much by students who live really close to the school (eg. 10 min away).
+    \item \textbf{The Multiplier ($k$):} Maintains a consistent service quality ratio for the median student population.
+    \item \textbf{The Additive Ceiling (Student Comfort):} Imposes an absolute cap especially relevant for long-distance commutes where the multiplicative nature of  $k\,T^{direct}_s$ leads to an unacceptable $T^{\max}_s$ for students who live far away.
+\end{enumerate}
     \item \textbf{Configurable Directional Enforcement:} Let $T^{AM}_s$ and $T^{PM}_s$ denote morning and afternoon in-vehicle times. In strict directional mode, insertion requires $T^{AM}_s\le T^{\max}_s$. In bidirectional-lenient mode (default), insertion is rejected only when both directions violate the cap:
     \begin{equation}
     \text{reject iff } \left(T^{AM}_s>T^{\max}_s\right) \wedge \left(T^{PM}_s>T^{\max}_s\right)
