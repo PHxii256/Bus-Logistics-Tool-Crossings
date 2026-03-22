@@ -2639,19 +2639,23 @@ def run(input_path=None, output_path=None, iterations=None):
     _eng._MATRIX_CACHE.clear()
     _eng._MATRIX_CACHE_LENGTH.clear()
 
-        # Bus routes are always rendered with G_unc (the bus drives on all roads)
-        fgs = {}          # mk -> (fg_routes, fg_walks)
-        fgs_unserved = {}  # mk -> fg_unserved
-        for mk, sol in [(mk, sol) for mk, sol in [
-            ("A", sol_a),
-            ("B", sol_b),
-            ("C", sol_c),
-        ] if sol is not None]:
-            print(f"  Drawing Mode {mk} …")
-            fg_r, fg_w, _ = _add_route_layer(m, G_unc, sol, mk, G_con,
-                               constraints=meta.get("constraints"))
-            fgs[mk] = (fg_r, fg_w)
-            fgs_unserved[mk] = _add_unserved_layer(m, sol, mk)
+    fgs = {}          # mk -> (fg_routes, fg_walks)
+    fgs_unserved = {}  # mk -> fg_unserved
+
+    solutions = [
+        ("A", sol_a),
+        ("B", sol_b),
+        ("C", sol_c),
+    ]
+
+    for mk, sol in solutions:
+        if sol is None:
+            continue
+        print(f"  Drawing Mode {mk} …")
+        fg_r, fgw,  = _add_route_layer(m, G_unc, sol, mk, G_con,
+                           constraints=meta.get("constraints"))
+        fgs[mk] = (fg_r, fg_w)
+        fgs_unserved[mk] = _add_unserved_layer(m, sol, mk)
 
     # Candidate stop inspector layers (one per mode, hidden by default)
     cand_data = {mk: cd for mk, cd in {
