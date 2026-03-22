@@ -197,22 +197,26 @@ The implemented workflow follows five stages:
 \end{enumerate}
 
 \subsection{Synthetic Dataset Generation}
-Due to privacy constraints and the lack of publicly available school registries in the studied region, student home locations are synthetically generated using an annulus-based spatial distribution model. Centered on a selected real-world school node, students are distributed across concentric circular bands (annuli) of varying radii. This method ensures a geographically diverse catchment area, testing the framework's performance across both short local commutes and extended regional travel. Each generated student is realistically assigned a specific school stage based on local demographics, which subsequently governs their allowable walking limits and safety-filtered permissions for crossing roads.
+Due to privacy constraints and the lack of publicly available school registries in the studied region, student home locations are synthetically generated using a Gaussian annulus-based spatial distribution model. Rather than distributing students uniformly across the map, this approach more accurately models real-world school catchments where the density of bus-riding students is highest in a "commuter ring" at a specific distance from the school.
+
+Centered on a selected real-world school node, the generation process samples a student's distance from the school using a bounded Gaussian distribution (e.g., concentrated around a peak distance of 2.0 km with a specified standard deviation). To prevent unrealistic edge cases, generated distances that fall outside predefined minimum (e.g., 0.4 km) and maximum bounds are discarded and resampled. Then a uniformly random angle ($0$ to $2\pi$) is selected to determine the direction bearing. Finally, these polar variables (distance and angle) are translated into geographical latitude and longitude coordinates. 
+
+Each generated student is assigned a specific school stage based on the school's specific demographics; otherwise we assume a uniform distribution of students across all school stages, which subsequently governs their allowable walking limits and safety-filtered permissions for crossing roads.
 
 \subsection{Candidate Stop Generation and Safety Modes}
 Candidate stops are not predefined; they are generated dynamically from each student location using pedestrian reachability under road-class safety rules. The three comparison modes are:
 \begin{itemize}
     \item \textbf{Strictly-Constrained:} conservative crossing permissions by school stage.
     \item \textbf{Weakly-Constrained:} increased permeability, especially for older stages.
-    \item \textbf{Direct (Point-to-Point):} walking suppressed (effectively home pickup), used as a welfare-relaxed baseline.
+    \item \textbf{Direct (Point-to-Point):} walking suppressed (effectively home pickup), used as a baseline.
 \end{itemize}
 
 \subsection{Pedestrian Graph Augmentation via Synthetic Crossings}
-OpenStreetMap drive topology frequently represents divided roads as two opposite carriageways with no direct pedestrian edge between sides. In Egypt-like contexts, this causes false infeasibility if candidate generation relies only on native car-network connectivity. To address this, we augment the \emph{pedestrian} graph with synthetic crossing edges between opposite sides of eligible roads (typically tertiary/secondary classes) when geometric and safety checks are satisfied. These synthetic edges are used only for pedestrian reachability and stop-candidate generation; bus routing remains on the original directed drive graph. This separation preserves vehicular realism while enabling context-faithful modeling of informal crossing behavior.
+OpenStreetMap drive topology frequently represents divided roads as two opposite carriageways without direct pedestrian edge between sides. In Egypt-like contexts, this causes us to not be able to model crossing streets (jaywalking) if the candidate generation relies only on the native car-network. To address this, we augment the \emph{pedestrian} graph with synthetic crossing edges between opposite sides of eligible roads (typically tertiary/secondary classes) when geometric and safety checks are satisfied. These synthetic edges are used only for pedestrian reachability and stop-candidate generation; bus routing remains on the original directed drive graph. This separation preserves vehicular realism while enabling context-faithful modeling of informal crossing behavior.
 
 Algorithm~\ref{alg:candidate_synth} summarizes the integrated stop-candidate pipeline. It combines school-stage safety permissions with synthetic crossing augmentation before bounded pedestrian exploration and ranking to generate the feasible insertion universe.
 
-\begin{algorithm}[tb]
+\begin{algorithm}[H]
 \caption{Safety-Aware Candidate Generation with Synthetic Crossings}
 \label{alg:candidate_synth}
 \KwIn{Drive graph $G_d$, pedestrian graph $G_w$, student $s$, school-stage policy $\Pi$, mode config}
@@ -234,7 +238,7 @@ The optimizer uses an Adaptive Large Neighbourhood Search (ALNS) to solve the se
 
 Algorithm~\ref{alg:alns_loop} presents the outer search loop. It showcases the integration of adaptive operator selection, solution acceptance, cooling within the simulated annealing framework, and dynamic satisfaction-driven early stopping.
 
-\begin{algorithm}[tb]
+\begin{algorithm}[H]
 \caption{ALNS Framework Loop}
 \label{alg:alns_loop}
 \KwIn{Initial solution $x_0$, destroy set $\mathcal{D}$, repair set $\mathcal{R}$, temperature $T_0$, cooling $\gamma$, patience limit $P_{max}$}
@@ -276,7 +280,7 @@ Each insertion is validated through a feasibility routine that checks bus capaci
 
 Algorithm~\ref{alg:insertion_eval} gives the detailed feasibility evaluator used by repair operators.
 
-\begin{algorithm}[tb]
+\begin{algorithm}[H]
 \caption{Feasibility-Aware Insertion Evaluation}
 \label{alg:insertion_eval}
 \KwIn{Route $r$, student $s$, candidate stop $p$, insertion index $i$, cache/matrix, cap parameters}

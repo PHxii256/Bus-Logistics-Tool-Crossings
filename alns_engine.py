@@ -479,7 +479,29 @@ def _get_insertions_for_route(student, route, graph, frontage_info):
         _student_candidate_cache[student.id] = candidate_nodes
         _student_candidate_dist[student.id]   = dist_map
     
-    # Start and end stops are fixed (Depot/School), strictly insert between
+    # OPTIMIZATION: Spatial pruning to skip routes that are too far.
+    # If the student creates a massive detour just to reach the route's bounding box,
+    # it likely violates constraints or is extremely inefficient.
+    # Only apply pruning if the route is well-established (has more than just start/end stops)
+    # to avoid preventing empty routes from picking up distant students.
+    if len(route.stops) > 2:
+        # Calculate route bounding box
+        r_lats = [s.coords[0] for s in route.stops]
+        r_lons = [s.coords[1] for s in route.stops]
+        min_lat, max_lat = min(r_lats), max(r_lats)
+        min_lon, max_lon = min(r_lons), max(r_lons)
+        
+        # Buffer relaxed to ~11km (~0.1 deg) to safely cover the entire 5km annulus 
+        # plus any reasonable detour, while still pruning cross-city jumps in larger maps.
+        buffer_lat = 0.1
+        buffer_lon = 0.12
+        
+        s_lat, s_lon = student.coords
+        
+        # If student is outside the box + buffer, return no options immediately
+        if not (min_lat - buffer_lat <= s_lat <= max_lat + buffer_lat and
+                min_lon - buffer_lon <= s_lon <= max_lon + buffer_lon):
+            return []
     start_pos = 1 if len(route.stops) >= 2 else 0
     end_pos = len(route.stops) if len(route.stops) >= 2 else len(route.stops) + 1
     

@@ -78,8 +78,8 @@
     "time_budget_seconds": 600,
     "max_candidates_per_student": 6,
     "minimize_buses": true,
-    "early_stop_patience": 300,
-    "early_stop_min_improvement": 10,
+    "early_stop_patience": 400,
+    "early_stop_min_improvement": 5,
     "early_stop_freeze_temp": 1,
     "early_stop_freeze_patience": 20
   },
