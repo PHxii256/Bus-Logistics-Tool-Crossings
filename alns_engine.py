@@ -698,12 +698,35 @@ class ALNSEngine:
                 no_improve_iters += 1
             
             t *= self.cooling
+            
+            # --- Satisficing / Polishing Window Logic ---
+            total_students = len(self.best_sol.students)
+            served_count = sum(1 for s in self.best_sol.students if s.is_served)
+            
+            theoretical_min_buses = 0
+            if self.best_sol.routes:
+                capacity = self.best_sol.routes[0].capacity
+                theoretical_min_buses = math.ceil(total_students / capacity)
+                
+            active_buses = sum(1 for r in self.best_sol.routes if r.students)
+            
+            # Use 30 iterations for polishing if we've successfully reached the theoretical optimum
+            if served_count == total_students and active_buses <= theoretical_min_buses:
+                effective_patience = 30
+            else:
+                effective_patience = self.early_stop_patience
 
-            if self.early_stop_patience and no_improve_iters >= self.early_stop_patience:
-                print(
-                    f"  Early stop: no best-objective improvement for "
-                    f"{no_improve_iters} iterations."
-                )
+            if effective_patience and no_improve_iters >= effective_patience:
+                if effective_patience == 30 and self.early_stop_patience != 30:
+                    print(
+                        f"  Early stop: Theoretical Optimum hit! Polished for "
+                        f"{no_improve_iters} iterations with no further objective improvement."
+                    )
+                else:
+                    print(
+                        f"  Early stop: no best-objective improvement for "
+                        f"{no_improve_iters} iterations."
+                    )
                 break
 
             if (
