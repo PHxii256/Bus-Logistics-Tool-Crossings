@@ -505,17 +505,10 @@ def _get_insertions_for_route(student, route, graph, frontage_info):
     start_pos = 1 if len(route.stops) >= 2 else 0
     end_pos = len(route.stops) if len(route.stops) >= 2 else len(route.stops) + 1
     
-    # Pre-filter: only keep candidates with KNOWN bus-reachability (both directions in cache)
-    school_node = route.stops[0].node_id if route.stops else None
-    reachable_candidates = []
-    for cand_node_id, cand_coords in candidate_nodes:
-        if school_node:
-            to_s = _MATRIX_CACHE.get((cand_node_id, school_node), None)
-            from_s = _MATRIX_CACHE.get((school_node, cand_node_id), None)
-            # Skip if not in matrix at all (never precomputed) or known unreachable
-            if to_s is None or from_s is None or to_s == float('inf') or from_s == float('inf'):
-                continue
-        reachable_candidates.append((cand_node_id, cand_coords))
+    # We DO NOT aggressively pre-filter candidates based on the cache here,
+    # as it causes students with walk_radius=0 (whose exact nodes might not be cached yet)
+    # to be incorrectly marked as completely un-routable.
+    reachable_candidates = candidate_nodes
         
     for pos in range(start_pos, end_pos):
         for cand_node_id, cand_coords in reachable_candidates:

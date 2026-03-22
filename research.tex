@@ -214,9 +214,9 @@ Candidate stops are not predefined; they are generated dynamically from each stu
 \subsection{Pedestrian Graph Augmentation via Synthetic Crossings}
 OpenStreetMap drive topology frequently represents divided roads as two opposite carriageways without direct pedestrian edge between sides. In Egypt-like contexts, this causes us to not be able to model crossing streets (jaywalking) if the candidate generation relies only on the native car-network. To address this, we augment the \emph{pedestrian} graph with synthetic crossing edges between opposite sides of eligible roads (typically tertiary/secondary classes) when geometric and safety checks are satisfied. These synthetic edges are used only for pedestrian reachability and stop-candidate generation; bus routing remains on the original directed drive graph. This separation preserves vehicular realism while enabling context-faithful modeling of informal crossing behavior.
 
-Algorithm~\ref{alg:candidate_synth} summarizes the integrated stop-candidate pipeline. It combines school-stage safety permissions with synthetic crossing augmentation before bounded pedestrian exploration and ranking to generate the feasible insertion universe.
+Algorithm~\ref{alg:candidate_synth} summarizes the integrated stop-candidate pipeline. It combines school-stage safety permissions with synthetic crossing augmentation before bounded pedestrian exploration and ranking to generate the feasible insertion universe. The dominant runtime comes from bounded graph traversal on the augmented walk graph; with neighborhood-bounded search, practical behavior is near-linear in explored edges per student. This step is critical because it decides the feasible insertion universe seen by the ALNS optimizer.
 
-\begin{algorithm}[H]
+\begin{algorithm}[h]
 \caption{Safety-Aware Candidate Generation with Synthetic Crossings}
 \label{alg:candidate_synth}
 \KwIn{Drive graph $G_d$, pedestrian graph $G_w$, student $s$, school-stage policy $\Pi$, mode config}
@@ -231,14 +231,10 @@ Truncate to top-$K$ mode-dependent candidates\;
 \Return{$C_s$}\;
 \end{algorithm}
 
-The dominant runtime comes from bounded graph traversal on the augmented walk graph; with neighborhood-bounded search, practical behavior is near-linear in explored edges per student. This step is critical because it decides the feasible insertion universe seen by the ALNS optimizer.
-
 \subsection{ALNS Design}
 The optimizer uses an Adaptive Large Neighbourhood Search (ALNS) to solve the service-maximization objective. ALNS employs roulette-wheel operator selection with adaptive weight updates, allowing the algorithm to dynamically choose the most effective destroy and repair strategies based on recent success. Destroy operators include random removal, worst-cost removal, relatedness (Shaw-style) removal, sequence removal, and route-merge removal. Repair uses regret-based insertion as the primary reconstruction policy, with random-order best insertion as a diversification companion. Acceptance follows a simulated annealing (SA) criterion. Early stopping is triggered when objective improvement stalls over a configurable patience window. To eliminate excessive computation when an optimal state is reached, the optimizer employs a \textit{satisficing polishing window}: if all students are served and the active fleet size matches the theoretical minimum ($\lceil |S| / C \rceil$), the patience window is dynamically reduced to a tight threshold (e.g., 30 iterations) to polish routing efficiency and walking distances before terminating.
 
-Algorithm~\ref{alg:alns_loop} presents the outer search loop. It showcases the integration of adaptive operator selection, solution acceptance, cooling within the simulated annealing framework, and dynamic satisfaction-driven early stopping.
-
-\begin{algorithm}[H]
+\begin{algorithm}[h]
 \caption{ALNS Framework Loop}
 \label{alg:alns_loop}
 \KwIn{Initial solution $x_0$, destroy set $\mathcal{D}$, repair set $\mathcal{R}$, temperature $T_0$, cooling $\gamma$, patience limit $P_{max}$}
@@ -273,12 +269,12 @@ $P_{current} \leftarrow P_{max}$ ; $stagnation \leftarrow 0$\;
 \Return{$x^*$}\;
 \end{algorithm}
 
-Each ALNS iteration costs one destroy, one repair, and one acceptance decision; empirical runtime is dominated by insertion feasibility checks inside repair. 
+Algorithm~\ref{alg:alns_loop} presents the outer search loop. It showcases the integration of adaptive operator selection, solution acceptance, cooling within the simulated annealing framework, and dynamic satisfaction-driven early stopping. Each ALNS iteration costs one destroy, one repair, and one acceptance decision; empirical runtime is dominated by insertion feasibility checks inside repair.
 
 \subsection{Constraint Handling in Search}
 Each insertion is validated through a feasibility routine that checks bus capacity and personalized ride-time caps. The ride-time check supports two policies: morning-only strict enforcement or bidirectional leniency (default), where an insertion is rejected only if both AM and PM exceed the personalized cap. This design preserves welfare protection while reducing over-rejection caused by directional asymmetry in one-way street networks.
 
-Algorithm~\ref{alg:insertion_eval} gives the detailed feasibility evaluator used by repair operators.
+Algorithm~\ref{alg:insertion_eval} gives the detailed feasibility evaluator used by repair operators. This evaluator is the main source of computational load during repair, because each candidate may trigger AM/PM cap checks plus downstream consistency checks for already assigned students. The benefit is strict welfare-feasibility control without requiring post-hoc repair of invalid routes.
 
 \begin{algorithm}[H]
 \caption{Feasibility-Aware Insertion Evaluation}
@@ -299,9 +295,8 @@ Compute walking penalty $\phi_s$ for $s \rightarrow p$\;
 \Return{valid, $(\text{detour delta} + \phi_s)$}\;
 \end{algorithm}
 
-This evaluator is the main source of computational load during repair, because each candidate may trigger AM/PM cap checks plus downstream consistency checks for already assigned students. The benefit is strict welfare-feasibility control without requiring post-hoc repair of invalid routes.
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
 \begin{thebibliography}{99}
 
 \bibitem{c1} J. Park and B.-I. Kim, ``The school bus routing problem: A review,'' \textit{European Journal of Operational Research}, vol. 202, no. 2, pp. 311--319, 2010, doi: \href{https://doi.org/10.1016/j.ejor.2009.05.017}{10.1016/j.ejor.2009.05.017}.
