@@ -2263,6 +2263,8 @@ def run(input_path=None, output_path=None, iterations=None):
     print("[1/7] Generating dataset …")
     _t0 = _wtime.time()
     base_data = _generate_dataset(meta)
+    # Preserve full algorithm config from input meta (early-stop, time budget, etc.).
+    base_data["meta"]["algorithm"] = copy.deepcopy(meta.get("algorithm", {}))
     base_data["meta"]["algorithm"]["iterations"] = iters
     _step_times["generate_dataset_s"] = round(_wtime.time() - _t0, 2)
 
