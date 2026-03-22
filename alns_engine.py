@@ -382,6 +382,27 @@ def _get_insertions_for_route(student, route, graph, frontage_info):
     """Helper to find all possible valid insertion points for a student in ONE route.
     Tries both the frontage node AND walk/reachability candidates.
     """
+    # OPTIMIZATION: Spatial pruning to skip routes that are too far.
+    # If the student creates a massive detour just to reach the route's bounding box,
+    # it likely violates constraints or is extremely inefficient.
+    if route.stops:
+        # Calculate route bounding box
+        r_lats = [s.coords[0] for s in route.stops]
+        r_lons = [s.coords[1] for s in route.stops]
+        min_lat, max_lat = min(r_lats), max(r_lats)
+        min_lon, max_lon = min(r_lons), max(r_lons)
+        
+        # Buffer approx 5km (~0.045 deg lat, ~0.05 deg lon)
+        buffer_lat = 0.045
+        buffer_lon = 0.05
+        
+        s_lat, s_lon = student.coords
+        
+        # If student is outside the box + buffer, return no options immediately
+        if not (min_lat - buffer_lat <= s_lat <= max_lat + buffer_lat and
+                min_lon - buffer_lon <= s_lon <= max_lon + buffer_lon):
+            return []
+
     from detour_engine import _MATRIX_CACHE
     options = []
     frontage_node_id, frontage_coords = frontage_info

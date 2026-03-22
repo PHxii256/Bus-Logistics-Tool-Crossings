@@ -1975,6 +1975,14 @@ def shortest_path_length_with_turns(graph, source, target, weight='travel_time',
             return _MATRIX_CACHE[(source, target)]
         
     _, t = find_shortest_path_with_turns(graph, source, target, weight=weight, initial_bearing=initial_bearing)
+    
+    # OPTIMIZATION: Write-through cache on miss to avoid re-calculating same paths repeatedly
+    if initial_bearing is None and t < float('inf'):
+        if weight == 'travel_time':
+            _MATRIX_CACHE[(source, target)] = t
+        elif weight == 'length':
+            _MATRIX_CACHE_LENGTH[(source, target)] = t
+            
     return t
 
 
@@ -2933,7 +2941,20 @@ def calculate_afternoon_ride_time_potential(route, new_stop, insert_position, gr
         v = afternoon_stops[i + 1].node_id
         t = _MATRIX_CACHE.get((u, v), None)
         if t is None:
-            _, t = find_shortest_path_with_turns(graph, u, v)
+            # OPTIMIZATION: Cache reverse edges to speed up future PM checks
+            path, t = find_shortest_path_with_turns(graph, u, v)
+            _MATRIX_CACHE[(u, v)] = t
+            
+            # Optionally cache length if you have the path (like calculate_route_time_from_matrix does)
+            if path:
+                dist_m = 0.0
+                for pi in range(len(path) - 1):
+                    ed = graph.get_edge_data(path[pi], path[pi+1])
+                    if ed:
+                        d = ed[0] if 0 in ed else list(ed.values())[0]
+                        dist_m += d.get('length', 0)
+                _MATRIX_CACHE_LENGTH[(u, v)] = dist_m
+                
         if t == float('inf'):
             return 9999.0
         ride_time += t
