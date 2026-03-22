@@ -237,17 +237,18 @@ Truncate to top-$K$ mode-dependent candidates\;
 The dominant runtime comes from bounded graph traversal on the augmented walk graph; with neighborhood-bounded search, practical behavior is near-linear in explored edges per student. This step is critical because it decides the feasible insertion universe seen by the ALNS optimizer.
 
 \subsection{ALNS Design}
-The optimizer uses an Adaptive Large Neighbourhood Search (ALNS) to solve the service-maximization objective. ALNS employs roulette-wheel operator selection with adaptive weight updates, allowing the algorithm to dynamically choose the most effective destroy and repair strategies based on recent success. Destroy operators include random removal, worst-cost removal, relatedness (Shaw-style) removal, sequence removal, and route-merge removal. Repair uses regret-based insertion as the primary reconstruction policy, with random-order best insertion as a diversification companion. Acceptance follows a simulated annealing (SA) criterion, with early stopping triggered when objective improvement stalls over a configurable patience window.
+The optimizer uses an Adaptive Large Neighbourhood Search (ALNS) to solve the service-maximization objective. ALNS employs roulette-wheel operator selection with adaptive weight updates, allowing the algorithm to dynamically choose the most effective destroy and repair strategies based on recent success. Destroy operators include random removal, worst-cost removal, relatedness (Shaw-style) removal, sequence removal, and route-merge removal. Repair uses regret-based insertion as the primary reconstruction policy, with random-order best insertion as a diversification companion. Acceptance follows a simulated annealing (SA) criterion. Early stopping is triggered when objective improvement stalls over a configurable patience window. To eliminate excessive computation when an optimal state is reached, the optimizer employs a \textit{satisficing polishing window}: if all students are served and the active fleet size matches the theoretical minimum ($\lceil |S| / C \rceil$), the patience window is dynamically reduced to a tight threshold (e.g., 30 iterations) to polish routing efficiency and walking distances before terminating.
 
-Algorithm~\ref{alg:alns_loop} presents the outer search loop. It showcases the integration of adaptive operator selection, solution acceptance, and cooling within the simulated annealing framework.
+Algorithm~\ref{alg:alns_loop} presents the outer search loop. It showcases the integration of adaptive operator selection, solution acceptance, cooling within the simulated annealing framework, and dynamic satisfaction-driven early stopping.
 
 \begin{algorithm}[tb]
 \caption{ALNS Framework Loop}
 \label{alg:alns_loop}
-\KwIn{Initial solution $x_0$, destroy set $\mathcal{D}$, repair set $\mathcal{R}$, temperature $T_0$, cooling $\gamma$, stopping limits}
+\KwIn{Initial solution $x_0$, destroy set $\mathcal{D}$, repair set $\mathcal{R}$, temperature $T_0$, cooling $\gamma$, patience limit $P_{max}$}
 \KwOut{Best solution $x^*$}
 $x \leftarrow x_0$; $x^* \leftarrow x_0$; initialize operator weights and scores\;
-\For{$it \leftarrow 1$ \KwTo $it_{max}$ \textbf{or until early-stop/time budget}}{
+$P_{current} \leftarrow P_{max}$ ; $stagnation \leftarrow 0$\;
+\For{$it \leftarrow 1$ \KwTo $it_{max}$}{
     Select destroy $d \in \mathcal{D}$ and repair $r \in \mathcal{R}$ via roulette-wheel over adaptive weights\;
     $x' \leftarrow r(d(x))$\;
     \If{$f(x') > f(x)$}{
@@ -259,8 +260,17 @@ $x \leftarrow x_0$; $x^* \leftarrow x_0$; initialize operator weights and scores
     Update operator scores and weights from solution quality signal\;
     \If{$f(x) > f(x^*)$}{
         $x^* \leftarrow x$\;
+        $stagnation \leftarrow 0$\;
     }
-    Log iteration diagnostics (objective, temperature, selected operators)\;
+    \Else{
+        $stagnation \leftarrow stagnation + 1$\;
+    }
+    \If{all served in $x^*$ and active buses $\le \lceil |S|/C \rceil$}{
+        $P_{current} \leftarrow \min(P_{current}, 30)$ \tcp*{Polishing window}
+    }
+    \If{$stagnation > P_{current}$}{
+        \textbf{break} \tcp*{Early stop triggered}
+    }
     $T \leftarrow \gamma T$\;
 }
 \Return{$x^*$}\;

@@ -2070,13 +2070,16 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         _wt = (mode_wall_times or {}).get(_mk)
         if _s and _wt is not None:
             _alns_t = round(_s.get("runtime", 0), 2)
+            _total_alns_t = round(_s.get("total_fleet_search_runtime", _alns_t), 2)
             _mx = _s.get("matrix_precompute") or {}
             _syn = _s.get("synthetic_edges_timing") or {}
             _ops = _s.get("operator_performance") or {}
+            
             _dbg_modes[_mk] = {
                 "mode_wall_time_s":        _wt,
-                "alns_solve_s":            _alns_t,
-                "setup_and_overhead_s":    round(_wt - _alns_t, 2),
+                "total_alns_solve_s":      _total_alns_t,
+                "successful_run_s":        _alns_t,
+                "actual_setup_overhead_s": round(_wt - _total_alns_t, 2),
                 "alns_iterations":         _s.get("iterations"),
                 "operator_performance": _ops,
                 "matrix_precompute_total_s": _mx.get("total_time_s"),

@@ -606,6 +606,7 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
 
     constraints = data.get("meta", {}).get("constraints", {})
     fleet_log   = []
+    total_fleet_search_runtime = 0.0
 
     for k in range(k_min, k_max + 1):
         trial = _copy.deepcopy(data)
@@ -619,6 +620,8 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
             time_budget_seconds=time_budget_seconds,
             matrix_cache_pkl_path=matrix_cache_pkl_path,
         )
+
+        total_fleet_search_runtime += stats.get("runtime", 0.0)
 
         served  = stats["served"]
         total   = stats["total"]
@@ -648,6 +651,7 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
             break
 
     best_stats["buses_used"]           = best_k
+    best_stats["total_fleet_search_runtime"] = total_fleet_search_runtime
     best_stats["fleet_search_log"]     = fleet_log
     best_stats["fleet_search_summary"] = _summarise_fleet_search(fleet_log)
     return best_k, best_sol, best_stats, best_school
