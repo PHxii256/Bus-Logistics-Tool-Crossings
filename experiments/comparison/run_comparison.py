@@ -1948,6 +1948,17 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                    sol_a, sol_b, sol_c, G_unc, iters, total_wall=None,
                    step_times=None, mode_wall_times=None):
     """Assemble the full metrics dict that will be written to metrics.json."""
+    matrix_cache_cfg = (
+        meta.get("distance_matrix_cache")
+        or meta.get("algorithm", {}).get("distance_matrix_cache")
+        or {}
+    )
+    matrix_cache_min_finite_ratio = (
+        float(matrix_cache_cfg.get("min_finite_ratio", 0.0001))
+        if isinstance(matrix_cache_cfg, dict)
+        else 0.0001
+    )
+
     mode_map = {
         "strictly_constrained":   ("A", sol_a),
         "weakly_constrained": ("B", sol_b),
