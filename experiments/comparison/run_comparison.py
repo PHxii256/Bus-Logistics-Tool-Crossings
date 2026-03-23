@@ -2150,6 +2150,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                 "enabled": bool((meta.get("distance_matrix_cache") or {}).get("enabled", False)),
                 "force_disable": bool((meta.get("distance_matrix_cache") or {}).get("force_disable", False)),
                 "isolate_per_run": bool((meta.get("distance_matrix_cache") or {}).get("isolate_per_run", False)),
+                "min_finite_ratio": matrix_cache_min_finite_ratio,
                 "pkl_path": (meta.get("distance_matrix_cache") or {}).get("pkl_path"),
             },
             "stage_walk_limits": stage_walk,
@@ -2251,6 +2252,11 @@ def run(input_path=None, output_path=None, iterations=None):
         or meta.get("algorithm", {}).get("distance_matrix_cache")
         or {}
     )
+    matrix_cache_min_finite_ratio = (
+        float(matrix_cache_cfg.get("min_finite_ratio", 0.0001))
+        if isinstance(matrix_cache_cfg, dict)
+        else 0.0001
+    )
     matrix_cache_pkl_path = _resolve_matrix_cache_pkl_path(
         matrix_cache_cfg, input_path, output
     )
@@ -2261,7 +2267,8 @@ def run(input_path=None, output_path=None, iterations=None):
             "  Matrix cache cfg: "
             f"enabled={bool(matrix_cache_cfg.get('enabled', False))}, "
             f"force_disable={bool(matrix_cache_cfg.get('force_disable', False))}, "
-            f"isolate_per_run={bool(matrix_cache_cfg.get('isolate_per_run', False))}"
+            f"isolate_per_run={bool(matrix_cache_cfg.get('isolate_per_run', False))}, "
+            f"min_finite_ratio={matrix_cache_min_finite_ratio}"
         )
 
     school_cfg = meta["school"]
@@ -2471,11 +2478,13 @@ def run(input_path=None, output_path=None, iterations=None):
         print("  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode A")
         _, sol_a, stats_a, school_a = find_minimum_fleet(
             data_a, G_con, iterations=iters, stage_walk_limits=stage_walk, G_drive=G_unc,
-            matrix_cache_pkl_path=matrix_cache_pkl_path)
+            matrix_cache_pkl_path=matrix_cache_pkl_path,
+            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
     else:
         sol_a, stats_a, school_a = run_algorithm(
             data_a, G_con, iterations=iters, stage_walk_limits=stage_walk, G_drive=G_unc,
-            matrix_cache_pkl_path=matrix_cache_pkl_path)
+            matrix_cache_pkl_path=matrix_cache_pkl_path,
+            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
     stats_a["label"] = "Mode-A"
     if "cap_violations_am" not in stats_a:
         cv = _count_cap_violations(sol_a, G_unc, meta.get("constraints", {}))
@@ -2527,11 +2536,13 @@ def run(input_path=None, output_path=None, iterations=None):
         print("  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode B")
         _, sol_b, stats_b, school_b = find_minimum_fleet(
             data_b, G_unc, iterations=iters, G_drive=G_unc,
-            matrix_cache_pkl_path=matrix_cache_pkl_path)
+            matrix_cache_pkl_path=matrix_cache_pkl_path,
+            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
     else:
         sol_b, stats_b, school_b = run_algorithm(
             data_b, G_unc, iterations=iters, G_drive=G_unc,
-            matrix_cache_pkl_path=matrix_cache_pkl_path)
+            matrix_cache_pkl_path=matrix_cache_pkl_path,
+            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
     stats_b["label"] = "Mode-B"
     if "cap_violations_am" not in stats_b:
         cv = _count_cap_violations(sol_b, G_unc, meta.get("constraints", {}))
@@ -2577,11 +2588,13 @@ def run(input_path=None, output_path=None, iterations=None):
         print("  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode C")
         _, sol_c, stats_c, school_c = find_minimum_fleet(
             data_c, G_unc, iterations=iters, G_drive=G_unc,
-            matrix_cache_pkl_path=matrix_cache_pkl_path)
+            matrix_cache_pkl_path=matrix_cache_pkl_path,
+            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
     else:
         sol_c, stats_c, school_c = run_algorithm(
             data_c, G_unc, iterations=iters, G_drive=G_unc,
-            matrix_cache_pkl_path=matrix_cache_pkl_path)
+            matrix_cache_pkl_path=matrix_cache_pkl_path,
+            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
     stats_c["label"] = "Mode-C"
     if "cap_violations_am" not in stats_c:
         cv = _count_cap_violations(sol_c, G_unc, meta.get("constraints", {}))

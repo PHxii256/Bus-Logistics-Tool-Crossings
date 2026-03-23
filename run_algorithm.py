@@ -225,7 +225,8 @@ def _set_last_matrix_precompute_stats(stats):
     _LAST_MATRIX_PRECOMPUTE_STATS = dict(stats or {})
 
 def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
-                      max_candidates=15, matrix_cache_pkl_path=None):
+                      max_candidates=15, matrix_cache_pkl_path=None,
+                      matrix_cache_min_finite_ratio=0.0001):
     """Build the distance matrix for ALNS.
 
     Parameters
@@ -260,6 +261,10 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
         "cache_loaded_finite_ratio": None,
         "cache_loaded_inf_pairs": None,
         "cache_loaded_finite_pairs": None,
+        "cache_guard_min_finite_ratio": float(matrix_cache_min_finite_ratio),
+        "cache_load_rejected": False,
+        "cache_load_reject_reason": None,
+        "cache_recomputed_after_reject": False,
     }
     critical_nodes = set()
     student_frontages = {}
@@ -310,10 +315,44 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
                 _stats["cache_loaded_finite_ratio"] = loaded.get("finite_ratio")
                 _stats["cache_loaded_inf_pairs"] = loaded.get("inf_pairs")
                 _stats["cache_loaded_finite_pairs"] = loaded.get("finite_pairs")
-            _stats["total_time_s"] = round(_t.time() - _t_start, 4)
-            _set_last_matrix_precompute_stats(_stats)
-            print(f"[Optimization] Loaded persisted matrix cache from: {matrix_cache_pkl_path}")
-            return critical_nodes, student_frontages
+
+            finite_ratio = loaded.get("finite_ratio") if isinstance(loaded, dict) else None
+            finite_pairs = loaded.get("finite_pairs") if isinstance(loaded, dict) else None
+            reject_reason = None
+
+            if finite_pairs == 0:
+                reject_reason = "loaded cache has zero finite pairs (all inf)"
+            elif (
+                finite_ratio is not None
+                and float(finite_ratio) < float(matrix_cache_min_finite_ratio)
+            ):
+                reject_reason = (
+                    f"loaded cache finite_ratio={finite_ratio} below minimum "
+                    f"{float(matrix_cache_min_finite_ratio):.6f}"
+                )
+
+            if reject_reason:
+                _stats["cache_load_rejected"] = True
+                _stats["cache_load_reject_reason"] = reject_reason
+                _stats["cache_recomputed_after_reject"] = True
+                _stats["loaded_from_pkl"] = False
+                _stats["source"] = "computed_osrm"
+                print(
+                    "[Optimization] Warning: rejecting persisted matrix cache "
+                    f"({reject_reason}). Recomputing via OSRM."
+                )
+                # Defensive clear: avoid stale/poisoned pairs affecting this solve.
+                _MATRIX_CACHE.clear()
+                _MATRIX_CACHE_LENGTH.clear()
+            else:
+                _stats["total_time_s"] = round(_t.time() - _t_start, 4)
+                _set_last_matrix_precompute_stats(_stats)
+                print(
+                    "[Optimization] Loaded persisted matrix cache from: "
+                    f"{matrix_cache_pkl_path} "
+                    f"(finite_ratio={finite_ratio}, finite_pairs={finite_pairs})"
+                )
+                return critical_nodes, student_frontages
     # Bus distance matrix ALWAYS uses the full driving graph
     # precalculate_distance_matrix(G_drive, list(critical_nodes), fast_mode=fast_mode)
     
@@ -499,7 +538,8 @@ def run_generate_routes(data, G, input_file_path):
 def run_algorithm(data: dict, G, iterations: int = None,
                   stage_walk_limits: dict = None, save=False,
                   G_drive=None, time_budget_seconds: float = None,
-                  matrix_cache_pkl_path: str = None):
+                  matrix_cache_pkl_path: str = None,
+                  matrix_cache_min_finite_ratio: float = 0.0001):
     """Run ALNS on *data* using graph *G* and return (best_solution, stats_dict, school_coords).
 
     Parameters
@@ -552,6 +592,7 @@ def run_algorithm(data: dict, G, iterations: int = None,
         G_drive=G_drive,
         max_candidates=max_cands,
         matrix_cache_pkl_path=matrix_cache_pkl_path,
+        matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio,
     )
     matrix_precompute = get_last_matrix_precompute_stats()
 
@@ -603,7 +644,8 @@ def run_algorithm(data: dict, G, iterations: int = None,
 def find_minimum_fleet(data: dict, G, iterations: int = None,
                        stage_walk_limits: dict = None,
                        G_drive=None, time_budget_seconds: float = None,
-                       matrix_cache_pkl_path: str = None):
+                       matrix_cache_pkl_path: str = None,
+                       matrix_cache_min_finite_ratio: float = 0.0001):
     """Search for the smallest fleet size that can serve every student.
 
     Iterates from the theoretical minimum number of buses (⌈students/capacity⌉)
@@ -653,6 +695,7 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
             G_drive=G_drive,
             time_budget_seconds=time_budget_seconds,
             matrix_cache_pkl_path=matrix_cache_pkl_path,
+            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio,
         )
 
         total_fleet_search_runtime += stats.get("runtime", 0.0)
