@@ -328,6 +328,25 @@ def regret_repair(solution, k=2):
 _student_candidate_cache = {}  # student_id -> list of (node_id, coords)
 _student_candidate_dist   = {}  # student_id -> {node_id: walk_dist_m}  (0 for frontage)
 
+# Lightweight diagnostics to understand why insertions fail/prune.
+_insertion_debug_stats = {
+    "routes_checked": 0,
+    "routes_bbox_pruned": 0,
+    "candidates_considered": 0,
+    "valid_insertions": 0,
+}
+
+
+def reset_insertion_debug_stats():
+    _insertion_debug_stats["routes_checked"] = 0
+    _insertion_debug_stats["routes_bbox_pruned"] = 0
+    _insertion_debug_stats["candidates_considered"] = 0
+    _insertion_debug_stats["valid_insertions"] = 0
+
+
+def get_insertion_debug_stats():
+    return dict(_insertion_debug_stats)
+
 # Candidate configuration set by ALNSEngine before each run (max_candidates_per_student, etc.)
 _alns_candidate_cfg = {}
 
@@ -382,26 +401,7 @@ def _get_insertions_for_route(student, route, graph, frontage_info):
     """Helper to find all possible valid insertion points for a student in ONE route.
     Tries both the frontage node AND walk/reachability candidates.
     """
-    # OPTIMIZATION: Spatial pruning to skip routes that are too far.
-    # If the student creates a massive detour just to reach the route's bounding box,
-    # it likely violates constraints or is extremely inefficient.
-    if route.stops:
-        # Calculate route bounding box
-        r_lats = [s.coords[0] for s in route.stops]
-        r_lons = [s.coords[1] for s in route.stops]
-        min_lat, max_lat = min(r_lats), max(r_lats)
-        min_lon, max_lon = min(r_lons), max(r_lons)
-        
-        # Buffer approx 5km (~0.045 deg lat, ~0.05 deg lon)
-        buffer_lat = 0.045
-        buffer_lon = 0.05
-        
-        s_lat, s_lon = student.coords
-        
-        # If student is outside the box + buffer, return no options immediately
-        if not (min_lat - buffer_lat <= s_lat <= max_lat + buffer_lat and
-                min_lon - buffer_lon <= s_lon <= max_lon + buffer_lon):
-            return []
+    _insertion_debug_stats["routes_checked"] += 1
 
     from detour_engine import _MATRIX_CACHE
     options = []
@@ -501,6 +501,7 @@ def _get_insertions_for_route(student, route, graph, frontage_info):
         # If student is outside the box + buffer, return no options immediately
         if not (min_lat - buffer_lat <= s_lat <= max_lat + buffer_lat and
                 min_lon - buffer_lon <= s_lon <= max_lon + buffer_lon):
+            _insertion_debug_stats["routes_bbox_pruned"] += 1
             return []
     start_pos = 1 if len(route.stops) >= 2 else 0
     end_pos = len(route.stops) if len(route.stops) >= 2 else len(route.stops) + 1
@@ -509,6 +510,7 @@ def _get_insertions_for_route(student, route, graph, frontage_info):
     # as it causes students with walk_radius=0 (whose exact nodes might not be cached yet)
     # to be incorrectly marked as completely un-routable.
     reachable_candidates = candidate_nodes
+    _insertion_debug_stats["candidates_considered"] += len(reachable_candidates)
         
     for pos in range(start_pos, end_pos):
         for cand_node_id, cand_coords in reachable_candidates:
@@ -540,6 +542,7 @@ def _get_insertions_for_route(student, route, graph, frontage_info):
                     'insertion_cost_minutes': penalized_cost,
                     'is_new_stop': existing_stop is None
                 })
+                _insertion_debug_stats["valid_insertions"] += 1
     return options
 
 def _get_all_valid_insertions(student, routes, graph):
@@ -574,7 +577,8 @@ class ALNSEngine:
     def __init__(self, initial_solution, iterations=100, temp=1000, cooling=0.98,
                  time_budget_seconds=None, max_candidates_per_student=None,
                  early_stop_patience=None, min_improvement=1e-6,
-                 freeze_temp_threshold=0.05, freeze_patience=None):
+                 freeze_temp_threshold=0.05, freeze_patience=None,
+                 merge_tail_iterations=30):
         # Configure module-level candidate settings.
         # NOTE: do NOT clear _student_candidate_cache here — the cache is
         # keyed by student-id and stays valid across fleet-search iterations
@@ -596,6 +600,20 @@ class ALNSEngine:
         self.min_improvement = float(min_improvement) if min_improvement is not None else 1e-6
         self.freeze_temp_threshold = float(freeze_temp_threshold)
         self.freeze_patience = int(freeze_patience) if freeze_patience else None
+        self.merge_tail_iterations = max(0, int(merge_tail_iterations or 0))
+        self.run_diagnostics = {
+            "merge_tail": {
+                "enabled": self.merge_tail_iterations > 0,
+                "ran": False,
+                "iterations": 0,
+                "accepted": 0,
+                "best_improvements": 0,
+                "served_start": 0,
+                "served_end": 0,
+                "active_buses_start": 0,
+                "active_buses_end": 0,
+            }
+        }
         
         self.destroy_ops = [
             random_removal,
@@ -662,8 +680,10 @@ class ALNSEngine:
         self.operator_stats_summary = out
         
     def run(self):
+        reset_insertion_debug_stats()
         t = self.temp
         start_time = time.time()
+        deadline = (start_time + self.time_budget_seconds) if self.time_budget_seconds else None
         block_start_time = start_time
         best_obj = self.best_sol.calculate_objective()
         no_improve_iters = 0
@@ -791,6 +811,30 @@ class ALNSEngine:
                 block_start_time = block_end_time
 
         total_elapsed = time.time() - start_time
+
+        # Short post-loop phase: force fleet-consolidation attempts while preserving speed.
+        total_students = len(self.best_sol.students)
+        served_count = sum(1 for s in self.best_sol.students if s.is_served)
+        active_buses = sum(1 for r in self.best_sol.routes if r.get_student_count() > 0)
+        theoretical_min_buses = 0
+        if self.best_sol.routes:
+            capacity = self.best_sol.routes[0].bus.capacity
+            theoretical_min_buses = math.ceil(total_students / capacity)
+
+        should_run_tail = (
+            self.merge_tail_iterations > 0
+            and served_count == total_students
+            and active_buses > theoretical_min_buses
+        )
+        if should_run_tail:
+            if self.time_budget_seconds:
+                remaining = self.time_budget_seconds - (time.time() - start_time)
+                if remaining <= 0:
+                    should_run_tail = False
+            if should_run_tail:
+                self._run_merge_focused_tail(best_obj, deadline)
+
+        total_elapsed = time.time() - start_time
         print(f"Optimization Complete.")
         print(f"Total Time: {total_elapsed:.2f}s")
         print(f"Final State: {self.best_sol}")
@@ -809,6 +853,67 @@ class ALNSEngine:
         self._finalize_operator_stats(executed_iters)
 
         return self.best_sol
+
+    def _run_merge_focused_tail(self, best_obj, deadline=None):
+        route_merge_idx = next((i for i, op in enumerate(self.destroy_ops) if op.__name__ == "route_merge_removal"), None)
+        regret_idx = next((i for i, op in enumerate(self.repair_ops) if op.__name__ == "regret_repair"), None)
+        if route_merge_idx is None or regret_idx is None:
+            return
+
+        diag = self.run_diagnostics["merge_tail"]
+        diag["ran"] = True
+        diag["served_start"] = sum(1 for s in self.best_sol.students if s.is_served)
+        diag["active_buses_start"] = sum(1 for r in self.best_sol.routes if r.get_student_count() > 0)
+
+        tail_t = max(1e-3, self.temp * 0.05)
+        print(f"Running merge-focused tail phase ({self.merge_tail_iterations} iterations)...")
+
+        for _ in range(self.merge_tail_iterations):
+            if deadline is not None and time.time() >= deadline:
+                break
+
+            new_sol = self.curr_sol.clone()
+            n_remove = max(1, int(len(new_sol.students) * random.uniform(0.08, 0.2)))
+
+            _td = time.time()
+            removed = self.destroy_ops[route_merge_idx](new_sol, n_remove)
+            self._record_op_timing("destroy", self.destroy_ops[route_merge_idx].__name__, time.time() - _td)
+            if not removed:
+                continue
+
+            _tr = time.time()
+            self.repair_ops[regret_idx](new_sol)
+            self._record_op_timing("repair", self.repair_ops[regret_idx].__name__, time.time() - _tr)
+
+            diag["iterations"] += 1
+            new_obj = new_sol.calculate_objective()
+            curr_obj = self.curr_sol.calculate_objective()
+            improved_best = False
+
+            if new_obj > best_obj + self.min_improvement:
+                self.best_sol = new_sol.clone()
+                self.curr_sol = new_sol
+                best_obj = new_obj
+                improved_best = True
+                diag["best_improvements"] += 1
+                diag["accepted"] += 1
+            elif new_obj > curr_obj + self.min_improvement:
+                self.curr_sol = new_sol
+                diag["accepted"] += 1
+            else:
+                diff = new_obj - curr_obj
+                p = math.exp(diff / tail_t) if tail_t > 0 else 0
+                if random.random() < p:
+                    self.curr_sol = new_sol
+                    diag["accepted"] += 1
+
+            tail_t *= 0.96
+
+        if self.curr_sol.calculate_objective() > self.best_sol.calculate_objective() + self.min_improvement:
+            self.best_sol = self.curr_sol.clone()
+
+        diag["served_end"] = sum(1 for s in self.best_sol.students if s.is_served)
+        diag["active_buses_end"] = sum(1 for r in self.best_sol.routes if r.get_student_count() > 0)
 
     def _select_op(self, weights):
         probs = weights / np.sum(weights)

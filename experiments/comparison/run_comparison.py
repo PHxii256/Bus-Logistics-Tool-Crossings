@@ -92,13 +92,15 @@ def _resolve_injection_pkl_path(injection_cfg, input_path):
 def _resolve_matrix_cache_pkl_path(matrix_cfg, input_path, output_path):
     if not isinstance(matrix_cfg, dict):
         return None
+    if bool(matrix_cfg.get("force_disable", False)):
+        return None
     enabled = bool(matrix_cfg.get("enabled", False))
     raw = matrix_cfg.get("pkl_path")
     if not enabled and not raw:
         return None
     if raw:
         if os.path.isabs(raw):
-            return raw
+            return _maybe_isolate_matrix_cache_path(raw, matrix_cfg)
         bases = []
         if input_path:
             input_dir = os.path.dirname(input_path)
@@ -110,12 +112,24 @@ def _resolve_matrix_cache_pkl_path(matrix_cfg, input_path, output_path):
                 continue
             candidate = os.path.abspath(os.path.join(base, raw))
             if os.path.exists(candidate):
-                return candidate
+                return _maybe_isolate_matrix_cache_path(candidate, matrix_cfg)
         base = os.path.dirname(input_path) if input_path else _SCRIPT_DIR
-        return os.path.abspath(os.path.join(base, raw))
+        return _maybe_isolate_matrix_cache_path(os.path.abspath(os.path.join(base, raw)), matrix_cfg)
 
     # Enabled with no explicit path: default to the run output directory.
-    return os.path.join(os.path.dirname(output_path), "distance_matrix_cache.pkl")
+    base = os.path.join(os.path.dirname(output_path), "distance_matrix_cache.pkl")
+    return _maybe_isolate_matrix_cache_path(base, matrix_cfg)
+
+def _maybe_isolate_matrix_cache_path(path, matrix_cfg):
+    if not path:
+        return path
+    if not isinstance(matrix_cfg, dict) or not bool(matrix_cfg.get("isolate_per_run", False)):
+        return path
+    folder = os.path.dirname(path)
+    name = os.path.basename(path)
+    stem, ext = os.path.splitext(name)
+    run_tag = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    return os.path.join(folder, f"{stem}_{run_tag}{ext or '.pkl'}")
 
 
 def _load_crossings_injection_payload(pkl_path):
@@ -2016,6 +2030,8 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "alns_runtime_seconds": round(s["runtime"],     2),
             "mode_wall_time_seconds": s.get("mode_wall_time"),
             "operator_performance": s.get("operator_performance"),
+            "alns_diagnostics": s.get("alns_diagnostics"),
+            "insertion_debug": s.get("insertion_debug"),
             "matrix_precompute": s.get("matrix_precompute"),
             "synthetic_edges_timing": s.get("synthetic_edges_timing"),
             "unsafe_crossings":     cx,
@@ -2087,11 +2103,18 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                 "matrix_precompute_load_s": _mx.get("load_time_s"),
                 "matrix_precompute_compute_s": _mx.get("compute_time_s"),
                 "matrix_precompute_save_s": _mx.get("save_time_s"),
+                "matrix_critical_nodes_count": _mx.get("critical_nodes_count"),
+                "matrix_nodes_count": _mx.get("matrix_nodes_count"),
+                "matrix_cache_key_prefix": _mx.get("cache_key_prefix"),
+                "matrix_cache_entry_node_count": _mx.get("cache_entry_node_count"),
+                "matrix_cache_loaded_finite_ratio": _mx.get("cache_loaded_finite_ratio"),
                 "synthetic_edges_source": _syn.get("source"),
                 "synthetic_edges_prepare_s": _syn.get("prepare_time_s"),
                 "synthetic_edges_pkl_load_s": _syn.get("pkl_load_time_s"),
                 "synthetic_edges_generate_s": _syn.get("generate_time_s"),
                 "synthetic_edges_auto_save_pkl_s": _syn.get("auto_save_pkl_time_s"),
+                "insertion_debug": _s.get("insertion_debug"),
+                "alns_diagnostics": _s.get("alns_diagnostics"),
                 "n_candidates_per_student": round(
                     sum(len(v) for v in (getattr(_alns, '_student_candidate_cache', None) or {}).values())
                     / max(1, _s.get("total", 1)), 1
@@ -2122,6 +2145,13 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "soft_ride_caps": meta.get("constraints", {}).get("soft_ride_caps", False),
             "time_budget_seconds": meta.get("algorithm", {}).get("time_budget_seconds"),
             "max_candidates_per_student": meta.get("algorithm", {}).get("max_candidates_per_student"),
+            "merge_tail_iterations": meta.get("algorithm", {}).get("merge_tail_iterations", 30),
+            "distance_matrix_cache": {
+                "enabled": bool((meta.get("distance_matrix_cache") or {}).get("enabled", False)),
+                "force_disable": bool((meta.get("distance_matrix_cache") or {}).get("force_disable", False)),
+                "isolate_per_run": bool((meta.get("distance_matrix_cache") or {}).get("isolate_per_run", False)),
+                "pkl_path": (meta.get("distance_matrix_cache") or {}).get("pkl_path"),
+            },
             "stage_walk_limits": stage_walk,
             "stage_distribution": {
                 k: v for k, v in meta.get("stage_distribution", {}).items()
@@ -2226,6 +2256,13 @@ def run(input_path=None, output_path=None, iterations=None):
     )
     if matrix_cache_pkl_path:
         print(f"  Matrix cache pkl: {matrix_cache_pkl_path}")
+    if isinstance(matrix_cache_cfg, dict):
+        print(
+            "  Matrix cache cfg: "
+            f"enabled={bool(matrix_cache_cfg.get('enabled', False))}, "
+            f"force_disable={bool(matrix_cache_cfg.get('force_disable', False))}, "
+            f"isolate_per_run={bool(matrix_cache_cfg.get('isolate_per_run', False))}"
+        )
 
     school_cfg = meta["school"]
     raw_walk = meta.get("stage_walk_limits", DEFAULT_STAGE_WALK_LIMITS)

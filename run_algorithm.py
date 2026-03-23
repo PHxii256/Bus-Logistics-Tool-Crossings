@@ -22,6 +22,7 @@ from data_loader import (
     serialize_routes, print_input_summary
 )
 import detour_engine as _det_eng
+import alns_engine as _alns
 from detour_engine import (
     calculate_route_distance, calculate_route_time,
     cheapest_insertion, process_detour_request, insert_with_2opt,
@@ -253,6 +254,12 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
         "save_time_s": 0.0,
         "total_time_s": 0.0,
         "critical_nodes_count": 0,
+        "matrix_nodes_count": 0,
+        "cache_key_prefix": None,
+        "cache_entry_node_count": None,
+        "cache_loaded_finite_ratio": None,
+        "cache_loaded_inf_pairs": None,
+        "cache_loaded_finite_pairs": None,
     }
     critical_nodes = set()
     student_frontages = {}
@@ -288,14 +295,21 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
     # Persistent matrix cache (optional): load full sub-matrix for this exact
     # critical-node set and driving graph snapshot.
     matrix_nodes = sorted(critical_nodes, key=lambda x: str(x))
+    _stats["matrix_nodes_count"] = len(matrix_nodes)
     if matrix_cache_pkl_path:
         cache_key = _build_matrix_cache_key(G_drive, matrix_nodes)
+        _stats["cache_key_prefix"] = cache_key[:12]
         _tl = _t.time()
         loaded = _load_matrix_cache_from_disk(matrix_cache_pkl_path, cache_key)
         _stats["load_time_s"] = round(_t.time() - _tl, 4)
         if loaded:
             _stats["source"] = "loaded_from_pkl"
             _stats["loaded_from_pkl"] = True
+            if isinstance(loaded, dict):
+                _stats["cache_entry_node_count"] = loaded.get("node_count")
+                _stats["cache_loaded_finite_ratio"] = loaded.get("finite_ratio")
+                _stats["cache_loaded_inf_pairs"] = loaded.get("inf_pairs")
+                _stats["cache_loaded_finite_pairs"] = loaded.get("finite_pairs")
             _stats["total_time_s"] = round(_t.time() - _t_start, 4)
             _set_last_matrix_precompute_stats(_stats)
             print(f"[Optimization] Loaded persisted matrix cache from: {matrix_cache_pkl_path}")
@@ -350,6 +364,9 @@ def _load_matrix_cache_from_disk(pkl_path, cache_key):
         if size == 0 or len(durations) != size or len(distances) != size:
             return False
 
+        finite_pairs = 0
+        inf_pairs = 0
+
         for i, src in enumerate(node_ids):
             row_t = durations[i]
             row_d = distances[i]
@@ -360,10 +377,23 @@ def _load_matrix_cache_from_disk(pkl_path, cache_key):
             for j, dst in enumerate(node_ids):
                 if src == dst:
                     continue
-                _MATRIX_CACHE[(src, dst)] = row_t[j]
-                _MATRIX_CACHE_LENGTH[(src, dst)] = row_d[j]
+                t_val = row_t[j]
+                d_val = row_d[j]
+                _MATRIX_CACHE[(src, dst)] = t_val
+                _MATRIX_CACHE_LENGTH[(src, dst)] = d_val
+                if t_val == float("inf") or d_val == float("inf"):
+                    inf_pairs += 1
+                else:
+                    finite_pairs += 1
 
-        return True
+        total_pairs = finite_pairs + inf_pairs
+        finite_ratio = round((finite_pairs / total_pairs), 4) if total_pairs > 0 else None
+        return {
+            "node_count": size,
+            "finite_pairs": finite_pairs,
+            "inf_pairs": inf_pairs,
+            "finite_ratio": finite_ratio,
+        }
     except Exception as e:
         print(f"[Optimization] Warning: failed to load matrix cache '{pkl_path}': {e}")
         return False
@@ -513,6 +543,7 @@ def run_algorithm(data: dict, G, iterations: int = None,
     min_improvement = algo_cfg.get("early_stop_min_improvement", 1e-6)
     freeze_temp_threshold = algo_cfg.get("early_stop_freeze_temp", 0.05)
     freeze_patience = algo_cfg.get("early_stop_freeze_patience", None)
+    merge_tail_iterations = algo_cfg.get("merge_tail_iterations", 30)
     # Walking BFS uses G (may be constrained); bus routing uses G_drive (unconstrained)
     precompute_matrix(
         students,
@@ -530,7 +561,8 @@ def run_algorithm(data: dict, G, iterations: int = None,
                          early_stop_patience=early_stop_patience,
                          min_improvement=min_improvement,
                          freeze_temp_threshold=freeze_temp_threshold,
-                         freeze_patience=freeze_patience)
+                         freeze_patience=freeze_patience,
+                         merge_tail_iterations=merge_tail_iterations)
     t0      = _time.time()
     best    = engine.run()
     elapsed = _time.time() - t0
@@ -560,6 +592,8 @@ def run_algorithm(data: dict, G, iterations: int = None,
         "runtime": round(elapsed, 2),
         "alns_iteration_log": list(getattr(engine, "iteration_log", [])),
         "operator_performance": dict(getattr(engine, "operator_stats_summary", {})),
+        "alns_diagnostics": dict(getattr(engine, "run_diagnostics", {})),
+        "insertion_debug": _alns.get_insertion_debug_stats(),
         "matrix_precompute": matrix_precompute,
     }
 
@@ -674,6 +708,42 @@ def _diagnose_unserved(unserved_students, sol, capacity, constraints):
     all_full = all(r.get_student_count() >= capacity for r in sol.routes)
 
     reasons = {}
+
+    school_nodes = []
+    for route in sol.routes:
+        if route.stops:
+            school_nodes.append(route.stops[0].node_id)
+
+    def _diagnose_zero_walk_student(student):
+        try:
+            frontage_node_id, frontage_coords = snap_address_to_edge(student.coords, sol.graph)
+        except Exception:
+            return "zero_walk_radius_snap_failed"
+
+        # If frontage cannot reach any school node in matrix, ALNS won't be able to insert.
+        if school_nodes:
+            reachable = False
+            for school_node in school_nodes:
+                to_school = _MATRIX_CACHE.get((frontage_node_id, school_node), float("inf"))
+                from_school = _MATRIX_CACHE.get((school_node, frontage_node_id), float("inf"))
+                if to_school < float("inf") and from_school < float("inf"):
+                    reachable = True
+                    break
+            if not reachable:
+                return "zero_walk_radius_frontage_unreachable"
+
+        # Probe insertion feasibility directly: this is diagnostic-only, not expensive at tiny unserved counts.
+        try:
+            for route in sol.routes:
+                options = _alns._get_insertions_for_route(
+                    student, route, sol.graph, (frontage_node_id, frontage_coords)
+                )
+                if options:
+                    return "search_budget_exhausted"
+            return "zero_walk_radius_no_valid_insertion"
+        except Exception:
+            return "zero_walk_radius_diagnostic_error"
+
     for s in unserved_students:
         if all_full:
             reasons["all_routes_at_capacity"] = reasons.get("all_routes_at_capacity", 0) + 1
@@ -688,7 +758,8 @@ def _diagnose_unserved(unserved_students, sol, capacity, constraints):
                     continue
 
         if getattr(s, "walk_radius", 0) == 0:
-            reasons["zero_walk_radius_no_candidates"] = reasons.get("zero_walk_radius_no_candidates", 0) + 1
+            z_reason = _diagnose_zero_walk_student(s)
+            reasons[z_reason] = reasons.get(z_reason, 0) + 1
             continue
 
         reasons["search_budget_exhausted"] = reasons.get("search_budget_exhausted", 0) + 1
@@ -730,6 +801,21 @@ def _summarise_fleet_search(fleet_log):
         n = reasons["zero_walk_radius_no_candidates"]
         parts.append(
             f"{n} student(s) have walk_radius=0 with no candidate stop found."
+        )
+    if reasons.get("zero_walk_radius_frontage_unreachable"):
+        n = reasons["zero_walk_radius_frontage_unreachable"]
+        parts.append(
+            f"{n} student(s) have walk_radius=0 and frontage node is unreachable from school in the matrix cache."
+        )
+    if reasons.get("zero_walk_radius_no_valid_insertion"):
+        n = reasons["zero_walk_radius_no_valid_insertion"]
+        parts.append(
+            f"{n} student(s) have walk_radius=0 but no valid insertion was found under current constraints/pruning."
+        )
+    if reasons.get("zero_walk_radius_snap_failed"):
+        n = reasons["zero_walk_radius_snap_failed"]
+        parts.append(
+            f"{n} student(s) with walk_radius=0 failed frontage-node snapping during diagnostics."
         )
     if reasons.get("search_budget_exhausted"):
         n = reasons["search_budget_exhausted"]
