@@ -1,0 +1,875 @@
+{
+  "mode": "B",
+  "mode_name": "Weakly Constrained (Any Walking)",
+  "buses_used": 4,
+  "iterations_configured": 1000,
+  "log_interval_iterations": 10,
+  "operator_performance": {
+    "executed_iterations": 1000,
+    "destroy": {
+      "random_removal": {
+        "count": 616,
+        "frequency_pct": 61.6,
+        "avg_time_s": 0.000194,
+        "best_time_s": 6.8e-05,
+        "worst_time_s": 0.000685,
+        "total_time_s": 0.119354
+      },
+      "worst_cost_removal": {
+        "count": 307,
+        "frequency_pct": 30.7,
+        "avg_time_s": 0.000658,
+        "best_time_s": 0.000495,
+        "worst_time_s": 0.001366,
+        "total_time_s": 0.202048
+      },
+      "route_merge_removal": {
+        "count": 77,
+        "frequency_pct": 7.7,
+        "avg_time_s": 8.7e-05,
+        "best_time_s": 6e-06,
+        "worst_time_s": 0.000202,
+        "total_time_s": 0.006672
+      }
+    },
+    "repair": {
+      "greedy_repair": {
+        "count": 448,
+        "frequency_pct": 44.8,
+        "avg_time_s": 0.196064,
+        "best_time_s": -0.694822,
+        "worst_time_s": 0.549127,
+        "total_time_s": 87.836508
+      },
+      "regret_repair": {
+        "count": 552,
+        "frequency_pct": 55.2,
+        "avg_time_s": 0.206836,
+        "best_time_s": -0.747102,
+        "worst_time_s": 2.202789,
+        "total_time_s": 114.173541
+      }
+    }
+  },
+  "matrix_precompute": {
+    "source": "loaded_from_pkl",
+    "loaded_from_pkl": true,
+    "saved_to_pkl": false,
+    "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/3457be27_crossings_enabled/distance_matrix_cache.pkl",
+    "load_time_s": 0.6076,
+    "compute_time_s": 0.0,
+    "save_time_s": 0.0,
+    "total_time_s": 1.5329,
+    "critical_nodes_count": 745
+  },
+  "synthetic_edges_timing": {
+    "source": "generated_synthetic",
+    "prepare_time_s": 2.0801,
+    "pkl_load_time_s": 0.0,
+    "generate_time_s": 1.7096,
+    "auto_save_pkl_time_s": 0.0153,
+    "pkl_path": null
+  },
+  "entries": [
+    {
+      "iteration": 10,
+      "temperature": 817.072807,
+      "objective_value": 579868.91,
+      "best_objective": 579868.91,
+      "students_served": 60,
+      "block_elapsed_seconds": 4.521
+    },
+    {
+      "iteration": 20,
+      "temperature": 667.607972,
+      "objective_value": 579878.56,
+      "best_objective": 579878.56,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.164
+    },
+    {
+      "iteration": 30,
+      "temperature": 545.484319,
+      "objective_value": 579878.56,
+      "best_objective": 579878.56,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.057
+    },
+    {
+      "iteration": 40,
+      "temperature": 445.700404,
+      "objective_value": 579880.55,
+      "best_objective": 579880.55,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.056
+    },
+    {
+      "iteration": 50,
+      "temperature": 364.16968,
+      "objective_value": 579882.1,
+      "best_objective": 579882.1,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.442
+    },
+    {
+      "iteration": 60,
+      "temperature": 297.553143,
+      "objective_value": 579882.1,
+      "best_objective": 579882.1,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.531
+    },
+    {
+      "iteration": 70,
+      "temperature": 243.122581,
+      "objective_value": 579883.34,
+      "best_objective": 579883.34,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.924
+    },
+    {
+      "iteration": 80,
+      "temperature": 198.64885,
+      "objective_value": 579883.34,
+      "best_objective": 579883.34,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.298
+    },
+    {
+      "iteration": 90,
+      "temperature": 162.310574,
+      "objective_value": 579883.8,
+      "best_objective": 579883.8,
+      "students_served": 60,
+      "block_elapsed_seconds": 3.344
+    },
+    {
+      "iteration": 100,
+      "temperature": 132.619556,
+      "objective_value": 579883.8,
+      "best_objective": 579883.8,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.136
+    },
+    {
+      "iteration": 110,
+      "temperature": 108.359833,
+      "objective_value": 579883.8,
+      "best_objective": 579883.8,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.138
+    },
+    {
+      "iteration": 120,
+      "temperature": 88.537873,
+      "objective_value": 579883.8,
+      "best_objective": 579883.8,
+      "students_served": 60,
+      "block_elapsed_seconds": 0.542
+    },
+    {
+      "iteration": 130,
+      "temperature": 72.341888,
+      "objective_value": 579883.8,
+      "best_objective": 579883.8,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.649
+    },
+    {
+      "iteration": 140,
+      "temperature": 59.10859,
+      "objective_value": 579883.8,
+      "best_objective": 579883.8,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.373
+    },
+    {
+      "iteration": 150,
+      "temperature": 48.296021,
+      "objective_value": 579883.8,
+      "best_objective": 579883.8,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.444
+    },
+    {
+      "iteration": 160,
+      "temperature": 39.461366,
+      "objective_value": 579883.8,
+      "best_objective": 579883.8,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.44
+    },
+    {
+      "iteration": 170,
+      "temperature": 32.242809,
+      "objective_value": 579883.8,
+      "best_objective": 579883.8,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.929
+    },
+    {
+      "iteration": 180,
+      "temperature": 26.344722,
+      "objective_value": 579883.8,
+      "best_objective": 579883.8,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.789
+    },
+    {
+      "iteration": 190,
+      "temperature": 21.525556,
+      "objective_value": 579883.8,
+      "best_objective": 579883.8,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.569
+    },
+    {
+      "iteration": 200,
+      "temperature": 17.587947,
+      "objective_value": 579883.8,
+      "best_objective": 579883.8,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.429
+    },
+    {
+      "iteration": 210,
+      "temperature": 14.370633,
+      "objective_value": 579883.8,
+      "best_objective": 579883.8,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.534
+    },
+    {
+      "iteration": 220,
+      "temperature": 11.741853,
+      "objective_value": 579884.24,
+      "best_objective": 579884.24,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.476
+    },
+    {
+      "iteration": 230,
+      "temperature": 9.593949,
+      "objective_value": 579884.28,
+      "best_objective": 579884.28,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.044
+    },
+    {
+      "iteration": 240,
+      "temperature": 7.838955,
+      "objective_value": 579884.32,
+      "best_objective": 579884.32,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.955
+    },
+    {
+      "iteration": 250,
+      "temperature": 6.404997,
+      "objective_value": 579884.32,
+      "best_objective": 579884.32,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.911
+    },
+    {
+      "iteration": 260,
+      "temperature": 5.233349,
+      "objective_value": 579885.61,
+      "best_objective": 579885.61,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.087
+    },
+    {
+      "iteration": 270,
+      "temperature": 4.276027,
+      "objective_value": 579885.85,
+      "best_objective": 579885.85,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.525
+    },
+    {
+      "iteration": 280,
+      "temperature": 3.493825,
+      "objective_value": 579885.85,
+      "best_objective": 579885.85,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.847
+    },
+    {
+      "iteration": 290,
+      "temperature": 2.85471,
+      "objective_value": 579885.85,
+      "best_objective": 579885.85,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.015
+    },
+    {
+      "iteration": 300,
+      "temperature": 2.332506,
+      "objective_value": 579885.85,
+      "best_objective": 579885.85,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.635
+    },
+    {
+      "iteration": 310,
+      "temperature": 1.905827,
+      "objective_value": 579885.85,
+      "best_objective": 579885.85,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.204
+    },
+    {
+      "iteration": 320,
+      "temperature": 1.557199,
+      "objective_value": 579885.85,
+      "best_objective": 579885.85,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.937
+    },
+    {
+      "iteration": 330,
+      "temperature": 1.272345,
+      "objective_value": 579885.85,
+      "best_objective": 579885.85,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.65
+    },
+    {
+      "iteration": 340,
+      "temperature": 1.039599,
+      "objective_value": 579886.73,
+      "best_objective": 579886.73,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.84
+    },
+    {
+      "iteration": 350,
+      "temperature": 0.849428,
+      "objective_value": 579886.73,
+      "best_objective": 579886.73,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.595
+    },
+    {
+      "iteration": 360,
+      "temperature": 0.694044,
+      "objective_value": 579886.96,
+      "best_objective": 579886.96,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.815
+    },
+    {
+      "iteration": 370,
+      "temperature": 0.567085,
+      "objective_value": 579886.96,
+      "best_objective": 579886.96,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.857
+    },
+    {
+      "iteration": 380,
+      "temperature": 0.46335,
+      "objective_value": 579886.96,
+      "best_objective": 579886.96,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.923
+    },
+    {
+      "iteration": 390,
+      "temperature": 0.37859,
+      "objective_value": 579886.96,
+      "best_objective": 579886.96,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.442
+    },
+    {
+      "iteration": 400,
+      "temperature": 0.309336,
+      "objective_value": 579886.96,
+      "best_objective": 579886.96,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.794
+    },
+    {
+      "iteration": 410,
+      "temperature": 0.25275,
+      "objective_value": 579886.96,
+      "best_objective": 579886.96,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.616
+    },
+    {
+      "iteration": 420,
+      "temperature": 0.206515,
+      "objective_value": 579886.96,
+      "best_objective": 579886.96,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.593
+    },
+    {
+      "iteration": 430,
+      "temperature": 0.168738,
+      "objective_value": 579886.96,
+      "best_objective": 579886.96,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.957
+    },
+    {
+      "iteration": 440,
+      "temperature": 0.137871,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.727
+    },
+    {
+      "iteration": 450,
+      "temperature": 0.112651,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.552
+    },
+    {
+      "iteration": 460,
+      "temperature": 0.092044,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.999
+    },
+    {
+      "iteration": 470,
+      "temperature": 0.075207,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.784
+    },
+    {
+      "iteration": 480,
+      "temperature": 0.061449,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.748
+    },
+    {
+      "iteration": 490,
+      "temperature": 0.050208,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.606
+    },
+    {
+      "iteration": 500,
+      "temperature": 0.041024,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.863
+    },
+    {
+      "iteration": 510,
+      "temperature": 0.03352,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 0.833
+    },
+    {
+      "iteration": 520,
+      "temperature": 0.027388,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.77
+    },
+    {
+      "iteration": 530,
+      "temperature": 0.022378,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.128
+    },
+    {
+      "iteration": 540,
+      "temperature": 0.018284,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.924
+    },
+    {
+      "iteration": 550,
+      "temperature": 0.01494,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.158
+    },
+    {
+      "iteration": 560,
+      "temperature": 0.012207,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.838
+    },
+    {
+      "iteration": 570,
+      "temperature": 0.009974,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.445
+    },
+    {
+      "iteration": 580,
+      "temperature": 0.008149,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.448
+    },
+    {
+      "iteration": 590,
+      "temperature": 0.006659,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.455
+    },
+    {
+      "iteration": 600,
+      "temperature": 0.005441,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.359
+    },
+    {
+      "iteration": 610,
+      "temperature": 0.004445,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.414
+    },
+    {
+      "iteration": 620,
+      "temperature": 0.003632,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.118
+    },
+    {
+      "iteration": 630,
+      "temperature": 0.002968,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.261
+    },
+    {
+      "iteration": 640,
+      "temperature": 0.002425,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.647
+    },
+    {
+      "iteration": 650,
+      "temperature": 0.001981,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.283
+    },
+    {
+      "iteration": 660,
+      "temperature": 0.001619,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.129
+    },
+    {
+      "iteration": 670,
+      "temperature": 0.001323,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.631
+    },
+    {
+      "iteration": 680,
+      "temperature": 0.001081,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.67
+    },
+    {
+      "iteration": 690,
+      "temperature": 0.000883,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.274
+    },
+    {
+      "iteration": 700,
+      "temperature": 0.000722,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.33
+    },
+    {
+      "iteration": 710,
+      "temperature": 0.00059,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.91
+    },
+    {
+      "iteration": 720,
+      "temperature": 0.000482,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.37
+    },
+    {
+      "iteration": 730,
+      "temperature": 0.000394,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.905
+    },
+    {
+      "iteration": 740,
+      "temperature": 0.000322,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.767
+    },
+    {
+      "iteration": 750,
+      "temperature": 0.000263,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.415
+    },
+    {
+      "iteration": 760,
+      "temperature": 0.000215,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.584
+    },
+    {
+      "iteration": 770,
+      "temperature": 0.000175,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.072
+    },
+    {
+      "iteration": 780,
+      "temperature": 0.000143,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.438
+    },
+    {
+      "iteration": 790,
+      "temperature": 0.000117,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.846
+    },
+    {
+      "iteration": 800,
+      "temperature": 9.6e-05,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.778
+    },
+    {
+      "iteration": 810,
+      "temperature": 7.8e-05,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.503
+    },
+    {
+      "iteration": 820,
+      "temperature": 6.4e-05,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.385
+    },
+    {
+      "iteration": 830,
+      "temperature": 5.2e-05,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.681
+    },
+    {
+      "iteration": 840,
+      "temperature": 4.3e-05,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.646
+    },
+    {
+      "iteration": 850,
+      "temperature": 3.5e-05,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.854
+    },
+    {
+      "iteration": 860,
+      "temperature": 2.8e-05,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.089
+    },
+    {
+      "iteration": 870,
+      "temperature": 2.3e-05,
+      "objective_value": 579886.98,
+      "best_objective": 579886.98,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.686
+    },
+    {
+      "iteration": 880,
+      "temperature": 1.9e-05,
+      "objective_value": 579887.07,
+      "best_objective": 579887.07,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.225
+    },
+    {
+      "iteration": 890,
+      "temperature": 1.6e-05,
+      "objective_value": 579887.14,
+      "best_objective": 579887.14,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.708
+    },
+    {
+      "iteration": 900,
+      "temperature": 1.3e-05,
+      "objective_value": 579887.14,
+      "best_objective": 579887.14,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.588
+    },
+    {
+      "iteration": 910,
+      "temperature": 1e-05,
+      "objective_value": 579887.14,
+      "best_objective": 579887.14,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.858
+    },
+    {
+      "iteration": 920,
+      "temperature": 8e-06,
+      "objective_value": 579887.24,
+      "best_objective": 579887.24,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.524
+    },
+    {
+      "iteration": 930,
+      "temperature": 7e-06,
+      "objective_value": 579887.82,
+      "best_objective": 579887.82,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.544
+    },
+    {
+      "iteration": 940,
+      "temperature": 6e-06,
+      "objective_value": 579887.82,
+      "best_objective": 579887.82,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.336
+    },
+    {
+      "iteration": 950,
+      "temperature": 5e-06,
+      "objective_value": 579887.82,
+      "best_objective": 579887.82,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.075
+    },
+    {
+      "iteration": 960,
+      "temperature": 4e-06,
+      "objective_value": 579888.13,
+      "best_objective": 579888.13,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.591
+    },
+    {
+      "iteration": 970,
+      "temperature": 3e-06,
+      "objective_value": 579888.75,
+      "best_objective": 579888.75,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.302
+    },
+    {
+      "iteration": 980,
+      "temperature": 3e-06,
+      "objective_value": 579888.83,
+      "best_objective": 579888.83,
+      "students_served": 60,
+      "block_elapsed_seconds": 1.98
+    },
+    {
+      "iteration": 990,
+      "temperature": 2e-06,
+      "objective_value": 579888.83,
+      "best_objective": 579888.83,
+      "students_served": 60,
+      "block_elapsed_seconds": 2.178
+    },
+    {
+      "iteration": 1000,
+      "temperature": 2e-06,
+      "objective_value": 579888.83,
+      "best_objective": 579888.83,
+      "students_served": 60,
+      "block_elapsed_seconds": 3.081
+    }
+  ]
+}
