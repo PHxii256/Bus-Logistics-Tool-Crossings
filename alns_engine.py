@@ -640,6 +640,17 @@ class ALNSEngine:
             "repair": {op.__name__: self._new_op_stats() for op in self.repair_ops},
         }
         self.operator_stats_summary = {}
+        self.effectiveness_stats = {
+            "destroy": {op.__name__: self._new_effect_stats() for op in self.destroy_ops},
+            "repair": {op.__name__: self._new_effect_stats() for op in self.repair_ops},
+            "pairs": {
+                f"{d.__name__}+{r.__name__}": self._new_effect_stats()
+                for d in self.destroy_ops
+                for r in self.repair_ops
+            },
+        }
+        self.destroy_idx_by_name = {op.__name__: idx for idx, op in enumerate(self.destroy_ops)}
+        self.repair_idx_by_name = {op.__name__: idx for idx, op in enumerate(self.repair_ops)}
 
     @staticmethod
     def _new_op_stats():
@@ -648,6 +659,18 @@ class ALNSEngine:
             "total_time_s": 0.0,
             "min_time_s": None,
             "max_time_s": None,
+        }
+
+    @staticmethod
+    def _new_effect_stats():
+        return {
+            "attempted": 0,
+            "accepted": 0,
+            "best_improvements": 0,
+            "bus_drop_events": 0,
+            "total_bus_drop": 0,
+            "served_drop_events": 0,
+            "total_served_drop": 0,
         }
 
     def _record_op_timing(self, family, op_name, elapsed_s):
@@ -661,8 +684,111 @@ class ALNSEngine:
         if stats["max_time_s"] is None or elapsed_s > stats["max_time_s"]:
             stats["max_time_s"] = float(elapsed_s)
 
+    def _record_effectiveness(self, destroy_name, repair_name, accepted, improved_best,
+                              prev_active, new_active, prev_served, new_served):
+        pair_key = f"{destroy_name}+{repair_name}"
+        touched = [
+            self.effectiveness_stats.get("destroy", {}).get(destroy_name),
+            self.effectiveness_stats.get("repair", {}).get(repair_name),
+            self.effectiveness_stats.get("pairs", {}).get(pair_key),
+        ]
+
+        for st in touched:
+            if st is None:
+                continue
+            st["attempted"] += 1
+            if accepted:
+                st["accepted"] += 1
+            if improved_best:
+                st["best_improvements"] += 1
+            if accepted and new_active < prev_active:
+                st["bus_drop_events"] += 1
+                st["total_bus_drop"] += int(prev_active - new_active)
+            if accepted and new_served < prev_served:
+                st["served_drop_events"] += 1
+                st["total_served_drop"] += int(prev_served - new_served)
+
+    @staticmethod
+    def _format_effectiveness_bucket(stats):
+        attempted = int(stats.get("attempted", 0))
+        accepted = int(stats.get("accepted", 0))
+        bus_drop_events = int(stats.get("bus_drop_events", 0))
+        served_drop_events = int(stats.get("served_drop_events", 0))
+        total_bus_drop = int(stats.get("total_bus_drop", 0))
+        total_served_drop = int(stats.get("total_served_drop", 0))
+        best_improvements = int(stats.get("best_improvements", 0))
+        return {
+            "attempted": attempted,
+            "accepted": accepted,
+            "acceptance_pct": round((accepted / max(1, attempted)) * 100.0, 2),
+            "best_improvements": best_improvements,
+            "bus_drop_events": bus_drop_events,
+            "total_bus_drop": total_bus_drop,
+            "bus_drop_per_accepted": round(total_bus_drop / max(1, accepted), 4),
+            "served_drop_events": served_drop_events,
+            "total_served_drop": total_served_drop,
+            "served_drop_per_accepted": round(total_served_drop / max(1, accepted), 4),
+        }
+
+    def _select_op_with_bias(self, weights, bias):
+        w = np.asarray(weights, dtype=float) * np.asarray(bias, dtype=float)
+        total = float(np.sum(w))
+        if total <= 0:
+            return self._select_op(weights)
+        probs = w / total
+        return np.random.choice(len(weights), p=probs)
+
+    def _select_destroy_idx(self, served_count, total_students, active_buses, theoretical_min_buses):
+        if served_count == total_students and active_buses > theoretical_min_buses:
+            # Consolidation mode: strongly favor merge-aware destroy operators.
+            bias = np.ones(len(self.destroy_ops))
+            bias[self.destroy_idx_by_name.get("route_merge_removal", 0)] = 5.0
+            bias[self.destroy_idx_by_name.get("sequence_removal", 0)] = 2.5
+            bias[self.destroy_idx_by_name.get("shaw_related_removal", 0)] = 2.0
+            bias[self.destroy_idx_by_name.get("worst_cost_removal", 0)] = 1.0
+            bias[self.destroy_idx_by_name.get("random_removal", 0)] = 0.8
+            return self._select_op_with_bias(self.d_weights, bias)
+        return self._select_op(self.d_weights)
+
+    def _select_repair_idx(self, iteration_idx, no_improve_iters, served_count, total_students,
+                           active_buses, theoretical_min_buses):
+        random_idx = self.repair_idx_by_name.get("random_order_best_repair", 0)
+        regret_idx = self.repair_idx_by_name.get("regret_repair", None)
+        if regret_idx is None:
+            return random_idx
+
+        progress = float(iteration_idx + 1) / float(max(1, self.iterations))
+        consolidation_mode = (served_count == total_students and active_buses > theoretical_min_buses)
+
+        if consolidation_mode:
+            # Keep runtime tight: regret is periodic, not dominant.
+            if ((iteration_idx + 1) % 4) == 0:
+                return regret_idx
+            return random_idx
+
+        if progress < 0.35:
+            # Exploration warm-up: mostly fast repair.
+            if ((iteration_idx + 1) % 10) == 0:
+                return regret_idx
+            return random_idx
+
+        if no_improve_iters >= 20 and ((iteration_idx + 1) % 3) == 0:
+            # Stagnation escape: occasionally spend on regret.
+            return regret_idx
+
+        if progress >= 0.75 and ((iteration_idx + 1) % 6) == 0:
+            # Late phase: light regret pulse for final cleanup.
+            return regret_idx
+
+        return random_idx
+
     def _finalize_operator_stats(self, executed_iterations):
-        out = {"executed_iterations": int(executed_iterations), "destroy": {}, "repair": {}}
+        out = {
+            "executed_iterations": int(executed_iterations),
+            "destroy": {},
+            "repair": {},
+            "effectiveness": {"destroy": {}, "repair": {}, "pairs": {}},
+        }
         denom = max(1, int(executed_iterations))
         for family in ("destroy", "repair"):
             for op_name, st in self.operator_stats.get(family, {}).items():
@@ -677,6 +803,11 @@ class ALNSEngine:
                     "worst_time_s": round(float(st.get("max_time_s", 0.0) or 0.0), 6),
                     "total_time_s": round(total, 6),
                 }
+        for family in ("destroy", "repair"):
+            for op_name, st in self.effectiveness_stats.get(family, {}).items():
+                out["effectiveness"][family][op_name] = self._format_effectiveness_bucket(st)
+        for pair_name, st in self.effectiveness_stats.get("pairs", {}).items():
+            out["effectiveness"]["pairs"][pair_name] = self._format_effectiveness_bucket(st)
         self.operator_stats_summary = out
         
     def run(self):
@@ -701,9 +832,27 @@ class ALNSEngine:
             if self.time_budget_seconds and (time.time() - start_time) >= self.time_budget_seconds:
                 print(f"  Time budget of {self.time_budget_seconds}s reached at iteration {i+1} — stopping.")
                 break
+
+            total_students = len(self.curr_sol.students)
+            served_count_curr = sum(1 for s in self.curr_sol.students if s.is_served)
+            active_buses_curr = sum(1 for r in self.curr_sol.routes if r.get_student_count() > 0)
+            theoretical_min_buses_curr = 0
+            if self.curr_sol.routes:
+                capacity = self.curr_sol.routes[0].bus.capacity
+                theoretical_min_buses_curr = math.ceil(total_students / capacity)
+
             # Selection
-            d_idx = self._select_op(self.d_weights)
-            r_idx = self._select_op(self.r_weights)
+            d_idx = self._select_destroy_idx(
+                served_count_curr, total_students, active_buses_curr, theoretical_min_buses_curr
+            )
+            r_idx = self._select_repair_idx(
+                i,
+                no_improve_iters,
+                served_count_curr,
+                total_students,
+                active_buses_curr,
+                theoretical_min_buses_curr,
+            )
             executed_iters = i + 1
             
             new_sol = self.curr_sol.clone()
@@ -723,6 +872,9 @@ class ALNSEngine:
             new_obj = new_sol.calculate_objective()
             curr_obj = self.curr_sol.calculate_objective()
             improved_best = False
+            accepted_move = False
+            prev_active_buses = active_buses_curr
+            prev_served_count = served_count_curr
             
             reward = 0
             if new_obj > best_obj + self.min_improvement:
@@ -731,9 +883,11 @@ class ALNSEngine:
                 best_obj = new_obj
                 reward = self.s1
                 improved_best = True
+                accepted_move = True
             elif new_obj > curr_obj + self.min_improvement:
                 self.curr_sol = new_sol
                 reward = self.s2
+                accepted_move = True
             else:
                 # Simulated Annealing acceptance criteria
                 # We use (new - old) because we are MAXIMIZING
@@ -742,6 +896,20 @@ class ALNSEngine:
                 if random.random() < p:
                     self.curr_sol = new_sol
                     reward = self.s3
+                    accepted_move = True
+
+            new_active_buses = sum(1 for r in self.curr_sol.routes if r.get_student_count() > 0)
+            new_served_count = sum(1 for s in self.curr_sol.students if s.is_served)
+            self._record_effectiveness(
+                self.destroy_ops[d_idx].__name__,
+                self.repair_ops[r_idx].__name__,
+                accepted_move,
+                improved_best,
+                prev_active_buses,
+                new_active_buses,
+                prev_served_count,
+                new_served_count,
+            )
             
             # Update weights (Adaptive)
             alpha = 0.7
@@ -889,6 +1057,9 @@ class ALNSEngine:
             new_obj = new_sol.calculate_objective()
             curr_obj = self.curr_sol.calculate_objective()
             improved_best = False
+            accepted_move = False
+            prev_active_buses = sum(1 for r in self.curr_sol.routes if r.get_student_count() > 0)
+            prev_served_count = sum(1 for s in self.curr_sol.students if s.is_served)
 
             if new_obj > best_obj + self.min_improvement:
                 self.best_sol = new_sol.clone()
@@ -897,15 +1068,31 @@ class ALNSEngine:
                 improved_best = True
                 diag["best_improvements"] += 1
                 diag["accepted"] += 1
+                accepted_move = True
             elif new_obj > curr_obj + self.min_improvement:
                 self.curr_sol = new_sol
                 diag["accepted"] += 1
+                accepted_move = True
             else:
                 diff = new_obj - curr_obj
                 p = math.exp(diff / tail_t) if tail_t > 0 else 0
                 if random.random() < p:
                     self.curr_sol = new_sol
                     diag["accepted"] += 1
+                    accepted_move = True
+
+            new_active_buses = sum(1 for r in self.curr_sol.routes if r.get_student_count() > 0)
+            new_served_count = sum(1 for s in self.curr_sol.students if s.is_served)
+            self._record_effectiveness(
+                self.destroy_ops[route_merge_idx].__name__,
+                self.repair_ops[regret_idx].__name__,
+                accepted_move,
+                improved_best,
+                prev_active_buses,
+                new_active_buses,
+                prev_served_count,
+                new_served_count,
+            )
 
             tail_t *= 0.96
 
