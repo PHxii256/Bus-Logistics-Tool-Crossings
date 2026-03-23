@@ -229,7 +229,7 @@ def _remove_student_from_solution(solution, student):
 #             _apply_insertion(solution, student, result)
 
 
-def random_order_best_repair(solution):
+def random_order_best_repair(solution, deadline=None):
     """I5-style insertion: random customer order, best insertion position."""
     unassigned = [s for s in solution.students if not s.is_served]
     if not unassigned:
@@ -242,10 +242,20 @@ def random_order_best_repair(solution):
         student_frontages[s.id] = snap_address_to_edge(s.coords, solution.graph)
 
     for student in unassigned:
+        if deadline is not None and time.time() >= deadline:
+            break
         all_options = []
         for route in solution.routes:
+            if deadline is not None and time.time() >= deadline:
+                break
             all_options.extend(
-                _get_insertions_for_route(student, route, solution.graph, student_frontages[student.id])
+                _get_insertions_for_route(
+                    student,
+                    route,
+                    solution.graph,
+                    student_frontages[student.id],
+                    deadline=deadline,
+                )
             )
         if not all_options:
             continue
@@ -253,11 +263,11 @@ def random_order_best_repair(solution):
         _apply_insertion(solution, student, best)
 
 
-def greedy_repair(solution):
+def greedy_repair(solution, deadline=None):
     """Backwards-compatible alias for the random-order best-position insertion."""
-    random_order_best_repair(solution)
+    random_order_best_repair(solution, deadline=deadline)
 
-def regret_repair(solution, k=2):
+def regret_repair(solution, k=2, deadline=None):
     """Inserts students with the highest 'regret' cost between best and k-best options.
     Optimized to minimize redundant calculations.
     """
@@ -275,23 +285,38 @@ def regret_repair(solution, k=2):
     # student_route_options[student_id][route_id] = list of insertions
     student_route_options = {}
     for s in unassigned:
+        if deadline is not None and time.time() >= deadline:
+            return
         student_route_options[s.id] = {}
         for route in solution.routes:
+            if deadline is not None and time.time() >= deadline:
+                return
             student_route_options[s.id][route.route_id] = _get_insertions_for_route(
-                s, route, solution.graph, student_frontages[s.id]
+                s, route, solution.graph, student_frontages[s.id], deadline=deadline
             )
 
     while unassigned:
+        if deadline is not None and time.time() >= deadline:
+            break
         best_regret = -1
         target_student = None
         target_insertion = None
-        
+        timeout_hit = False
+
         for student in unassigned:
+            if deadline is not None and time.time() >= deadline:
+                timeout_hit = True
+                break
             # Flatten all valid options across all routes
             all_options = []
             for r_id in student_route_options[student.id]:
+                if deadline is not None and time.time() >= deadline:
+                    timeout_hit = True
+                    break
                 all_options.extend(student_route_options[student.id][r_id])
-            
+
+            if timeout_hit:
+                break
             if not all_options:
                 continue
             
@@ -307,6 +332,9 @@ def regret_repair(solution, k=2):
                 best_regret = regret
                 target_student = student
                 target_insertion = all_options[0]
+
+        if timeout_hit:
+            break
         
         if target_student and target_insertion:
             # Apply insertion
@@ -318,9 +346,14 @@ def regret_repair(solution, k=2):
             
             # Update only the affected route's options for all remaining unassigned students
             for s in unassigned:
+                if deadline is not None and time.time() >= deadline:
+                    timeout_hit = True
+                    break
                 student_route_options[s.id][affected_route.route_id] = _get_insertions_for_route(
-                    s, affected_route, solution.graph, student_frontages[s.id]
+                    s, affected_route, solution.graph, student_frontages[s.id], deadline=deadline
                 )
+            if timeout_hit:
+                break
         else:
             break
 
@@ -397,7 +430,7 @@ def _reorder_candidates_with_shared_boost(student_id, candidate_nodes):
 
     return boosted_current
 
-def _get_insertions_for_route(student, route, graph, frontage_info):
+def _get_insertions_for_route(student, route, graph, frontage_info, deadline=None):
     """Helper to find all possible valid insertion points for a student in ONE route.
     Tries both the frontage node AND walk/reachability candidates.
     """
@@ -405,6 +438,8 @@ def _get_insertions_for_route(student, route, graph, frontage_info):
 
     from detour_engine import _MATRIX_CACHE
     options = []
+    if deadline is not None and time.time() >= deadline:
+        return options
     frontage_node_id, frontage_coords = frontage_info
     
     # Use cached candidates if available (graph doesn't change between iterations)
@@ -445,6 +480,8 @@ def _get_insertions_for_route(student, route, graph, frontage_info):
                 visited = set()
                 bfs_queue = [(center_node, 0)]
                 while bfs_queue and len(candidate_nodes) < max_k:
+                    if deadline is not None and time.time() >= deadline:
+                        break
                     node, dist = bfs_queue.pop(0)
                     if node in visited or dist > max_walk:
                         continue
@@ -513,7 +550,11 @@ def _get_insertions_for_route(student, route, graph, frontage_info):
     _insertion_debug_stats["candidates_considered"] += len(reachable_candidates)
         
     for pos in range(start_pos, end_pos):
+        if deadline is not None and time.time() >= deadline:
+            break
         for cand_node_id, cand_coords in reachable_candidates:
+            if deadline is not None and time.time() >= deadline:
+                break
             # Check if an existing stop at this node can be reused
             existing_stop = next((s for s in route.stops if s.node_id == cand_node_id), None)
             eval_stop = existing_stop if existing_stop else Stop(cand_node_id, cand_coords[0], cand_coords[1])
@@ -545,12 +586,14 @@ def _get_insertions_for_route(student, route, graph, frontage_info):
                 _insertion_debug_stats["valid_insertions"] += 1
     return options
 
-def _get_all_valid_insertions(student, routes, graph):
+def _get_all_valid_insertions(student, routes, graph, deadline=None):
     """Legacy helper (still needed for greedy_repair)"""
     node_id, coords = snap_address_to_edge(student.coords, graph)
     all_options = []
     for route in routes:
-        all_options.extend(_get_insertions_for_route(student, route, graph, (node_id, coords)))
+        if deadline is not None and time.time() >= deadline:
+            break
+        all_options.extend(_get_insertions_for_route(student, route, graph, (node_id, coords), deadline=deadline))
     return all_options
 
 def _apply_insertion(solution, student, result):
@@ -716,7 +759,7 @@ class ALNSEngine:
             
             # Repair
             _tr = time.time()
-            self.repair_ops[r_idx](new_sol)
+            self.repair_ops[r_idx](new_sol, deadline=deadline)
             self._record_op_timing("repair", self.repair_ops[r_idx].__name__, time.time() - _tr)
             
             # Score calculation
@@ -843,7 +886,7 @@ class ALNSEngine:
         unserved_count = sum(1 for s in self.best_sol.students if not s.is_served)
         if unserved_count > 0:
             print(f"Running final repair pass on {unserved_count} unserved students...")
-            greedy_repair(self.best_sol)
+            greedy_repair(self.best_sol, deadline=deadline)
             rescued = unserved_count - sum(1 for s in self.best_sol.students if not s.is_served)
             if rescued > 0:
                 print(f"  Repair pass rescued {rescued} student(s).")
@@ -882,7 +925,7 @@ class ALNSEngine:
                 continue
 
             _tr = time.time()
-            self.repair_ops[regret_idx](new_sol)
+            self.repair_ops[regret_idx](new_sol, deadline=deadline)
             self._record_op_timing("repair", self.repair_ops[regret_idx].__name__, time.time() - _tr)
 
             diag["iterations"] += 1

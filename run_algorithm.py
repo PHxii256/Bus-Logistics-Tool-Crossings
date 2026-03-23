@@ -681,10 +681,27 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
           f"searching k={k_min}..{k_max}")
 
     constraints = data.get("meta", {}).get("constraints", {})
+    algo_cfg = data.get("meta", {}).get("algorithm", {})
+    base_budget_s = time_budget_seconds if time_budget_seconds is not None else algo_cfg.get("time_budget_seconds", None)
+    first_k_budget_scale = float(algo_cfg.get("fleet_search_first_k_budget_scale", 1.0))
+    followup_k_budget_scale = float(algo_cfg.get("fleet_search_followup_k_budget_scale", 0.65))
+    trailing_early_stop_ratio = float(algo_cfg.get("fleet_search_trailing_early_stop_ratio", 0.9))
+    trailing_min_gap = int(algo_cfg.get("fleet_search_trailing_min_served_gap", 1))
+    max_per_k_s_cfg = algo_cfg.get("fleet_search_max_per_k_seconds", None)
+    max_per_k_s = float(max_per_k_s_cfg) if max_per_k_s_cfg is not None else None
+
     fleet_log   = []
     total_fleet_search_runtime = 0.0
 
     for k in range(k_min, k_max + 1):
+        k_budget_s = None
+        if base_budget_s is not None:
+            scale = first_k_budget_scale if k == k_min else followup_k_budget_scale
+            scale = max(0.05, float(scale))
+            k_budget_s = max(1.0, float(base_budget_s) * scale)
+            if max_per_k_s is not None:
+                k_budget_s = min(k_budget_s, max_per_k_s)
+
         trial = _copy.deepcopy(data)
         trial["data"]["buses"] = trial["data"]["buses"][:k]
 
@@ -693,7 +710,7 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
             iterations=iterations,
             stage_walk_limits=stage_walk_limits,
             G_drive=G_drive,
-            time_budget_seconds=time_budget_seconds,
+            time_budget_seconds=k_budget_s,
             matrix_cache_pkl_path=matrix_cache_pkl_path,
             matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio,
         )
@@ -713,6 +730,7 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
             "unserved":         total - served,
             "feasible":         served == total,
             "runtime_s":        stats["runtime"],
+            "time_budget_s":    round(k_budget_s, 2) if k_budget_s is not None else None,
             "matrix_precompute": stats.get("matrix_precompute"),
             "rejection_reasons": reasons,
         })
@@ -727,10 +745,33 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
             print(f"  → All students served with {k} bus(es) — minimum found.")
             break
 
+        # If a larger fleet size trails the best served count and has already
+        # spent most of its capped budget, stop expanding k to avoid runaway time.
+        if best_stats is not None and k > best_k:
+            served_gap = best_stats["served"] - served
+            used_most_budget = (
+                k_budget_s is not None
+                and float(stats.get("runtime", 0.0)) >= (float(k_budget_s) * trailing_early_stop_ratio)
+            )
+            if served_gap >= trailing_min_gap and used_most_budget:
+                print(
+                    f"  Early stop fleet search at k={k}: trailing best by {served_gap} served "
+                    f"after using {stats.get('runtime', 0.0):.2f}s/{k_budget_s:.2f}s budget."
+                )
+                break
+
     best_stats["buses_used"]           = best_k
     best_stats["total_fleet_search_runtime"] = total_fleet_search_runtime
     best_stats["fleet_search_log"]     = fleet_log
     best_stats["fleet_search_summary"] = _summarise_fleet_search(fleet_log)
+    best_stats["fleet_search_budget_policy"] = {
+        "base_time_budget_seconds": base_budget_s,
+        "first_k_budget_scale": first_k_budget_scale,
+        "followup_k_budget_scale": followup_k_budget_scale,
+        "max_per_k_seconds": max_per_k_s,
+        "trailing_early_stop_ratio": trailing_early_stop_ratio,
+        "trailing_min_served_gap": trailing_min_gap,
+    }
     return best_k, best_sol, best_stats, best_school
 
 
