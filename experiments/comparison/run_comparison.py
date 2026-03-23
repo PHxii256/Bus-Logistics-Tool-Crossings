@@ -348,6 +348,7 @@ def _reset_caches(keep_matrix=False, keep_walk=False):
     if not keep_walk:
         _eng._WALK_DIST_CACHE.clear()
         _eng._safe_nodes_cache.clear()
+        _eng._WALK_GRAPH = None  # Force walk graph rebuild per mode
     _eng._STUDENT_NODE_CACHE.clear()
 
 
