@@ -11,8 +11,8 @@ student can reach on foot without crossing a dangerous road.
 
 Modes
 -----
-  A  Constrained   – walking BFS avoids primary/trunk/secondary; same walk radius as B
-  B  Unconstrained – walking BFS uses all edges; same walk radius as A
+    A  Strictly Constrained – walking BFS avoids primary/trunk/secondary; same walk radius as B
+    B  Weakly Constrained   – walking BFS uses all edges; same walk radius as A
   C  Door-to-Door  – walk_radius=0 for all (bus visits every home)
 
 Usage (from the repo root):
@@ -87,6 +87,49 @@ def _resolve_injection_pkl_path(injection_cfg, input_path):
             return candidate
     base = os.path.dirname(input_path) if input_path else _SCRIPT_DIR
     return os.path.abspath(os.path.join(base, raw))
+
+
+def _resolve_matrix_cache_pkl_path(matrix_cfg, input_path, output_path):
+    if not isinstance(matrix_cfg, dict):
+        return None
+    if bool(matrix_cfg.get("force_disable", False)):
+        return None
+    enabled = bool(matrix_cfg.get("enabled", False))
+    raw = matrix_cfg.get("pkl_path")
+    if not enabled and not raw:
+        return None
+    if raw:
+        if os.path.isabs(raw):
+            return _maybe_isolate_matrix_cache_path(raw, matrix_cfg)
+        bases = []
+        if input_path:
+            input_dir = os.path.dirname(input_path)
+            bases.append(input_dir)
+            bases.append(os.path.dirname(input_dir))
+        bases.extend([_SCRIPT_DIR, _ROOT])
+        for base in bases:
+            if not base:
+                continue
+            candidate = os.path.abspath(os.path.join(base, raw))
+            if os.path.exists(candidate):
+                return _maybe_isolate_matrix_cache_path(candidate, matrix_cfg)
+        base = os.path.dirname(input_path) if input_path else _SCRIPT_DIR
+        return _maybe_isolate_matrix_cache_path(os.path.abspath(os.path.join(base, raw)), matrix_cfg)
+
+    # Enabled with no explicit path: default to the run output directory.
+    base = os.path.join(os.path.dirname(output_path), "distance_matrix_cache.pkl")
+    return _maybe_isolate_matrix_cache_path(base, matrix_cfg)
+
+def _maybe_isolate_matrix_cache_path(path, matrix_cfg):
+    if not path:
+        return path
+    if not isinstance(matrix_cfg, dict) or not bool(matrix_cfg.get("isolate_per_run", False)):
+        return path
+    folder = os.path.dirname(path)
+    name = os.path.basename(path)
+    stem, ext = os.path.splitext(name)
+    run_tag = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    return os.path.join(folder, f"{stem}_{run_tag}{ext or '.pkl'}")
 
 
 def _load_crossings_injection_payload(pkl_path):
@@ -188,6 +231,94 @@ def _inject_crossings_into_walk_graph(walk_graph, payload):
     }
 
 
+def _build_crossings_injection_payload_from_walk_graph(walk_graph, synth_cfg=None):
+    edge_pairs = []
+    nodes_by_id = {}
+    seen_undirected = set()
+
+    for u, v, data in walk_graph.edges(data=True):
+        if not (data.get("synthetic_crossing") or data.get("injected_crossing")):
+            continue
+        key = tuple(sorted((u, v), key=lambda x: str(x)))
+        if key in seen_undirected:
+            continue
+        seen_undirected.add(key)
+
+        try:
+            y_u = float(walk_graph.nodes[u].get("y"))
+            x_u = float(walk_graph.nodes[u].get("x"))
+            y_v = float(walk_graph.nodes[v].get("y"))
+            x_v = float(walk_graph.nodes[v].get("x"))
+        except Exception:
+            continue
+
+        nodes_by_id[u] = {"node_id": u, "lat": y_u, "lon": x_u}
+        nodes_by_id[v] = {"node_id": v, "lat": y_v, "lon": x_v}
+
+        edge_pairs.append({
+            "node_a": u,
+            "node_b": v,
+            "length_m": float(data.get("length", 0.0) or 0.0),
+            "crossing_type": data.get("crossing_subtype", "real_to_real"),
+            "road_name": data.get("road_name", "?"),
+        })
+
+    crossings = []
+    markers = _eng.get_synthetic_crossings()
+    if isinstance(markers, list) and markers:
+        for c in markers:
+            try:
+                crossings.append({
+                    "lat_a": float(c.get("lat_a")),
+                    "lon_a": float(c.get("lon_a")),
+                    "lat_b": float(c.get("lat_b")),
+                    "lon_b": float(c.get("lon_b")),
+                    "length_m": float(c.get("length_m", 0.0) or 0.0),
+                    "crossing_type": c.get("crossing_type", "real_to_real"),
+                    "road_name": c.get("road_name", "?"),
+                    "node_a": c.get("node_a"),
+                    "node_b": c.get("node_b"),
+                })
+            except Exception:
+                continue
+    else:
+        for e in edge_pairs:
+            a = nodes_by_id.get(e["node_a"])
+            b = nodes_by_id.get(e["node_b"])
+            if not a or not b:
+                continue
+            crossings.append({
+                "lat_a": a["lat"],
+                "lon_a": a["lon"],
+                "lat_b": b["lat"],
+                "lon_b": b["lon"],
+                "length_m": e.get("length_m", 0.0),
+                "crossing_type": e.get("crossing_type", "real_to_real"),
+                "road_name": e.get("road_name", "?"),
+                "node_a": e["node_a"],
+                "node_b": e["node_b"],
+            })
+
+    return {
+        "nodes": list(nodes_by_id.values()),
+        "edge_pairs": edge_pairs,
+        "crossings": crossings,
+        "metadata": {
+            "strategy": str((synth_cfg or {}).get("strategy", "drive_node_crossings")),
+            "created_unix": time.time(),
+            "source": "run_comparison_autosave",
+        },
+    }
+
+
+def _save_crossings_injection_payload(payload, pkl_path):
+    folder = os.path.dirname(pkl_path)
+    if folder:
+        os.makedirs(folder, exist_ok=True)
+    with open(pkl_path, "wb") as f:
+        pickle.dump(payload, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+
 # ────────────────────────────────────────────────────────────────────
 # Dataset generation (delegates to experiments.generate_dataset)
 # ────────────────────────────────────────────────────────────────────
@@ -232,6 +363,38 @@ def _reset_caches(keep_matrix=False, keep_walk=False):
         _eng._WALK_DIST_CACHE.clear()
         _eng._safe_nodes_cache.clear()
     _eng._STUDENT_NODE_CACHE.clear()
+
+
+def _apply_dwell_time_to_stats(sol, stats, dwell_seconds_per_stop):
+    """Add dwell-time to reporting totals (does not affect optimization).
+
+    Dwell is applied per non-school stop and stored in the stats dict so both
+    HTML and JSON outputs can render consistent totals.
+    """
+    dwell_sec = float(dwell_seconds_per_stop or 0.0)
+    base_total = float(stats.get("total_time", 0.0) or 0.0)
+    stats["base_total_time"] = round(base_total, 2)
+    stats["dwell_time_per_stop_seconds"] = dwell_sec
+
+    if dwell_sec <= 0:
+        stats["total_dwell_time_min"] = 0.0
+        stats["route_dwell_time_min"] = {}
+        return stats
+
+    route_dwell = {}
+    total_dwell_min = 0.0
+    for route in sol.routes:
+        if route.get_student_count() <= 0:
+            continue
+        pickup_stops = sum(1 for stop in route.stops if getattr(stop, "stop_type", None) != "school")
+        dwell_min = (pickup_stops * dwell_sec) / 60.0
+        route_dwell[route.route_id] = round(dwell_min, 2)
+        total_dwell_min += dwell_min
+
+    stats["route_dwell_time_min"] = route_dwell
+    stats["total_dwell_time_min"] = round(total_dwell_min, 2)
+    stats["total_time"] = round(base_total + total_dwell_min, 2)
+    return stats
 
 
 def _prebuild_ball_tree(G):
@@ -478,8 +641,8 @@ _ICON_COLORS = {
     "C": ["orange", "red",       "darkred",   "beige"],
 }
 _MODE_NAMES = {
-    "A": "Constrained (Safe Walking)",
-    "B": "Unconstrained (Any Walking)",
+    "A": "Strictly Constrained (Safe Walking)",
+    "B": "Weakly Constrained (Any Walking)",
     "C": "Door-to-Door (No Walking)",
 }
 
@@ -656,7 +819,7 @@ def _dir_cap_html(label, ride, direct, cap, k):
 
 
 def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
-    """Add route + walk FeatureGroups for one mode.  Returns (fg_routes, fg_walks, crossings, occupancies)."""
+    """Add route + walk FeatureGroups for one mode.  Returns (fg_routes, fg_walks, occupancies)."""
     con = constraints or {}
     ride_k       = float(con.get("ride_time_multiplier", 2.5))
     floor_min    = float(con.get("floor_minutes",        45))
@@ -808,10 +971,9 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
 
         occupancies.append(student_count)
 
-    crossings = _count_unsafe_crossings(sol, G_con, G)
     fg_routes.add_to(m)
     fg_walks.add_to(m)
-    return fg_routes, fg_walks, crossings, occupancies
+    return fg_routes, fg_walks, occupancies
 
 
 def _count_satisfied_per_route(sol, G, constraints):
@@ -1213,10 +1375,31 @@ def _add_synthetic_crossing_markers(m, crossings_list, show_only_used=False, use
             derived.append({"lat": mid_lat, "lon": mid_lon, "length_m": float(data.get("length", 0.0))})
 
     all_markers = list(crossings_list or []) + derived
+
+    def _marker_lat_lon(cx):
+        if not isinstance(cx, dict):
+            return None
+        if "lat" in cx and "lon" in cx:
+            try:
+                return float(cx.get("lat", 0.0)), float(cx.get("lon", 0.0))
+            except Exception:
+                return None
+        if all(k in cx for k in ("lat_a", "lon_a", "lat_b", "lon_b")):
+            try:
+                lat = (float(cx["lat_a"]) + float(cx["lat_b"])) / 2.0
+                lon = (float(cx["lon_a"]) + float(cx["lon_b"])) / 2.0
+                return lat, lon
+            except Exception:
+                return None
+        return None
+
     seen = set()
     uniq = []
     for cx in all_markers:
-        lk = (round(float(cx.get("lat", 0.0)), 6), round(float(cx.get("lon", 0.0)), 6))
+        lat_lon = _marker_lat_lon(cx)
+        if lat_lon is None:
+            continue
+        lk = (round(lat_lon[0], 6), round(lat_lon[1], 6))
         if lk in seen:
             continue
         seen.add(lk)
@@ -1229,9 +1412,13 @@ def _add_synthetic_crossing_markers(m, crossings_list, show_only_used=False, use
         folium.PolyLine(seg, color="#c2185b", weight=5, opacity=0.95).add_to(fg)
 
     for cx in uniq:
+        lat_lon = _marker_lat_lon(cx)
+        if lat_lon is None:
+            continue
+        lat, lon = lat_lon
         length_m = float(cx.get("length_m", 0.0))
         folium.CircleMarker(
-            location=(cx["lat"], cx["lon"]), radius=8,
+            location=(lat, lon), radius=8,
             color="#4a148c", fill=True, fillColor="#ffeb3b", fillOpacity=0.95, weight=2,
             tooltip=f"Synthetic crossing ({length_m:.1f} m)",
         ).add_to(fg)
@@ -1333,7 +1520,7 @@ def _add_crossing_usage_layers(m, solutions_dict, G_walk, G_drive):
             if not crossing_usage:
                 continue
 
-            mode_label = {"A": "Constrained", "B": "Unconstrained", "C": "Door-to-Door"}.get(mode_key, mode_key)
+            mode_label = {"A": "Strictly Constrained", "B": "Weakly Constrained", "C": "Door-to-Door"}.get(mode_key, mode_key)
             fg = FeatureGroup(name=f"Crossing Usage – Mode {mode_key} ({len(crossing_usage)})", show=False)
 
             for (u, v), usage_data in crossing_usage.items():
@@ -1399,9 +1586,8 @@ def _add_crossing_usage_layers(m, solutions_dict, G_walk, G_drive):
 
 
 def _build_custom_layer_control_js(
-    map_var, fg_danger, fg_unclass, fg_walknet, fg_syn_cross,
+    map_var, fg_danger, fg_unclass, fg_syn_cross,
     fgs_a, fgs_b, fgs_c,
-    fg_crossings,
     fg_injected=None,
     syn_label=None,
     injected_label=None,
@@ -1419,7 +1605,6 @@ def _build_custom_layer_control_js(
     vc_r, vc_w = fgs_c[0].get_name(), fgs_c[1].get_name()
     v_danger  = fg_danger.get_name()
     v_unclass = fg_unclass.get_name()
-    v_walknet = fg_walknet.get_name()
     v_syn = fg_syn_cross.get_name()
     syn_label = syn_label or "Synthetic Crossings"
     injected_label = injected_label or "Injected Crossings"
@@ -1432,18 +1617,10 @@ def _build_custom_layer_control_js(
                     [{vi}],
                     map.hasLayer({vi}));"""
 
-    crossings_row = ""
-    if fg_crossings is not None:
-        vc = fg_crossings.get_name()
-        crossings_row = f"""
-                row('Unsafe Crossings',
-                    [{vc}],
-                    map.hasLayer({vc}));"""
-
     unserved_rows = ""
     for fg_u, label in [
-        (fg_unserved_a, 'Constrained – Unserved'),
-        (fg_unserved_b, 'Unconstrained – Unserved'),
+        (fg_unserved_a, 'Strictly Constrained – Unserved'),
+        (fg_unserved_b, 'Weakly Constrained – Unserved'),
         (fg_unserved_c, 'Door-to-Door – Unserved'),
     ]:
         if fg_u is not None:
@@ -1455,8 +1632,8 @@ def _build_custom_layer_control_js(
 
     candidate_rows = ""
     for fg_c2, label in [
-        (fg_cands_a, 'Constrained – Candidate Stops'),
-        (fg_cands_b, 'Unconstrained – Candidate Stops'),
+        (fg_cands_a, 'Strictly Constrained – Candidate Stops'),
+        (fg_cands_b, 'Weakly Constrained – Candidate Stops'),
         (fg_cands_c, 'Door-to-Door – Candidate Stops'),
     ]:
         if fg_c2 is not None:
@@ -1468,8 +1645,8 @@ def _build_custom_layer_control_js(
 
     usage_rows = ""
     for fg_u, label in [
-        (fg_usage_a, 'Constrained – Crossing Usage'),
-        (fg_usage_b, 'Unconstrained – Crossing Usage'),
+        (fg_usage_a, 'Strictly Constrained – Crossing Usage'),
+        (fg_usage_b, 'Weakly Constrained – Crossing Usage'),
         (fg_usage_c, 'Door-to-Door – Crossing Usage'),
     ]:
         if fg_u is not None:
@@ -1524,9 +1701,9 @@ def _build_custom_layer_control_js(
                     span.textContent = label;
                     lbl.appendChild(span);
                 }}
-                row('Constrained (Safe Walking)',
+                row('Strictly Constrained (Safe Walking)',
                     [{va_r}, {va_w}], map.hasLayer({va_r}));
-                row('Unconstrained (Any Walking)',
+                row('Weakly Constrained (Any Walking)',
                     [{vb_r}, {vb_w}], map.hasLayer({vb_r}));
                 row('Direct (No Walking)',
                     [{vc_r}, {vc_w}], map.hasLayer({vc_r}));
@@ -1535,10 +1712,8 @@ def _build_custom_layer_control_js(
                     [{v_danger}], map.hasLayer({v_danger}));
                 row('Unclassified Roads (no student placement)',
                     [{v_unclass}], map.hasLayer({v_unclass}));
-                row('Safe Walking Network (cyan streets)',
-                    [{v_walknet}], map.hasLayer({v_walknet}));
                 row('{syn_label}',
-                    [{v_syn}], map.hasLayer({v_syn}));{injected_row}{crossings_row}{usage_rows}{unserved_rows}
+                    [{v_syn}], map.hasLayer({v_syn}));{injected_row}{usage_rows}{unserved_rows}
                 sep();
                 var hdr2 = L.DomUtil.create('div', '', c);
                 hdr2.textContent = 'Candidate Stop Inspector';
@@ -1553,7 +1728,7 @@ def _build_custom_layer_control_js(
     """
 
 
-def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
+def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
                       solutions_dict=None, G=None, constraints=None,
                       meta=None):
     now    = datetime.datetime.now()
@@ -1563,15 +1738,8 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
 
     algo = (meta or {}).get("algorithm", {}) if meta else {}
     buses_cfg = (meta or {}).get("buses", {}) if meta else {}
-    synth_cfg = (meta or {}).get("synthetic_crossings", {}) if meta else {}
-    caps_on = (constraints or {}).get("enabled", True)
-    soft_caps = (constraints or {}).get("soft_ride_caps", False)
-    crossings_enabled = bool(synth_cfg.get("enabled", False))
-    time_budget = algo.get("time_budget_seconds", None)
-    max_cands = algo.get("max_candidates_per_student", None)
     buses_count = buses_cfg.get("count", None)
     bus_capacity = buses_cfg.get("capacity", None)
-    minimize_buses = bool(algo.get("minimize_buses", False))
 
     blocks = ""
     _build_stats_html._mode_tables = ""   # accumulator for side-by-side mode tables
@@ -1590,7 +1758,7 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
         </div>"""
             continue
         s   = all_stats[mk]
-        cx  = len(crossings_dict.get(mk, []))
+        cx  = int(crossings_count_dict.get(mk, 0))
         occ = occupancies_dict.get(mk, [])
         cx_color = "#c0392b" if cx > 0 else "#27ae60"
         mc = _ROUTE_COLORS[mk][0]
@@ -1608,39 +1776,12 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
 
         sat_by_route = s.get("sat_by_route", {})
 
-        fleet_summary = s.get("fleet_search_summary")
         buses_used = s.get("buses_used")
-        fleet_line = ""
-        if buses_used is not None and buses_count is not None:
-            cap_str = f" (cap {bus_capacity})" if bus_capacity is not None else ""
-            fleet_line = f"<div style=\"font-size:11px; color:#666;\">Fleet: used {buses_used}/{buses_count} buses{cap_str}</div>"
-        elif buses_count is not None:
-            cap_str = f" (cap {bus_capacity})" if bus_capacity is not None else ""
-            fleet_line = f"<div style=\"font-size:11px; color:#666;\">Fleet: {buses_count} buses{cap_str}</div>"
-        fleet_note = f"<div style=\"font-size:11px; color:#777; margin-top:2px;\">{fleet_summary}</div>" if fleet_summary else ""
         fleet_cell = "-"
         if buses_used is not None and buses_count is not None:
             fleet_cell = f"{buses_used}/{buses_count}"
         elif buses_count is not None:
             fleet_cell = f"{buses_count}"
-        
-        cap_viol = s.get("cap_violations_am")
-        cap_checked = s.get("cap_checked_am")
-        cap_pct = s.get("cap_violation_pct_am")
-        cap_pm_viol = s.get("cap_violations_pm")
-        cap_pm_checked = s.get("cap_checked_pm")
-        cap_pm_pct = s.get("cap_violation_pct_pm")
-        cap_line = ""
-        if cap_viol is not None or cap_pm_viol is not None:
-            am_pct_str = f" ({cap_pct}%)" if cap_pct is not None else ""
-            pm_pct_str = f" ({cap_pm_pct}%)" if cap_pm_pct is not None else ""
-            am_str = f"AM {cap_viol}/{cap_checked}{am_pct_str}" if cap_viol is not None else "AM —"
-            pm_str = f"PM {cap_pm_viol}/{cap_pm_checked}{pm_pct_str}" if cap_pm_viol is not None else "PM —"
-            cap_line = (
-                f"<div style=\"font-size:11px; color:#777; margin-top:2px;\">"
-                f"Cap violations: {am_str} | {pm_str}"
-                f"</div>"
-            )
 
         blocks += f"""
         <div style="margin-bottom:8px; padding-bottom:8px;
@@ -1653,7 +1794,7 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
             <tr style="color:#555;">
               <td style="text-align:left; padding:1px 4px;">Routes</td>
               <td style="text-align:left; padding:1px 4px;">Fleet</td>
-              <td style="text-align:left; padding:1px 4px;">Time (Bus+Walk)</td>
+              <td style="text-align:left; padding:1px 4px;">Total Time</td>
               <td style="text-align:left; padding:1px 4px;">Distance</td>
               <td style="text-align:left; padding:1px 4px;">Avg Occ.</td>
               <td style="text-align:left; padding:1px 4px;">Served</td>
@@ -1663,7 +1804,7 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
             <tr style="font-weight:bold;">
               <td style="padding:1px 4px;">{s['routes']}</td>
               <td style="padding:1px 4px;">{fleet_cell}</td>
-              <td style="padding:1px 4px;">{s['total_time']:.0f}+{s.get('walk_stats', {}).get('avg_walk_time_min', 0) * s['served']:.0f} min</td>
+                            <td style="padding:1px 4px;">{s['total_time']:.0f} min</td>
               <td style="padding:1px 4px;">{s['total_dist']:.1f} km</td>
               <td style="padding:1px 4px;">{avg_occ_str}</td>
               <td style="padding:1px 4px;">{s['served']}/{s['total']}</td>
@@ -1671,9 +1812,6 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
               <td style="padding:1px 4px; color:{cx_color};">{cx}</td>
             </tr>
           </table>
-          {fleet_line}
-          {fleet_note}
-          {cap_line}
         </div>"""
 
         # Per-mode mini-table for the side-by-side horizontal layout
@@ -1691,7 +1829,7 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
               <tr>
                 <td style="{td_l}">{route.route_id}</td>
                 <td style="{td_r}">{route.total_distance:.1f}</td>
-                <td style="{td_r}">{route.total_time:.0f}</td>
+                                <td style="{td_r}">{(route.total_time + s.get('route_dwell_time_min', {}).get(route.route_id, 0.0)):.0f}</td>
                 <td style="{td_r}">{sc}/{cap_r}</td>
                 <td style="{td_r}">{sat_r}/{sc}</td>
               </tr>"""
@@ -1729,23 +1867,6 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
         </div>
       </div>"""
 
-    algo_lines = []
-    algo_lines.append(f"Caps: {'ON' if caps_on else 'OFF'}")
-    algo_lines.append(f"SoftCaps: {'ON' if soft_caps else 'OFF'}")
-    algo_lines.append(f"MinFleet: {'ON' if minimize_buses else 'OFF'}")
-    algo_lines.append(f"Crossings: {'ON' if crossings_enabled else 'OFF'}")
-    cap_penalty = (constraints or {}).get("cap_penalty_per_minute", None)
-    if cap_penalty is not None:
-        algo_lines.append(f"CapPenalty: {cap_penalty}/min")
-    if time_budget is not None:
-        algo_lines.append(f"Budget: {time_budget}s")
-    if max_cands is not None:
-        algo_lines.append(f"Candidates: {max_cands}")
-    if buses_count is not None:
-        cap_str = f" (cap {bus_capacity})" if bus_capacity is not None else ""
-        algo_lines.append(f"Fleet: {buses_count}{cap_str}")
-    algo_line = " | ".join(algo_lines)
-
     return f"""
     <div style="position:fixed; bottom:15px; right:15px; width:430px;
                 max-height:260px; overflow-y:auto;
@@ -1756,9 +1877,6 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict,
                   padding-bottom:6px; border-bottom:2px solid #ccc;">
         Three-Mode Routing Comparison
       </div>
-            <div style="font-size:11px; color:#666; margin-bottom:8px;">
-                {algo_line}
-            </div>
       {blocks}
       {route_table}
       <div style="font-size:10px; color:#888; margin-top:6px;">
@@ -1830,9 +1948,20 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                    sol_a, sol_b, sol_c, G_unc, iters, total_wall=None,
                    step_times=None, mode_wall_times=None):
     """Assemble the full metrics dict that will be written to metrics.json."""
+    matrix_cache_cfg = (
+        meta.get("distance_matrix_cache")
+        or meta.get("algorithm", {}).get("distance_matrix_cache")
+        or {}
+    )
+    matrix_cache_min_finite_ratio = (
+        float(matrix_cache_cfg.get("min_finite_ratio", 0.0001))
+        if isinstance(matrix_cache_cfg, dict)
+        else 0.0001
+    )
+
     mode_map = {
-        "constrained":   ("A", sol_a),
-        "unconstrained": ("B", sol_b),
+        "strictly_constrained":   ("A", sol_a),
+        "weakly_constrained": ("B", sol_b),
         "door_to_door":  ("C", sol_c),
     }
     modes_out = {}
@@ -1904,10 +2033,18 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "students_served":      s["served"],
             "students_unserved":    s["total"] - s["served"],
             "total_route_time_min": round(s["total_time"], 2),
+            "base_route_time_min": round(s.get("base_total_time", s["total_time"]), 2),
+            "total_dwell_time_min": round(s.get("total_dwell_time_min", 0.0), 2),
+            "dwell_time_per_stop_seconds": s.get("dwell_time_per_stop_seconds", 0.0),
             "total_route_dist_km":  round(s["total_dist"],  2),
             "avg_route_time_min":   round(s["total_time"] / n_routes, 2) if n_routes else 0,
             "alns_runtime_seconds": round(s["runtime"],     2),
             "mode_wall_time_seconds": s.get("mode_wall_time"),
+            "operator_performance": s.get("operator_performance"),
+            "alns_diagnostics": s.get("alns_diagnostics"),
+            "insertion_debug": s.get("insertion_debug"),
+            "matrix_precompute": s.get("matrix_precompute"),
+            "synthetic_edges_timing": s.get("synthetic_edges_timing"),
             "unsafe_crossings":     cx,
             "walk_stats":           walk,
             "students":             students_list,
@@ -1947,24 +2084,48 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         entry = modes_out.get(mode_key, {})
         return entry.get(field, default) if not entry.get("skipped") else default
 
-    t_con  = _mget("constrained",   "total_route_time_min", 0)
-    t_unc  = _mget("unconstrained", "total_route_time_min", 0)
+    t_con  = _mget("strictly_constrained",   "total_route_time_min", 0)
+    t_unc  = _mget("weakly_constrained", "total_route_time_min", 0)
     t_d2d  = _mget("door_to_door",  "total_route_time_min", 0)
-    cx_con = _mget("constrained",   "unsafe_crossings", 0)
-    cx_unc = _mget("unconstrained", "unsafe_crossings", 0)
+    cx_con = _mget("strictly_constrained",   "unsafe_crossings", 0)
+    cx_unc = _mget("weakly_constrained", "unsafe_crossings", 0)
 
     # Build per-mode debug breakdown
     _dbg_modes = {}
-    for _mk, _sk, _sol in [("A", "constrained", sol_a), ("B", "unconstrained", sol_b), ("C", "door_to_door", sol_c)]:
+    for _mk, _sk, _sol in [("A", "strictly_constrained", sol_a), ("B", "weakly_constrained", sol_b), ("C", "door_to_door", sol_c)]:
         _s = all_stats.get(_mk)
         _wt = (mode_wall_times or {}).get(_mk)
         if _s and _wt is not None:
             _alns_t = round(_s.get("runtime", 0), 2)
+            _total_alns_t = round(_s.get("total_fleet_search_runtime", _alns_t), 2)
+            _mx = _s.get("matrix_precompute") or {}
+            _syn = _s.get("synthetic_edges_timing") or {}
+            _ops = _s.get("operator_performance") or {}
+            
             _dbg_modes[_mk] = {
                 "mode_wall_time_s":        _wt,
-                "alns_solve_s":            _alns_t,
-                "setup_and_overhead_s":    round(_wt - _alns_t, 2),
+                "total_alns_solve_s":      _total_alns_t,
+                "successful_run_s":        _alns_t,
+                "actual_setup_overhead_s": round(_wt - _total_alns_t, 2),
                 "alns_iterations":         _s.get("iterations"),
+                "operator_performance": _ops,
+                "matrix_precompute_total_s": _mx.get("total_time_s"),
+                "matrix_precompute_source": _mx.get("source"),
+                "matrix_precompute_load_s": _mx.get("load_time_s"),
+                "matrix_precompute_compute_s": _mx.get("compute_time_s"),
+                "matrix_precompute_save_s": _mx.get("save_time_s"),
+                "matrix_critical_nodes_count": _mx.get("critical_nodes_count"),
+                "matrix_nodes_count": _mx.get("matrix_nodes_count"),
+                "matrix_cache_key_prefix": _mx.get("cache_key_prefix"),
+                "matrix_cache_entry_node_count": _mx.get("cache_entry_node_count"),
+                "matrix_cache_loaded_finite_ratio": _mx.get("cache_loaded_finite_ratio"),
+                "synthetic_edges_source": _syn.get("source"),
+                "synthetic_edges_prepare_s": _syn.get("prepare_time_s"),
+                "synthetic_edges_pkl_load_s": _syn.get("pkl_load_time_s"),
+                "synthetic_edges_generate_s": _syn.get("generate_time_s"),
+                "synthetic_edges_auto_save_pkl_s": _syn.get("auto_save_pkl_time_s"),
+                "insertion_debug": _s.get("insertion_debug"),
+                "alns_diagnostics": _s.get("alns_diagnostics"),
                 "n_candidates_per_student": round(
                     sum(len(v) for v in (getattr(_alns, '_student_candidate_cache', None) or {}).values())
                     / max(1, _s.get("total", 1)), 1
@@ -1995,6 +2156,14 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "soft_ride_caps": meta.get("constraints", {}).get("soft_ride_caps", False),
             "time_budget_seconds": meta.get("algorithm", {}).get("time_budget_seconds"),
             "max_candidates_per_student": meta.get("algorithm", {}).get("max_candidates_per_student"),
+            "merge_tail_iterations": meta.get("algorithm", {}).get("merge_tail_iterations", 30),
+            "distance_matrix_cache": {
+                "enabled": bool((meta.get("distance_matrix_cache") or {}).get("enabled", False)),
+                "force_disable": bool((meta.get("distance_matrix_cache") or {}).get("force_disable", False)),
+                "isolate_per_run": bool((meta.get("distance_matrix_cache") or {}).get("isolate_per_run", False)),
+                "min_finite_ratio": matrix_cache_min_finite_ratio,
+                "pkl_path": (meta.get("distance_matrix_cache") or {}).get("pkl_path"),
+            },
             "stage_walk_limits": stage_walk,
             "stage_distribution": {
                 k: v for k, v in meta.get("stage_distribution", {}).items()
@@ -2003,7 +2172,6 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "constraints": {
                 "enabled": meta.get("constraints", {}).get("enabled", True),
                 "soft_ride_caps": meta.get("constraints", {}).get("soft_ride_caps", False),
-                "cap_penalty_per_minute": meta.get("constraints", {}).get("cap_penalty_per_minute"),
                 "ride_time_multiplier": meta.get("constraints", {}).get("ride_time_multiplier"),
                 "floor_minutes": meta.get("constraints", {}).get("floor_minutes"),
                 "ceiling_minutes": meta.get("constraints", {}).get("ceiling_minutes"),
@@ -2014,6 +2182,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                 "max_candidates_per_student": meta.get("algorithm", {}).get("max_candidates_per_student"),
                 "minimize_buses": meta.get("algorithm", {}).get("minimize_buses", False),
                 "force_fleet_size": meta.get("algorithm", {}).get("force_fleet_size"),
+                "dwell_time_seconds_per_stop": meta.get("algorithm", {}).get("dwell_time_seconds_per_stop", 30),
             },
         },
         "modes": modes_out,
@@ -2021,12 +2190,12 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "efficiency_gain_vs_d2d_pct": (
                 round((t_d2d - t_con) / t_d2d * 100, 1) if t_d2d else None
             ),
-            "safety_cost_vs_unconstrained_pct": (
+            "safety_cost_vs_weakly_constrained_pct": (
                 round((t_con - t_unc) / t_unc * 100, 1) if t_unc else None
             ),
-            "crossings_eliminated_vs_unconstrained": cx_unc - cx_con,
-            "constrained_total_time_min":   t_con,
-            "unconstrained_total_time_min": t_unc,
+            "crossings_eliminated_vs_weakly_constrained": cx_unc - cx_con,
+            "strictly_constrained_total_time_min":   t_con,
+            "weakly_constrained_total_time_min": t_unc,
             "door_to_door_total_time_min":  t_d2d,
         },
     }
@@ -2069,12 +2238,14 @@ def run(input_path=None, output_path=None, iterations=None):
     iters          = iterations or algo_cfg.get("iterations", 30)
     minimize_buses = algo_cfg.get("minimize_buses", False)
     force_k        = algo_cfg.get("force_fleet_size")
+    dwell_time_seconds_per_stop = float(algo_cfg.get("dwell_time_seconds_per_stop", 30.0) or 0.0)
 
     # ── Debug / partial-run flags ──
     _dbg       = meta.get("debug", {})
     run_mode_a = bool(_dbg.get("run_mode_a", True))
     run_mode_b = bool(_dbg.get("run_mode_b", True))
     run_mode_c = bool(_dbg.get("run_mode_c", True))
+    run_build_map = bool(_dbg.get("run_build_map", True))
     _active_modes = [m for m, en in [("A", run_mode_a), ("B", run_mode_b), ("C", run_mode_c)] if en]
 
     # Resolve where to write the map
@@ -2084,6 +2255,32 @@ def run(input_path=None, output_path=None, iterations=None):
         rel = meta.get("output", "comparison_map.html")
         base = os.path.dirname(input_path) if input_path else _SCRIPT_DIR
         output = rel if os.path.isabs(rel) else os.path.join(base, rel)
+    output_dir = os.path.dirname(output) or "."
+    os.makedirs(output_dir, exist_ok=True)
+
+    matrix_cache_cfg = (
+        meta.get("distance_matrix_cache")
+        or meta.get("algorithm", {}).get("distance_matrix_cache")
+        or {}
+    )
+    matrix_cache_min_finite_ratio = (
+        float(matrix_cache_cfg.get("min_finite_ratio", 0.0001))
+        if isinstance(matrix_cache_cfg, dict)
+        else 0.0001
+    )
+    matrix_cache_pkl_path = _resolve_matrix_cache_pkl_path(
+        matrix_cache_cfg, input_path, output
+    )
+    if matrix_cache_pkl_path:
+        print(f"  Matrix cache pkl: {matrix_cache_pkl_path}")
+    if isinstance(matrix_cache_cfg, dict):
+        print(
+            "  Matrix cache cfg: "
+            f"enabled={bool(matrix_cache_cfg.get('enabled', False))}, "
+            f"force_disable={bool(matrix_cache_cfg.get('force_disable', False))}, "
+            f"isolate_per_run={bool(matrix_cache_cfg.get('isolate_per_run', False))}, "
+            f"min_finite_ratio={matrix_cache_min_finite_ratio}"
+        )
 
     school_cfg = meta["school"]
     raw_walk = meta.get("stage_walk_limits", DEFAULT_STAGE_WALK_LIMITS)
@@ -2099,7 +2296,9 @@ def run(input_path=None, output_path=None, iterations=None):
     print(f"  Stages   : {meta['stage_distribution']}")
     print(f"  Walk lim : {stage_walk}")
     print(f"  Iters    : {iters}")
-    _mode_labels = {"A": "Constrained", "B": "Unconstrained", "C": "Door-to-Door"}
+    print(f"  Dwell    : {dwell_time_seconds_per_stop:.0f}s per pickup stop")
+    print(f"  BuildMap : {'ON' if run_build_map else 'OFF'}")
+    _mode_labels = {"A": "Strictly Constrained", "B": "Weakly Constrained", "C": "Door-to-Door"}
     _skipped = [m for m in ("A", "B", "C") if m not in _active_modes]
     _mode_wall_times = {}
     _step_times: dict = {}
@@ -2119,6 +2318,8 @@ def run(input_path=None, output_path=None, iterations=None):
     print("[1/7] Generating dataset …")
     _t0 = _wtime.time()
     base_data = _generate_dataset(meta)
+    # Preserve full algorithm config from input meta (early-stop, time budget, etc.).
+    base_data["meta"]["algorithm"] = copy.deepcopy(meta.get("algorithm", {}))
     base_data["meta"]["algorithm"]["iterations"] = iters
     _step_times["generate_dataset_s"] = round(_wtime.time() - _t0, 2)
 
@@ -2128,17 +2329,17 @@ def run(input_path=None, output_path=None, iterations=None):
         stage_counts[s["school_stage"]] = stage_counts.get(s["school_stage"], 0) + 1
     print(f"  Stage breakdown: {stage_counts}")
 
-    # ── 2. Constrained graph ──
-    print("\n[2/7] Building CONSTRAINED graph …")
+    # ── 2. Strictly constrained graph ──
+    print("\n[2/7] Building STRICTLY CONSTRAINED graph …")
     _t0 = _wtime.time()
     G_con = setup_graph(base_data["meta"], unconstrained=False)
     _prebuild_ball_tree(G_con)
     _step_times["build_constrained_graph_s"] = round(_wtime.time() - _t0, 2)
 
-    # ── 3. Unconstrained graph ──
+    # ── 3. Weakly constrained graph ──
     # NOTE: setup_graph() always loads a fresh graph from pickle — G_unc and
     # G_con are fully independent objects.  No deepcopy of G_con is needed.
-    print("[3/7] Building UNCONSTRAINED graph …")
+    print("[3/7] Building WEAKLY CONSTRAINED graph …")
     _t0 = _wtime.time()
     G_unc = setup_graph(base_data["meta"], unconstrained=True)
     _eng._BALL_TREE = None
@@ -2153,6 +2354,14 @@ def run(input_path=None, output_path=None, iterations=None):
     injection_enabled = bool(injection_cfg.get("enabled", False))
     injection_strict = bool(injection_cfg.get("strict_validation", False))
     injection_pkl_path = _resolve_injection_pkl_path(injection_cfg, input_path)
+    synthetic_edges_timing = {
+        "source": "none",
+        "prepare_time_s": 0.0,
+        "pkl_load_time_s": 0.0,
+        "generate_time_s": 0.0,
+        "auto_save_pkl_time_s": 0.0,
+        "pkl_path": injection_pkl_path,
+    }
     synth_cfg = (meta.get("synthetic_crossings") if isinstance(meta, dict) else None) or {
         "enabled": False,
         "strategy": "per_drive_node",
@@ -2187,10 +2396,13 @@ def run(input_path=None, output_path=None, iterations=None):
         if injection_enabled and injection_pkl_path:
             print(f"  [Crossings Injection] Loading: {injection_pkl_path}")
             try:
+                _tpkl = _wtime.time()
                 injected_payload = _load_crossings_injection_payload(injection_pkl_path)
                 _validate_crossings_injection_payload(injected_payload, synth_cfg)
+                synthetic_edges_timing["pkl_load_time_s"] = round(_wtime.time() - _tpkl, 4)
                 _eng.set_walk_graph(G_walk, synthetic_cfg={"enabled": False})
                 injected_result = _inject_crossings_into_walk_graph(G_walk, injected_payload)
+                synthetic_edges_timing["source"] = "injection_pkl"
                 _eng._SYNTHETIC_CROSSINGS = list(injected_result.get("markers", []))
                 syn_list = list(injected_result.get("markers", []))
                 print(
@@ -2203,17 +2415,50 @@ def run(input_path=None, output_path=None, iterations=None):
                 print(f"  [Crossings Injection] Warning: {e}. Falling back to synthetic generation.")
                 injected_payload = None
                 injected_result = None
+                _tgen = _wtime.time()
                 syn_list = _eng.set_walk_graph(G_walk, synthetic_cfg=synth_cfg, drive_graph=G_con)
+                synthetic_edges_timing["source"] = "generated_synthetic"
+                synthetic_edges_timing["generate_time_s"] = round(_wtime.time() - _tgen, 4)
         else:
+            _tgen = _wtime.time()
             syn_list = _eng.set_walk_graph(G_walk, synthetic_cfg=synth_cfg, drive_graph=G_con)
+            synthetic_edges_timing["source"] = "generated_synthetic"
+            synthetic_edges_timing["generate_time_s"] = round(_wtime.time() - _tgen, 4)
 
+        if use_walk_graph and not injection_pkl_path:
+            auto_inj_path = os.path.join(
+                output_dir,
+                "crossings_nodes_injection.pkl",
+            )
+            try:
+                _tsave = _wtime.time()
+                auto_payload = _build_crossings_injection_payload_from_walk_graph(G_walk, synth_cfg=synth_cfg)
+                if auto_payload.get("edge_pairs"):
+                    _save_crossings_injection_payload(auto_payload, auto_inj_path)
+                    synthetic_edges_timing["auto_save_pkl_time_s"] = round(_wtime.time() - _tsave, 4)
+                    print(
+                        f"  [Crossings Injection] Auto-saved PKL: {auto_inj_path} "
+                        f"({len(auto_payload.get('edge_pairs', []))} edges)"
+                    )
+                else:
+                    synthetic_edges_timing["auto_save_pkl_time_s"] = round(_wtime.time() - _tsave, 4)
+                    print("  [Crossings Injection] Auto-save skipped: no synthetic/injected crossing edges found.")
+            except Exception as e:
+                print(f"  [Crossings Injection] Warning: could not auto-save PKL: {e}")
+
+        synthetic_edges_timing["prepare_time_s"] = round(_wtime.time() - _t0, 4)
         _step_times["build_walk_graph_s"] = round(_wtime.time() - _t0, 2)
+        _step_times["synthetic_edges_prepare_s"] = synthetic_edges_timing["prepare_time_s"]
+        _step_times["synthetic_edges_generate_s"] = synthetic_edges_timing["generate_time_s"]
+        _step_times["synthetic_edges_pkl_load_s"] = synthetic_edges_timing["pkl_load_time_s"]
+        _step_times["synthetic_edges_auto_save_pkl_s"] = synthetic_edges_timing["auto_save_pkl_time_s"]
     else:
         print("[3b/7] Walking graph disabled (meta.walk_graph.enabled=false)")
         _eng.set_walk_graph(None, synthetic_cfg={"enabled": False})
         _clean_walk_graph = None
+        synthetic_edges_timing["source"] = "walk_graph_disabled"
 
-    # ── 4. Mode A: Constrained ──
+    # ── 4. Mode A: Strictly Constrained ──
     # Walking BFS uses G_con (safety-restricted edges).
     # Bus driving distances ALWAYS use G_unc (full road network).
     # NOTE: For Mode A, we use the walk graph WITHOUT synthetic crossings.
@@ -2226,7 +2471,7 @@ def run(input_path=None, output_path=None, iterations=None):
     _ride_caps_on = meta.get("constraints", {}).get("enabled", True)
     _t_a = _wtime.time()
     print("\n" + "-" * 50)
-    print("MODE A: Constrained (safety ON, stage walk radii)")
+    print("MODE A: Strictly Constrained (safety ON, stage walk radii)")
     print("-" * 50)
     data_a = _make_constrained(base_data)
     if not _ride_caps_on:
@@ -2243,10 +2488,14 @@ def run(input_path=None, output_path=None, iterations=None):
     if minimize_a:
         print("  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode A")
         _, sol_a, stats_a, school_a = find_minimum_fleet(
-            data_a, G_con, iterations=iters, stage_walk_limits=stage_walk, G_drive=G_unc)
+            data_a, G_con, iterations=iters, stage_walk_limits=stage_walk, G_drive=G_unc,
+            matrix_cache_pkl_path=matrix_cache_pkl_path,
+            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
     else:
         sol_a, stats_a, school_a = run_algorithm(
-            data_a, G_con, iterations=iters, stage_walk_limits=stage_walk, G_drive=G_unc)
+            data_a, G_con, iterations=iters, stage_walk_limits=stage_walk, G_drive=G_unc,
+            matrix_cache_pkl_path=matrix_cache_pkl_path,
+            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
     stats_a["label"] = "Mode-A"
     if "cap_violations_am" not in stats_a:
         cv = _count_cap_violations(sol_a, G_unc, meta.get("constraints", {}))
@@ -2260,6 +2509,8 @@ def run(input_path=None, output_path=None, iterations=None):
         stats_a["buses_used"] = int(force_k)
     if "buses_used" not in stats_a:
         stats_a["buses_used"] = meta.get("buses", {}).get("count")
+    _apply_dwell_time_to_stats(sol_a, stats_a, dwell_time_seconds_per_stop)
+    stats_a["synthetic_edges_timing"] = dict(synthetic_edges_timing)
     # Snapshot candidate data before caches are cleared for next mode
     cands_a    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
     cand_dist_a = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
@@ -2268,14 +2519,14 @@ def run(input_path=None, output_path=None, iterations=None):
           f"routes={stats_a['routes']} | time={stats_a['total_time']:.1f} min | "
           f"{stats_a['runtime']:.1f}s")
 
-    # ── 5. Mode B: Unconstrained ──
+    # ── 5. Mode B: Weakly Constrained ──
     # Restore walk graph with crossings for Mode B - crossings help in unconstrained mode
     if _saved_walk_graph is not None:
         _eng._WALK_GRAPH = _saved_walk_graph
         print("  [Mode B] Restored walk graph WITH synthetic crossings")
     _t_b = _wtime.time()
     print("\n" + "-" * 50)
-    print("MODE B: Unconstrained (all safe, same walk radius)")
+    print("MODE B: Weakly Constrained (all safe, same walk radius)")
     print("-" * 50)
     data_b = _make_unconstrained(base_data)
     if not _ride_caps_on:
@@ -2295,9 +2546,14 @@ def run(input_path=None, output_path=None, iterations=None):
     if minimize_b:
         print("  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode B")
         _, sol_b, stats_b, school_b = find_minimum_fleet(
-            data_b, G_unc, iterations=iters, G_drive=G_unc)
+            data_b, G_unc, iterations=iters, G_drive=G_unc,
+            matrix_cache_pkl_path=matrix_cache_pkl_path,
+            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
     else:
-        sol_b, stats_b, school_b = run_algorithm(data_b, G_unc, iterations=iters, G_drive=G_unc)
+        sol_b, stats_b, school_b = run_algorithm(
+            data_b, G_unc, iterations=iters, G_drive=G_unc,
+            matrix_cache_pkl_path=matrix_cache_pkl_path,
+            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
     stats_b["label"] = "Mode-B"
     if "cap_violations_am" not in stats_b:
         cv = _count_cap_violations(sol_b, G_unc, meta.get("constraints", {}))
@@ -2311,6 +2567,8 @@ def run(input_path=None, output_path=None, iterations=None):
         stats_b["buses_used"] = int(force_k)
     if "buses_used" not in stats_b:
         stats_b["buses_used"] = meta.get("buses", {}).get("count")
+    _apply_dwell_time_to_stats(sol_b, stats_b, dwell_time_seconds_per_stop)
+    stats_b["synthetic_edges_timing"] = dict(synthetic_edges_timing)
     cands_b    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
     cand_dist_b = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
     _mode_wall_times["B"] = round(_wtime.time() - _t_b, 2)
@@ -2340,9 +2598,14 @@ def run(input_path=None, output_path=None, iterations=None):
     if minimize_c:
         print("  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode C")
         _, sol_c, stats_c, school_c = find_minimum_fleet(
-            data_c, G_unc, iterations=iters, G_drive=G_unc)
+            data_c, G_unc, iterations=iters, G_drive=G_unc,
+            matrix_cache_pkl_path=matrix_cache_pkl_path,
+            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
     else:
-        sol_c, stats_c, school_c = run_algorithm(data_c, G_unc, iterations=iters, G_drive=G_unc)
+        sol_c, stats_c, school_c = run_algorithm(
+            data_c, G_unc, iterations=iters, G_drive=G_unc,
+            matrix_cache_pkl_path=matrix_cache_pkl_path,
+            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
     stats_c["label"] = "Mode-C"
     if "cap_violations_am" not in stats_c:
         cv = _count_cap_violations(sol_c, G_unc, meta.get("constraints", {}))
@@ -2356,6 +2619,8 @@ def run(input_path=None, output_path=None, iterations=None):
         stats_c["buses_used"] = int(force_k)
     if "buses_used" not in stats_c:
         stats_c["buses_used"] = meta.get("buses", {}).get("count")
+    _apply_dwell_time_to_stats(sol_c, stats_c, dwell_time_seconds_per_stop)
+    stats_c["synthetic_edges_timing"] = dict(synthetic_edges_timing)
     cands_c    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
     cand_dist_c = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
     _mode_wall_times["C"] = round(_wtime.time() - _t_c, 2)
@@ -2363,73 +2628,19 @@ def run(input_path=None, output_path=None, iterations=None):
           f"routes={stats_c['routes']} | time={stats_c['total_time']:.1f} min | "
           f"{stats_c['runtime']:.1f}s")
 
-    # ── 7. Build map ──
-    _t0 = _wtime.time()
-    print("\n" + "-" * 50)
-    print("BUILDING COMPARISON MAP")
-    print("-" * 50)
-
-    center = (school_cfg["latitude"], school_cfg["longitude"])
-    m = folium.Map(location=center, zoom_start=14, tiles="OpenStreetMap")
-
-    # School marker
-    folium.Marker(
-        location=center, popup="<b>SCHOOL</b>", tooltip="School",
-        icon=folium.Icon(color="darkgreen", icon="graduation-cap", prefix="fa"),
-    ).add_to(m)
-
-    # Dangerous roads layer
-    fg_danger = FeatureGroup(name="Dangerous Roads (unsafe to cross)", show=True)
-    danger_segs = _extract_segments(G_con, center[0], center[1], "dangerous")
-    for seg in danger_segs:
-        folium.PolyLine(seg, color="#e74c3c", weight=3, opacity=0.45,
-                        dash_array="6,4").add_to(fg_danger)
-    fg_danger.add_to(m)
-    print(f"  Dangerous-road segments: {len(danger_segs)}")
-
-    # Unclassified roads layer
-    fg_unclass = FeatureGroup(name="Unclassified Roads (no student placement)", show=False)
-    unclass_segs = _extract_segments(G_con, center[0], center[1], "unclassified")
-    for seg in unclass_segs:
-        folium.PolyLine(seg, color="#7f8c8d", weight=2, opacity=0.5,
-                        dash_array="3,5", tooltip="Unclassified road").add_to(fg_unclass)
-    fg_unclass.add_to(m)
-    print(f"  Unclassified-road segments: {len(unclass_segs)}")
-
-    # Walk network layer
-    fg_walknet = FeatureGroup(name="Safe Walking Network", show=False)
-    walk_segs = _extract_walk_segments(G_con, center[0], center[1], radius_km=4.0, safe_only=True)
-    for seg in walk_segs:
-        folium.PolyLine(seg, color="#ffffff", weight=4, opacity=0.45).add_to(fg_walknet)
-        folium.PolyLine(seg, color="#00acc1", weight=2.5, opacity=0.9).add_to(fg_walknet)
-    fg_walknet.add_to(m)
-    print(f"  Safe walk-network segments: {len(walk_segs)}")
-
+    # Build mode aggregates once (used by map and output metrics).
     crossings_dict, occupancies_dict, all_stats = {}, {}, {}
-
-    # Clear path cache so rendering computes fresh turn-aware paths on G_unc
-    _eng._path_cache.clear()
-    _eng._MATRIX_CACHE.clear()
-    _eng._MATRIX_CACHE_LENGTH.clear()
-
-    # Bus routes are always rendered with G_unc (the bus drives on all roads)
-    fgs = {}          # mk -> (fg_routes, fg_walks)
-    fgs_unserved = {}  # mk -> fg_unserved
     for mk, sol, stats in [(mk, sol, st) for mk, sol, st in [
         ("A", sol_a, stats_a),
         ("B", sol_b, stats_b),
         ("C", sol_c, stats_c),
     ] if sol is not None]:
-        print(f"  Drawing Mode {mk} …")
-        fg_r, fg_w, cx, occ = _add_route_layer(m, G_unc, sol, mk, G_con,
-                                                 constraints=meta.get("constraints"))
-        fgs[mk] = (fg_r, fg_w)
-        crossings_dict[mk] = cx
-        occupancies_dict[mk] = occ
+        crossings_dict[mk] = []
+        occupancies_dict[mk] = [r.get_student_count() for r in sol.routes if r.get_student_count() > 0]
         all_stats[mk] = stats
         _sat_by_route = _count_satisfied_per_route(sol, G_unc, meta.get("constraints", {}))
-        all_stats[mk]["satisfied"]     = sum(_sat_by_route.values())
-        all_stats[mk]["sat_by_route"]  = _sat_by_route
+        all_stats[mk]["satisfied"] = sum(_sat_by_route.values())
+        all_stats[mk]["sat_by_route"] = _sat_by_route
         if "cap_violations_am" not in all_stats[mk]:
             cv = _count_cap_violations(sol, G_unc, meta.get("constraints", {}))
             all_stats[mk]["cap_violations_am"] = cv["am"]
@@ -2438,6 +2649,75 @@ def run(input_path=None, output_path=None, iterations=None):
             all_stats[mk]["cap_violations_pm"] = cv["pm"]
             all_stats[mk]["cap_checked_pm"] = cv["pm_checked"]
             all_stats[mk]["cap_violation_pct_pm"] = cv["pm_pct"]
+
+    # Crossings shown in the stats table: synthetic crossings actually used by each mode.
+    # Mode A is constrained with synthetic crossings disabled by design.
+    used_crossings_count = {"A": 0, "B": 0, "C": 0}
+    try:
+        from detour_engine import get_crossing_usage_from_solution as _get_mode_usage
+        _walk_for_usage = _eng._WALK_GRAPH or _eng._get_walk_graph(G_unc)
+        for _mk, _sol in (("B", sol_b), ("C", sol_c)):
+            if _sol is None:
+                continue
+            used_crossings_count[_mk] = len(_get_mode_usage(_sol, G_unc, _walk_for_usage))
+    except Exception:
+        pass
+
+    if run_build_map:
+        # ── 7. Build map ──
+        _t0 = _wtime.time()
+        print("\n" + "-" * 50)
+        print("BUILDING COMPARISON MAP")
+        print("-" * 50)
+
+        center = (school_cfg["latitude"], school_cfg["longitude"])
+        m = folium.Map(location=center, zoom_start=14, tiles="OpenStreetMap")
+
+        # School marker
+        folium.Marker(
+            location=center, popup="<b>SCHOOL</b>", tooltip="School",
+            icon=folium.Icon(color="darkgreen", icon="graduation-cap", prefix='fa'),
+        ).add_to(m)
+
+        # Dangerous roads layer
+        fg_danger = FeatureGroup(name="Dangerous Roads (unsafe to cross)", show=True)
+        danger_segs = _extract_segments(G_con, center[0], center[1], "dangerous")
+        for seg in danger_segs:
+            folium.PolyLine(seg, color="#e74c3c", weight=3, opacity=0.45,
+                            dash_array="6,4").add_to(fg_danger)
+        fg_danger.add_to(m)
+        print(f"  Dangerous-road segments: {len(danger_segs)}")
+
+        # Unclassified roads layer
+        fg_unclass = FeatureGroup(name="Unclassified Roads (no student placement)", show=False)
+        unclass_segs = _extract_segments(G_con, center[0], center[1], "unclassified")
+        for seg in unclass_segs:
+            folium.PolyLine(seg, color="#7f8c8d", weight=2, opacity=0.5,
+                            dash_array="3,5", tooltip="Unclassified road").add_to(fg_unclass)
+        fg_unclass.add_to(m)
+        print(f"  Unclassified-road segments: {len(unclass_segs)}")
+
+    # Clear path cache so rendering computes fresh turn-aware paths on G_unc
+    _eng._path_cache.clear()
+    _eng._MATRIX_CACHE.clear()
+    _eng._MATRIX_CACHE_LENGTH.clear()
+
+    fgs = {}          # mk -> (fg_routes, fg_walks)
+    fgs_unserved = {}  # mk -> fg_unserved
+
+    solutions = [
+        ("A", sol_a),
+        ("B", sol_b),
+        ("C", sol_c),
+    ]
+
+    for mk, sol in solutions:
+        if sol is None:
+            continue
+        print(f"  Drawing Mode {mk} …")
+        fg_r, fg_w, _ = _add_route_layer(m, G_unc, sol, mk, G_con,
+                            constraints=meta.get("constraints"))
+        fgs[mk] = (fg_r, fg_w)
         fgs_unserved[mk] = _add_unserved_layer(m, sol, mk)
 
     # Candidate stop inspector layers (one per mode, hidden by default)
@@ -2450,8 +2730,6 @@ def run(input_path=None, output_path=None, iterations=None):
     for mk, (sol, cds, cdst, G_mk) in cand_data.items():
         fgs_cands[mk] = _add_candidate_layer(m, G_mk, mk, sol, cds, cdst)
 
-    _rej_syn_unsafe = _eng.get_synthetic_rejected_unsafe()
-    fg_crossings = _add_crossing_markers(m, crossings_dict, rejected_unsafe=_rej_syn_unsafe)
     _syn_markers = _eng.get_synthetic_crossings()
     _show_only_used_syn = bool(synth_cfg.get("show_only_used", True))
     _used_syn_edges = _collect_used_synthetic_edge_keys([sol_a, sol_b, sol_c], G_unc) if _show_only_used_syn else set()
@@ -2469,7 +2747,6 @@ def run(input_path=None, output_path=None, iterations=None):
         print(f"  Synthetic crossings (used edges): {len(_used_syn_edges)}")
     if injected_result is not None:
         print(f"  Injected crossings (edges): {len(injected_result.get('edge_pairs', []))}")
-    print(f"  Rejected synthetic (unsafe-road): {len(_rej_syn_unsafe)}")
     if len(_syn_markers) == 0:
         print("  WARNING: zero synthetic crossings were generated with current thresholds.")
 
@@ -2494,44 +2771,46 @@ def run(input_path=None, output_path=None, iterations=None):
         print(f"    Candidates enabled by crossings: {crossing_stats['candidates_via_crossing']}")
         print(f"    Students benefiting from crossings: {crossing_stats['students_with_crossing_benefit']}")
 
-    # Fill in empty FeatureGroups for any skipped modes so the layer control doesn't crash
-    for _mk in ("A", "B", "C"):
-        if _mk not in fgs:
-            _emp = FeatureGroup(name=f"Mode {_mk} (skipped)", show=False)
-            fgs[_mk] = (_emp, _emp)
+        # Fill in empty FeatureGroups for any skipped modes so the layer control doesn't crash
+        for _mk in ("A", "B", "C"):
+            if _mk not in fgs:
+                _emp = FeatureGroup(name=f"Mode {_mk} (skipped)", show=False)
+                fgs[_mk] = (_emp, _emp)
 
-    # Custom grouped layer control (title + 3 mode checkboxes, no radio buttons)
-    map_var = f"map_{m._id}"
-    ctrl_js = _build_custom_layer_control_js(
-        map_var, fg_danger, fg_unclass, fg_walknet, fg_syn,
-        fgs["A"], fgs["B"], fgs["C"],
-        fg_crossings,
-        fg_injected=fg_injected,
-        syn_label=_syn_label,
-        injected_label=_injected_label,
-        fg_unserved_a=fgs_unserved.get("A"),
-        fg_unserved_b=fgs_unserved.get("B"),
-        fg_unserved_c=fgs_unserved.get("C"),
-        fg_cands_a=fgs_cands.get("A"),
-        fg_cands_b=fgs_cands.get("B"),
-        fg_cands_c=fgs_cands.get("C"),
-        fg_usage_a=fgs_crossing_usage.get("A"),
-        fg_usage_b=fgs_crossing_usage.get("B"),
-        fg_usage_c=fgs_crossing_usage.get("C"),
-    )
-    m.get_root().script.add_child(folium.Element(ctrl_js))
+        # Custom grouped layer control (title + 3 mode checkboxes, no radio buttons)
+        map_var = f"map_{m._id}"
+        ctrl_js = _build_custom_layer_control_js(
+            map_var, fg_danger, fg_unclass, fg_syn,
+            fgs["A"], fgs["B"], fgs["C"],
+            fg_injected=fg_injected,
+            syn_label=_syn_label,
+            injected_label=_injected_label,
+            fg_unserved_a=fgs_unserved.get("A"),
+            fg_unserved_b=fgs_unserved.get("B"),
+            fg_unserved_c=fgs_unserved.get("C"),
+            fg_cands_a=fgs_cands.get("A"),
+            fg_cands_b=fgs_cands.get("B"),
+            fg_cands_c=fgs_cands.get("C"),
+            fg_usage_a=fgs_crossing_usage.get("A"),
+            fg_usage_b=fgs_crossing_usage.get("B"),
+            fg_usage_c=fgs_crossing_usage.get("C"),
+        )
+        m.get_root().script.add_child(folium.Element(ctrl_js))
 
-    m.get_root().html.add_child(folium.Element(
-        _build_stats_html(all_stats, crossings_dict, occupancies_dict,
-                          solutions_dict={"A": sol_a, "B": sol_b, "C": sol_c},
-                          G=G_unc,
-                          constraints=meta.get("constraints", {}),
-                          meta=meta)))
+        m.get_root().html.add_child(folium.Element(
+            _build_stats_html(all_stats, used_crossings_count, occupancies_dict,
+                              solutions_dict={"A": sol_a, "B": sol_b, "C": sol_c},
+                              G=G_unc,
+                              constraints=meta.get("constraints", {}),
+                              meta=meta)))
 
-    m.save(output)
-    fsize_kb = os.path.getsize(output) / 1024
-    _step_times["build_map_s"] = round(_wtime.time() - _t0, 2)
-    print(f"\n  Map saved: {output}  ({fsize_kb:.0f} KB)")
+        m.save(output)
+        fsize_kb = os.path.getsize(output) / 1024
+        _step_times["build_map_s"] = round(_wtime.time() - _t0, 2)
+        print(f"\n  Map saved: {output}  ({fsize_kb:.0f} KB)")
+    else:
+        _step_times["build_map_s"] = 0.0
+        print("\n[7/7] Map generation skipped (debug.run_build_map=false)")
 
     # ── Metrics JSON ──
     _total_wall = round(_wtime.time() - _run_start, 2)
@@ -2546,6 +2825,27 @@ def run(input_path=None, output_path=None, iterations=None):
     with open(metrics_path, "w", encoding="utf-8") as f:
         json.dump(_sanitise_floats(metrics), f, indent=2, ensure_ascii=False)
     print(f"  Metrics  : {metrics_path}")
+
+    # ── ALNS iteration logs (every 10 iterations) ──
+    logs_dir = os.path.dirname(output)
+    for mk in _active_modes:
+        st = all_stats.get(mk) or {}
+        iter_log = st.get("alns_iteration_log") or []
+        log_payload = {
+            "mode": mk,
+            "mode_name": _MODE_NAMES.get(mk, mk),
+            "buses_used": st.get("buses_used"),
+            "iterations_configured": iters,
+            "log_interval_iterations": 10,
+            "operator_performance": st.get("operator_performance"),
+            "matrix_precompute": st.get("matrix_precompute"),
+            "synthetic_edges_timing": st.get("synthetic_edges_timing"),
+            "entries": iter_log,
+        }
+        log_path = os.path.join(logs_dir, f"alns_log_mode_{mk.lower()}.json")
+        with open(log_path, "w", encoding="utf-8") as f:
+            json.dump(_sanitise_floats(log_payload), f, indent=2, ensure_ascii=False)
+        print(f"  ALNS log : {log_path}")
 
     # ── Summary ──
     print("\n" + "=" * 60)
@@ -2567,7 +2867,10 @@ def run(input_path=None, output_path=None, iterations=None):
     print(f"Total wall-clock:     {_total_wall:.1f}s")
     print(f"\nStage distribution used: { {k:v for k,v in meta['stage_distribution'].items() if k != '_comment'} }")
     print(f"Walk limits used: {stage_walk}")
-    print(f"\nOpen '{output}' in a browser to explore.")
+    if run_build_map:
+        print(f"\nOpen '{output}' in a browser to explore.")
+    else:
+        print("\nHTML map was not generated (debug.run_build_map=false).")
 
 
 # ────────────────────────────────────────────────────────────────────

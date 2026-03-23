@@ -1,0 +1,102 @@
+{
+  "_comment": "Crossings experiment: walk network + synthetic crossing overlay.",
+
+  "school": {
+    "name": "Victory College School",
+    "latitude": 29.964406,
+    "longitude": 31.270319
+  },
+
+  "n_students": 60,
+  "seed": 1000,
+
+  "stage_distribution": {
+    "KG": 0.25,
+    "ELEMENTARY": 0.25,
+    "MIDDLE": 0.25,
+    "HIGH": 0.25
+  },
+
+  "stage_walk_limits": {
+    "KG": 0,
+    "ELEMENTARY": 0,
+    "MIDDLE": 250,
+    "HIGH": 500
+  },
+
+  "buses": {
+    "count": 4,
+    "capacity": 22
+  },
+
+  "constraints": {
+    "enabled": true,
+    "ride_time_multiplier": 3,
+    "floor_minutes": 30,
+    "ceiling_minutes": 60,
+    "daily_detour_budget_minutes": 10,
+    "bidirectional_check": true
+  },
+    
+  "walk_graph": {
+    "enabled": true,
+    "radius_km": 2.0
+  },
+
+  "synthetic_crossings": {
+    "enabled": true,
+    "strategy": "drive_node_crossings",
+    "min_dist_m": 0.0,
+    "max_dist_m": 60.0,
+    "min_opposite_bearing_deg": 70.0,
+    "max_crossing_angle_delta_deg": 30.0,
+    "min_perpendicular_deg": 10.0,
+    "max_perpendicular_deg": 200.0,
+    "min_spacing_m": 30.0,
+    "min_spacing_per_road_m": 30.0,
+    "max_per_road": 600,
+    "show_only_used": false,
+    "max_total": 3000,
+    "enable_guaranteed_connection": true,
+    "guaranteed_connection_distance_m": 6.0,
+    "fallback_mode": "adaptive"
+  },
+
+  "crossings_injection": {
+    "enabled": false,
+    "pkl_path": "experiments/experiment4_crossings/crossings_nodes_injection.pkl",
+    "strict_validation": false
+  },
+
+  "distance_matrix_cache": {
+    "enabled": true,
+    "pkl_path": "experiments/experiment4_crossings/distance_matrix_cache.pkl"
+  },
+
+  "algorithm": {
+    "iterations": 1000,
+    "time_budget_seconds": 60,
+    "max_candidates_per_student": 6,
+    "minimize_buses": true,
+    "early_stop_patience": 100,
+    "early_stop_min_improvement": 0.1,
+    "early_stop_freeze_temp": 0.1,
+    "early_stop_freeze_patience": 20
+  },
+
+  "annulus": {
+    "peak_km": 2.0,
+    "sigma_km": 1.0,
+    "min_km": 0.4,
+    "max_km": 5.0
+  },
+
+  "output": "comparison_map.html",
+
+  "debug": {
+    "run_mode_a": true,
+    "run_mode_b": true,
+    "run_mode_c": true,
+    "run_build_map": true
+  }
+}
