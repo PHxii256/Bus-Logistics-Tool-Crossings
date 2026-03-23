@@ -578,12 +578,19 @@ def run_algorithm(data: dict, G, iterations: int = None,
 
     iters  = iterations or algo_cfg.get("iterations", 60)
     budget = time_budget_seconds or algo_cfg.get("time_budget_seconds", None)
-    max_cands = algo_cfg.get("max_candidates_per_student", 15)
+    max_cands = max(6, int(algo_cfg.get("max_candidates_per_student", 15) or 15))
     early_stop_patience = algo_cfg.get("early_stop_patience", None)
     min_improvement = algo_cfg.get("early_stop_min_improvement", 1e-6)
     freeze_temp_threshold = algo_cfg.get("early_stop_freeze_temp", 0.05)
     freeze_patience = algo_cfg.get("early_stop_freeze_patience", None)
     merge_tail_iterations = algo_cfg.get("merge_tail_iterations", 30)
+    worst_cost_sample_ratio = algo_cfg.get("worst_cost_sample_ratio", 0.35)
+    regret_share_early = algo_cfg.get("regret_share_early", 0.4)
+    regret_share_mid = algo_cfg.get("regret_share_mid", 0.3)
+    regret_share_late = algo_cfg.get("regret_share_late", 0.22)
+    regret_stagnation_bonus = algo_cfg.get("regret_stagnation_bonus", 0.08)
+    regret_share_min = algo_cfg.get("regret_share_min", 0.15)
+    regret_share_max = algo_cfg.get("regret_share_max", 0.6)
     # Walking BFS uses G (may be constrained); bus routing uses G_drive (unconstrained)
     precompute_matrix(
         students,
@@ -603,7 +610,14 @@ def run_algorithm(data: dict, G, iterations: int = None,
                          min_improvement=min_improvement,
                          freeze_temp_threshold=freeze_temp_threshold,
                          freeze_patience=freeze_patience,
-                         merge_tail_iterations=merge_tail_iterations)
+                         merge_tail_iterations=merge_tail_iterations,
+                         worst_cost_sample_ratio=worst_cost_sample_ratio,
+                         regret_share_early=regret_share_early,
+                         regret_share_mid=regret_share_mid,
+                         regret_share_late=regret_share_late,
+                         regret_stagnation_bonus=regret_stagnation_bonus,
+                         regret_share_min=regret_share_min,
+                         regret_share_max=regret_share_max)
     t0      = _time.time()
     best    = engine.run()
     elapsed = _time.time() - t0

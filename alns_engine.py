@@ -41,6 +41,13 @@ def worst_cost_removal(solution, n):
     if n == 0:
         return []
 
+    sample_ratio = float(_alns_operator_cfg.get("worst_cost_sample_ratio", 1.0))
+    sample_ratio = max(0.05, min(1.0, sample_ratio))
+    if sample_ratio < 1.0:
+        sample_size = max(n, int(len(served_students) * sample_ratio))
+        if sample_size < len(served_students):
+            served_students = random.sample(served_students, sample_size)
+
     removal_candidates = []
     for student in served_students:
         stop = student.assigned_stop
@@ -169,6 +176,107 @@ def sequence_removal(solution, n):
                 removed.append(student)
             if len(removed) >= n:
                 break
+
+    return removed
+
+
+def route_cluster_removal(solution, n):
+    """R10-style cluster removal using an MST split on one route's pickup stops.
+
+    Pick a route with at least 3 pickup stops, build an MST on stop coordinates,
+    remove the heaviest edge to form two clusters, then remove students from one
+    cluster (prefer the smaller cluster for controlled diversification).
+    """
+    if n <= 0:
+        return []
+
+    candidate_routes = []
+    for route in solution.routes:
+        pickup_stops = [s for s in route.stops if s.stop_type != 'school' and len(s.students) > 0]
+        if len(pickup_stops) >= 3:
+            candidate_routes.append((route, pickup_stops))
+    if not candidate_routes:
+        return []
+
+    route, stops = random.choice(candidate_routes)
+    m = len(stops)
+
+    # Build complete-graph edges with geographic distance, then Kruskal MST.
+    edges = []
+    for i in range(m):
+        for j in range(i + 1, m):
+            d = _haversine_m(stops[i].coords, stops[j].coords)
+            edges.append((d, i, j))
+    edges.sort(key=lambda x: x[0])
+
+    parent = list(range(m))
+    rank = [0] * m
+
+    def _find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def _union(a, b):
+        ra, rb = _find(a), _find(b)
+        if ra == rb:
+            return False
+        if rank[ra] < rank[rb]:
+            parent[ra] = rb
+        elif rank[ra] > rank[rb]:
+            parent[rb] = ra
+        else:
+            parent[rb] = ra
+            rank[ra] += 1
+        return True
+
+    mst_edges = []
+    for d, i, j in edges:
+        if _union(i, j):
+            mst_edges.append((d, i, j))
+            if len(mst_edges) == m - 1:
+                break
+    if len(mst_edges) < 2:
+        return []
+
+    # Remove heaviest MST edge to split into two components.
+    cut_d, cut_i, cut_j = max(mst_edges, key=lambda x: x[0])
+    _ = cut_d  # kept for readability / future diagnostics
+    adj = {i: [] for i in range(m)}
+    for _, i, j in mst_edges:
+        if (i == cut_i and j == cut_j) or (i == cut_j and j == cut_i):
+            continue
+        adj[i].append(j)
+        adj[j].append(i)
+
+    comp_a = set()
+    stack = [0]
+    while stack:
+        u = stack.pop()
+        if u in comp_a:
+            continue
+        comp_a.add(u)
+        for v in adj[u]:
+            if v not in comp_a:
+                stack.append(v)
+    comp_b = set(range(m)) - comp_a
+    if not comp_a or not comp_b:
+        return []
+
+    # Prefer smaller cluster for focused disruption.
+    chosen = comp_a if len(comp_a) <= len(comp_b) else comp_b
+    chosen_stops = [stops[i] for i in chosen]
+
+    removed = []
+    for stop in chosen_stops:
+        for student in list(stop.students):
+            if len(removed) >= n:
+                break
+            _remove_student_from_solution(solution, student)
+            removed.append(student)
+        if len(removed) >= n:
+            break
 
     return removed
 
@@ -382,6 +490,7 @@ def get_insertion_debug_stats():
 
 # Candidate configuration set by ALNSEngine before each run (max_candidates_per_student, etc.)
 _alns_candidate_cfg = {}
+_alns_operator_cfg = {}
 
 
 def _reorder_candidates_with_shared_boost(student_id, candidate_nodes):
@@ -446,7 +555,7 @@ def _get_insertions_for_route(student, route, graph, frontage_info, deadline=Non
     if student.id in _student_candidate_cache:
         candidate_nodes = _student_candidate_cache[student.id]
     else:
-        max_k = _alns_candidate_cfg.get("max_candidates_per_student", 15)
+        max_k = max(6, int(_alns_candidate_cfg.get("max_candidates_per_student", 15)))
         # Build candidate list: frontage node + walk candidates (if applicable)
         candidate_nodes = [(frontage_node_id, frontage_coords)]
         dist_map = {frontage_node_id: 0.0}  # node_id -> walk distance (metres)
@@ -621,17 +730,27 @@ class ALNSEngine:
                  time_budget_seconds=None, max_candidates_per_student=None,
                  early_stop_patience=None, min_improvement=1e-6,
                  freeze_temp_threshold=0.05, freeze_patience=None,
-                 merge_tail_iterations=30):
+                 merge_tail_iterations=30,
+                 worst_cost_sample_ratio=0.35,
+                 regret_share_early=0.4,
+                 regret_share_mid=0.3,
+                 regret_share_late=0.22,
+                 regret_stagnation_bonus=0.08,
+                 regret_share_min=0.15,
+                 regret_share_max=0.6):
         # Configure module-level candidate settings.
         # NOTE: do NOT clear _student_candidate_cache here — the cache is
         # keyed by student-id and stays valid across fleet-search iterations
         # (same students, same graph, same walk radii).  Clearing is handled
         # by _reset_caches() in run_comparison.py between MODES, not between
         # fleet-search k values.
-        global _alns_candidate_cfg
+        global _alns_candidate_cfg, _alns_operator_cfg
         _alns_candidate_cfg = {}
         if max_candidates_per_student is not None:
             _alns_candidate_cfg["max_candidates_per_student"] = max_candidates_per_student
+        _alns_operator_cfg = {
+            "worst_cost_sample_ratio": worst_cost_sample_ratio,
+        }
 
         self.curr_sol = initial_solution.clone()
         self.best_sol = initial_solution.clone()
@@ -644,6 +763,12 @@ class ALNSEngine:
         self.freeze_temp_threshold = float(freeze_temp_threshold)
         self.freeze_patience = int(freeze_patience) if freeze_patience else None
         self.merge_tail_iterations = max(0, int(merge_tail_iterations or 0))
+        self.regret_share_early = float(regret_share_early)
+        self.regret_share_mid = float(regret_share_mid)
+        self.regret_share_late = float(regret_share_late)
+        self.regret_stagnation_bonus = float(regret_stagnation_bonus)
+        self.regret_share_min = float(regret_share_min)
+        self.regret_share_max = float(regret_share_max)
         self.run_diagnostics = {
             "merge_tail": {
                 "enabled": self.merge_tail_iterations > 0,
@@ -663,6 +788,7 @@ class ALNSEngine:
             worst_cost_removal,
             shaw_related_removal,
             sequence_removal,
+            route_cluster_removal,
             route_merge_removal,
         ]
         self.repair_ops = [random_order_best_repair, regret_repair]
@@ -721,6 +847,49 @@ class ALNSEngine:
                     "total_time_s": round(total, 6),
                 }
         self.operator_stats_summary = out
+
+    def _select_repair_idx(self, iter_idx, no_improve_iters, start_time, deadline):
+        """Phase-aware repair selection with explicit regret throttling."""
+        names = [op.__name__ for op in self.repair_ops]
+        regret_idx = names.index("regret_repair") if "regret_repair" in names else None
+        if regret_idx is None or len(self.repair_ops) == 1:
+            return self._select_op(self.r_weights)
+
+        robr_idx = names.index("random_order_best_repair") if "random_order_best_repair" in names else 0
+
+        progress = (iter_idx + 1) / max(1, self.iterations)
+        if deadline is not None:
+            total = max(1e-9, deadline - start_time)
+            elapsed = max(0.0, time.time() - start_time)
+            progress = max(progress, min(1.0, elapsed / total))
+
+        if progress < 0.25:
+            target = self.regret_share_early
+        elif progress < 0.75:
+            target = self.regret_share_mid
+        else:
+            target = self.regret_share_late
+
+        if no_improve_iters >= 12:
+            target += self.regret_stagnation_bonus
+
+        target = max(self.regret_share_min, min(self.regret_share_max, target))
+
+        regret_count = self.operator_stats["repair"]["regret_repair"]["count"]
+        robr_count = self.operator_stats["repair"]["random_order_best_repair"]["count"]
+        used = regret_count + robr_count
+        observed = (regret_count / used) if used > 0 else target
+
+        if observed > target + 0.08:
+            regret_prob = max(0.05, target * 0.4)
+        elif observed < target - 0.08:
+            regret_prob = min(0.85, target + 0.18)
+        else:
+            regret_prob = target
+
+        if random.random() < regret_prob:
+            return regret_idx
+        return robr_idx
         
     def run(self):
         reset_insertion_debug_stats()
@@ -746,7 +915,7 @@ class ALNSEngine:
                 break
             # Selection
             d_idx = self._select_op(self.d_weights)
-            r_idx = self._select_op(self.r_weights)
+            r_idx = self._select_repair_idx(i, no_improve_iters, start_time, deadline)
             executed_iters = i + 1
             
             new_sol = self.curr_sol.clone()
