@@ -8,7 +8,7 @@
   },
 
   "n_students": 180,
-  "seed": 10000,
+  "seed": 1000,
 
   "stage_distribution": {
     "KG": 0.25,
@@ -74,7 +74,7 @@
   },
 
 "algorithm": {
-    "iterations": 10000,
+    "iterations": 1000,
     "time_budget_seconds": 60,
     "max_candidates_per_student": 6,
     "minimize_buses": true,

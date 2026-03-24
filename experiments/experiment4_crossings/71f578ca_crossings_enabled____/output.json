@@ -1,0 +1,3499 @@
+{
+  "generated_at": "23/03/26 05:40 pm",
+  "total_wall_time_seconds": 594.19,
+  "debug_stats": {
+    "step_times": {
+      "generate_dataset_s": 18.04,
+      "build_constrained_graph_s": 22.04,
+      "build_unconstrained_graph_s": 24.95,
+      "build_walk_graph_s": 2.02,
+      "synthetic_edges_prepare_s": 2.0209,
+      "synthetic_edges_generate_s": 1.6808,
+      "synthetic_edges_pkl_load_s": 0.0,
+      "synthetic_edges_auto_save_pkl_s": 0.0,
+      "build_map_s": 4.76
+    },
+    "mode_breakdown": {
+      "A": {
+        "mode_wall_time_s": 468.99,
+        "total_alns_solve_s": 465.78,
+        "successful_run_s": 183.87,
+        "actual_setup_overhead_s": 3.21,
+        "alns_iterations": null,
+        "operator_performance": {
+          "executed_iterations": 1,
+          "destroy": {
+            "random_removal": {
+              "count": 1,
+              "frequency_pct": 100.0,
+              "avg_time_s": 7e-06,
+              "best_time_s": 7e-06,
+              "worst_time_s": 7e-06,
+              "total_time_s": 7e-06
+            },
+            "worst_cost_removal": {
+              "count": 0,
+              "frequency_pct": 0.0,
+              "avg_time_s": 0.0,
+              "best_time_s": 0.0,
+              "worst_time_s": 0.0,
+              "total_time_s": 0.0
+            },
+            "shaw_related_removal": {
+              "count": 0,
+              "frequency_pct": 0.0,
+              "avg_time_s": 0.0,
+              "best_time_s": 0.0,
+              "worst_time_s": 0.0,
+              "total_time_s": 0.0
+            },
+            "sequence_removal": {
+              "count": 0,
+              "frequency_pct": 0.0,
+              "avg_time_s": 0.0,
+              "best_time_s": 0.0,
+              "worst_time_s": 0.0,
+              "total_time_s": 0.0
+            },
+            "route_merge_removal": {
+              "count": 0,
+              "frequency_pct": 0.0,
+              "avg_time_s": 0.0,
+              "best_time_s": 0.0,
+              "worst_time_s": 0.0,
+              "total_time_s": 0.0
+            }
+          },
+          "repair": {
+            "random_order_best_repair": {
+              "count": 1,
+              "frequency_pct": 100.0,
+              "avg_time_s": 183.851164,
+              "best_time_s": 183.851164,
+              "worst_time_s": 183.851164,
+              "total_time_s": 183.851164
+            },
+            "regret_repair": {
+              "count": 0,
+              "frequency_pct": 0.0,
+              "avg_time_s": 0.0,
+              "best_time_s": 0.0,
+              "worst_time_s": 0.0,
+              "total_time_s": 0.0
+            }
+          },
+          "effectiveness": {
+            "destroy": {
+              "random_removal": {
+                "attempted": 1,
+                "accepted": 1,
+                "acceptance_pct": 100.0,
+                "best_improvements": 1,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "worst_cost_removal": {
+                "attempted": 0,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "shaw_related_removal": {
+                "attempted": 0,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "sequence_removal": {
+                "attempted": 0,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "route_merge_removal": {
+                "attempted": 0,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              }
+            },
+            "repair": {
+              "random_order_best_repair": {
+                "attempted": 1,
+                "accepted": 1,
+                "acceptance_pct": 100.0,
+                "best_improvements": 1,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "regret_repair": {
+                "attempted": 0,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              }
+            },
+            "pairs": {
+              "random_removal+random_order_best_repair": {
+                "attempted": 1,
+                "accepted": 1,
+                "acceptance_pct": 100.0,
+                "best_improvements": 1,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "random_removal+regret_repair": {
+                "attempted": 0,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "worst_cost_removal+random_order_best_repair": {
+                "attempted": 0,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "worst_cost_removal+regret_repair": {
+                "attempted": 0,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "shaw_related_removal+random_order_best_repair": {
+                "attempted": 0,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "shaw_related_removal+regret_repair": {
+                "attempted": 0,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "sequence_removal+random_order_best_repair": {
+                "attempted": 0,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "sequence_removal+regret_repair": {
+                "attempted": 0,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "route_merge_removal+random_order_best_repair": {
+                "attempted": 0,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "route_merge_removal+regret_repair": {
+                "attempted": 0,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              }
+            }
+          }
+        },
+        "matrix_precompute_total_s": 1.6704,
+        "matrix_precompute_source": "loaded_from_pkl",
+        "matrix_precompute_load_s": 0.6801,
+        "matrix_precompute_compute_s": 0.0,
+        "matrix_precompute_save_s": 0.0,
+        "matrix_critical_nodes_count": 229,
+        "matrix_nodes_count": 229,
+        "matrix_cache_key_prefix": "8f4f80883d56",
+        "matrix_cache_entry_node_count": 229,
+        "matrix_cache_loaded_finite_ratio": 1.0,
+        "synthetic_edges_source": "generated_synthetic",
+        "synthetic_edges_prepare_s": 2.0209,
+        "synthetic_edges_pkl_load_s": 0.0,
+        "synthetic_edges_generate_s": 1.6808,
+        "synthetic_edges_auto_save_pkl_s": 0.0,
+        "insertion_debug": {
+          "routes_checked": 256,
+          "routes_bbox_pruned": 0,
+          "candidates_considered": 936,
+          "valid_insertions": 1697
+        },
+        "alns_diagnostics": {
+          "merge_tail": {
+            "enabled": true,
+            "ran": false,
+            "iterations": 0,
+            "accepted": 0,
+            "best_improvements": 0,
+            "served_start": 0,
+            "served_end": 0,
+            "active_buses_start": 0,
+            "active_buses_end": 0
+          }
+        },
+        "n_candidates_per_student": 1.0
+      },
+      "B": {
+        "mode_wall_time_s": 42.84,
+        "total_alns_solve_s": 33.59,
+        "successful_run_s": 9.87,
+        "actual_setup_overhead_s": 9.25,
+        "alns_iterations": null,
+        "operator_performance": {
+          "executed_iterations": 114,
+          "destroy": {
+            "random_removal": {
+              "count": 13,
+              "frequency_pct": 11.4,
+              "avg_time_s": 0.000191,
+              "best_time_s": 0.000111,
+              "worst_time_s": 0.000325,
+              "total_time_s": 0.002478
+            },
+            "worst_cost_removal": {
+              "count": 15,
+              "frequency_pct": 13.16,
+              "avg_time_s": 0.00081,
+              "best_time_s": 0.000631,
+              "worst_time_s": 0.001171,
+              "total_time_s": 0.012151
+            },
+            "shaw_related_removal": {
+              "count": 14,
+              "frequency_pct": 12.28,
+              "avg_time_s": 0.000347,
+              "best_time_s": 0.000258,
+              "worst_time_s": 0.000514,
+              "total_time_s": 0.004863
+            },
+            "sequence_removal": {
+              "count": 22,
+              "frequency_pct": 19.3,
+              "avg_time_s": 0.000206,
+              "best_time_s": 7.2e-05,
+              "worst_time_s": 0.000412,
+              "total_time_s": 0.004523
+            },
+            "route_merge_removal": {
+              "count": 80,
+              "frequency_pct": 70.18,
+              "avg_time_s": 9e-05,
+              "best_time_s": 6e-06,
+              "worst_time_s": 0.000187,
+              "total_time_s": 0.007193
+            }
+          },
+          "repair": {
+            "random_order_best_repair": {
+              "count": 87,
+              "frequency_pct": 76.32,
+              "avg_time_s": 0.057206,
+              "best_time_s": 0.022972,
+              "worst_time_s": 0.192457,
+              "total_time_s": 4.976911
+            },
+            "regret_repair": {
+              "count": 57,
+              "frequency_pct": 50.0,
+              "avg_time_s": 0.082518,
+              "best_time_s": 0.026263,
+              "worst_time_s": 0.252912,
+              "total_time_s": 4.703505
+            }
+          },
+          "effectiveness": {
+            "destroy": {
+              "random_removal": {
+                "attempted": 13,
+                "accepted": 11,
+                "acceptance_pct": 84.62,
+                "best_improvements": 1,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "worst_cost_removal": {
+                "attempted": 15,
+                "accepted": 12,
+                "acceptance_pct": 80.0,
+                "best_improvements": 2,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "shaw_related_removal": {
+                "attempted": 14,
+                "accepted": 12,
+                "acceptance_pct": 85.71,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "sequence_removal": {
+                "attempted": 22,
+                "accepted": 19,
+                "acceptance_pct": 86.36,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "route_merge_removal": {
+                "attempted": 80,
+                "accepted": 78,
+                "acceptance_pct": 97.5,
+                "best_improvements": 1,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              }
+            },
+            "repair": {
+              "random_order_best_repair": {
+                "attempted": 87,
+                "accepted": 79,
+                "acceptance_pct": 90.8,
+                "best_improvements": 4,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "regret_repair": {
+                "attempted": 57,
+                "accepted": 53,
+                "acceptance_pct": 92.98,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              }
+            },
+            "pairs": {
+              "random_removal+random_order_best_repair": {
+                "attempted": 8,
+                "accepted": 8,
+                "acceptance_pct": 100.0,
+                "best_improvements": 1,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "random_removal+regret_repair": {
+                "attempted": 5,
+                "accepted": 3,
+                "acceptance_pct": 60.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "worst_cost_removal+random_order_best_repair": {
+                "attempted": 11,
+                "accepted": 9,
+                "acceptance_pct": 81.82,
+                "best_improvements": 2,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "worst_cost_removal+regret_repair": {
+                "attempted": 4,
+                "accepted": 3,
+                "acceptance_pct": 75.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "shaw_related_removal+random_order_best_repair": {
+                "attempted": 10,
+                "accepted": 8,
+                "acceptance_pct": 80.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "shaw_related_removal+regret_repair": {
+                "attempted": 4,
+                "accepted": 4,
+                "acceptance_pct": 100.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "sequence_removal+random_order_best_repair": {
+                "attempted": 18,
+                "accepted": 16,
+                "acceptance_pct": 88.89,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "sequence_removal+regret_repair": {
+                "attempted": 4,
+                "accepted": 3,
+                "acceptance_pct": 75.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "route_merge_removal+random_order_best_repair": {
+                "attempted": 40,
+                "accepted": 38,
+                "acceptance_pct": 95.0,
+                "best_improvements": 1,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "route_merge_removal+regret_repair": {
+                "attempted": 40,
+                "accepted": 40,
+                "acceptance_pct": 100.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              }
+            }
+          }
+        },
+        "matrix_precompute_total_s": 1.6735,
+        "matrix_precompute_source": "loaded_from_pkl",
+        "matrix_precompute_load_s": 0.6765,
+        "matrix_precompute_compute_s": 0.0,
+        "matrix_precompute_save_s": 0.0,
+        "matrix_critical_nodes_count": 345,
+        "matrix_nodes_count": 345,
+        "matrix_cache_key_prefix": "30f45a64ae1b",
+        "matrix_cache_entry_node_count": 345,
+        "matrix_cache_loaded_finite_ratio": 1.0,
+        "synthetic_edges_source": "generated_synthetic",
+        "synthetic_edges_prepare_s": 2.0209,
+        "synthetic_edges_pkl_load_s": 0.0,
+        "synthetic_edges_generate_s": 1.6808,
+        "synthetic_edges_auto_save_pkl_s": 0.0,
+        "insertion_debug": {
+          "routes_checked": 6983,
+          "routes_bbox_pruned": 0,
+          "candidates_considered": 41799,
+          "valid_insertions": 45442
+        },
+        "alns_diagnostics": {
+          "merge_tail": {
+            "enabled": true,
+            "ran": true,
+            "iterations": 30,
+            "accepted": 30,
+            "best_improvements": 0,
+            "served_start": 60,
+            "served_end": 60,
+            "active_buses_start": 4,
+            "active_buses_end": 4
+          }
+        },
+        "n_candidates_per_student": 1.0
+      },
+      "C": {
+        "mode_wall_time_s": 10.46,
+        "total_alns_solve_s": 9.72,
+        "successful_run_s": 3.66,
+        "actual_setup_overhead_s": 0.74,
+        "alns_iterations": null,
+        "operator_performance": {
+          "executed_iterations": 159,
+          "destroy": {
+            "random_removal": {
+              "count": 81,
+              "frequency_pct": 50.94,
+              "avg_time_s": 0.000157,
+              "best_time_s": 5e-06,
+              "worst_time_s": 0.000356,
+              "total_time_s": 0.012687
+            },
+            "worst_cost_removal": {
+              "count": 20,
+              "frequency_pct": 12.58,
+              "avg_time_s": 0.000587,
+              "best_time_s": 0.000528,
+              "worst_time_s": 0.000727,
+              "total_time_s": 0.011736
+            },
+            "shaw_related_removal": {
+              "count": 45,
+              "frequency_pct": 28.3,
+              "avg_time_s": 0.000283,
+              "best_time_s": 0.000183,
+              "worst_time_s": 0.000545,
+              "total_time_s": 0.01272
+            },
+            "sequence_removal": {
+              "count": 6,
+              "frequency_pct": 3.77,
+              "avg_time_s": 0.000164,
+              "best_time_s": 0.000129,
+              "worst_time_s": 0.000211,
+              "total_time_s": 0.000983
+            },
+            "route_merge_removal": {
+              "count": 7,
+              "frequency_pct": 4.4,
+              "avg_time_s": 0.000104,
+              "best_time_s": 8.4e-05,
+              "worst_time_s": 0.000119,
+              "total_time_s": 0.000728
+            }
+          },
+          "repair": {
+            "random_order_best_repair": {
+              "count": 144,
+              "frequency_pct": 90.57,
+              "avg_time_s": 0.020163,
+              "best_time_s": 0.011126,
+              "worst_time_s": 0.061682,
+              "total_time_s": 2.903529
+            },
+            "regret_repair": {
+              "count": 15,
+              "frequency_pct": 9.43,
+              "avg_time_s": 0.036319,
+              "best_time_s": 0.016005,
+              "worst_time_s": 0.064748,
+              "total_time_s": 0.54478
+            }
+          },
+          "effectiveness": {
+            "destroy": {
+              "random_removal": {
+                "attempted": 81,
+                "accepted": 48,
+                "acceptance_pct": 59.26,
+                "best_improvements": 6,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "worst_cost_removal": {
+                "attempted": 20,
+                "accepted": 2,
+                "acceptance_pct": 10.0,
+                "best_improvements": 1,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "shaw_related_removal": {
+                "attempted": 45,
+                "accepted": 18,
+                "acceptance_pct": 40.0,
+                "best_improvements": 1,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "sequence_removal": {
+                "attempted": 6,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "route_merge_removal": {
+                "attempted": 7,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              }
+            },
+            "repair": {
+              "random_order_best_repair": {
+                "attempted": 144,
+                "accepted": 62,
+                "acceptance_pct": 43.06,
+                "best_improvements": 8,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "regret_repair": {
+                "attempted": 15,
+                "accepted": 6,
+                "acceptance_pct": 40.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              }
+            },
+            "pairs": {
+              "random_removal+random_order_best_repair": {
+                "attempted": 74,
+                "accepted": 44,
+                "acceptance_pct": 59.46,
+                "best_improvements": 6,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "random_removal+regret_repair": {
+                "attempted": 7,
+                "accepted": 4,
+                "acceptance_pct": 57.14,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "worst_cost_removal+random_order_best_repair": {
+                "attempted": 18,
+                "accepted": 2,
+                "acceptance_pct": 11.11,
+                "best_improvements": 1,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "worst_cost_removal+regret_repair": {
+                "attempted": 2,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "shaw_related_removal+random_order_best_repair": {
+                "attempted": 41,
+                "accepted": 16,
+                "acceptance_pct": 39.02,
+                "best_improvements": 1,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "shaw_related_removal+regret_repair": {
+                "attempted": 4,
+                "accepted": 2,
+                "acceptance_pct": 50.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "sequence_removal+random_order_best_repair": {
+                "attempted": 4,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "sequence_removal+regret_repair": {
+                "attempted": 2,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "route_merge_removal+random_order_best_repair": {
+                "attempted": 7,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              },
+              "route_merge_removal+regret_repair": {
+                "attempted": 0,
+                "accepted": 0,
+                "acceptance_pct": 0.0,
+                "best_improvements": 0,
+                "bus_drop_events": 0,
+                "total_bus_drop": 0,
+                "bus_drop_per_accepted": 0.0,
+                "served_drop_events": 0,
+                "total_served_drop": 0,
+                "served_drop_per_accepted": 0.0
+              }
+            }
+          }
+        },
+        "matrix_precompute_total_s": 1.533,
+        "matrix_precompute_source": "loaded_from_pkl",
+        "matrix_precompute_load_s": 0.5529,
+        "matrix_precompute_compute_s": 0.0,
+        "matrix_precompute_save_s": 0.0,
+        "matrix_critical_nodes_count": 61,
+        "matrix_nodes_count": 61,
+        "matrix_cache_key_prefix": "9c2bf61e56b6",
+        "matrix_cache_entry_node_count": 61,
+        "matrix_cache_loaded_finite_ratio": 1.0,
+        "synthetic_edges_source": "generated_synthetic",
+        "synthetic_edges_prepare_s": 2.0209,
+        "synthetic_edges_pkl_load_s": 0.0,
+        "synthetic_edges_generate_s": 1.6808,
+        "synthetic_edges_auto_save_pkl_s": 0.0,
+        "insertion_debug": {
+          "routes_checked": 10370,
+          "routes_bbox_pruned": 0,
+          "candidates_considered": 10370,
+          "valid_insertions": 5425
+        },
+        "alns_diagnostics": {
+          "merge_tail": {
+            "enabled": true,
+            "ran": false,
+            "iterations": 0,
+            "accepted": 0,
+            "best_improvements": 0,
+            "served_start": 0,
+            "served_end": 0,
+            "active_buses_start": 0,
+            "active_buses_end": 0
+          }
+        },
+        "n_candidates_per_student": 1.0
+      }
+    },
+    "synthetic_crossings": {
+      "strategy": "drive_node_crossings",
+      "drive_edges_found": 356,
+      "drive_nodes_extracted": 406,
+      "roads_found": 33,
+      "roads_with_both_directions": 23,
+      "real_to_real_crossings": 55,
+      "real_to_synthetic_crossings": 90,
+      "synthetic_nodes_created": 90,
+      "rejected_no_opposite": 10,
+      "pairing_attempts": 1660,
+      "pairing_rejected_distance_too_short": 0,
+      "pairing_rejected_distance_too_long": 1426,
+      "pairing_rejected_angle": 5,
+      "pairing_rejected_bearing_calc_failed": 0,
+      "rejected_distance": 94,
+      "rejected_angle": 0,
+      "rejected_spacing": 11,
+      "skipped_global_connection_lock": 45,
+      "rejected_fallback_geometry": 0,
+      "fallback_reused_existing_nodes": 32,
+      "fallback_projected_with_spacing": 51,
+      "fallback_projected_no_spacing": 29,
+      "fallback_guaranteed": 19,
+      "fallback_failed_completely": 0,
+      "checked_drive_nodes": 391,
+      "candidate_pairs_checked": 217,
+      "rejected_lane_pair": 26,
+      "rejected_existing_edge": 39,
+      "rejected_existing_walk_short": 40,
+      "rejected_not_perpendicular": 1,
+      "added": 3
+    }
+  },
+  "config": {
+    "n_students": 60,
+    "seed": 1000,
+    "iterations": 1000,
+    "buses_count": 4,
+    "buses_capacity": 22,
+    "minimize_buses": true,
+    "force_fleet_size": null,
+    "constraints_enabled": true,
+    "soft_ride_caps": false,
+    "time_budget_seconds": 60,
+    "max_candidates_per_student": 6,
+    "merge_tail_iterations": 30,
+    "distance_matrix_cache": {
+      "enabled": true,
+      "force_disable": false,
+      "isolate_per_run": false,
+      "pkl_path": "experiments/experiment4_crossings/distance_matrix_cache.pkl"
+    },
+    "stage_walk_limits": {
+      "KG": 0,
+      "ELEMENTARY": 0,
+      "MIDDLE": 250,
+      "HIGH": 500
+    },
+    "stage_distribution": {
+      "KG": 0.25,
+      "ELEMENTARY": 0.25,
+      "MIDDLE": 0.25,
+      "HIGH": 0.25
+    },
+    "constraints": {
+      "enabled": true,
+      "soft_ride_caps": false,
+      "ride_time_multiplier": 3,
+      "floor_minutes": 30,
+      "ceiling_minutes": 60,
+      "bidirectional_check": true
+    },
+    "algorithm": {
+      "time_budget_seconds": 60,
+      "max_candidates_per_student": 6,
+      "minimize_buses": true,
+      "force_fleet_size": null,
+      "dwell_time_seconds_per_stop": 30
+    }
+  },
+  "modes": {
+    "strictly_constrained": {
+      "routes_created": 4,
+      "students_served": 56,
+      "students_unserved": 4,
+      "total_route_time_min": 166.02,
+      "base_route_time_min": 138.02,
+      "total_dwell_time_min": 28.0,
+      "dwell_time_per_stop_seconds": 30.0,
+      "total_route_dist_km": 76.46,
+      "avg_route_time_min": 41.51,
+      "alns_runtime_seconds": 183.87,
+      "mode_wall_time_seconds": null,
+      "operator_performance": {
+        "executed_iterations": 1,
+        "destroy": {
+          "random_removal": {
+            "count": 1,
+            "frequency_pct": 100.0,
+            "avg_time_s": 7e-06,
+            "best_time_s": 7e-06,
+            "worst_time_s": 7e-06,
+            "total_time_s": 7e-06
+          },
+          "worst_cost_removal": {
+            "count": 0,
+            "frequency_pct": 0.0,
+            "avg_time_s": 0.0,
+            "best_time_s": 0.0,
+            "worst_time_s": 0.0,
+            "total_time_s": 0.0
+          },
+          "shaw_related_removal": {
+            "count": 0,
+            "frequency_pct": 0.0,
+            "avg_time_s": 0.0,
+            "best_time_s": 0.0,
+            "worst_time_s": 0.0,
+            "total_time_s": 0.0
+          },
+          "sequence_removal": {
+            "count": 0,
+            "frequency_pct": 0.0,
+            "avg_time_s": 0.0,
+            "best_time_s": 0.0,
+            "worst_time_s": 0.0,
+            "total_time_s": 0.0
+          },
+          "route_merge_removal": {
+            "count": 0,
+            "frequency_pct": 0.0,
+            "avg_time_s": 0.0,
+            "best_time_s": 0.0,
+            "worst_time_s": 0.0,
+            "total_time_s": 0.0
+          }
+        },
+        "repair": {
+          "random_order_best_repair": {
+            "count": 1,
+            "frequency_pct": 100.0,
+            "avg_time_s": 183.851164,
+            "best_time_s": 183.851164,
+            "worst_time_s": 183.851164,
+            "total_time_s": 183.851164
+          },
+          "regret_repair": {
+            "count": 0,
+            "frequency_pct": 0.0,
+            "avg_time_s": 0.0,
+            "best_time_s": 0.0,
+            "worst_time_s": 0.0,
+            "total_time_s": 0.0
+          }
+        },
+        "effectiveness": {
+          "destroy": {
+            "random_removal": {
+              "attempted": 1,
+              "accepted": 1,
+              "acceptance_pct": 100.0,
+              "best_improvements": 1,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "worst_cost_removal": {
+              "attempted": 0,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "shaw_related_removal": {
+              "attempted": 0,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "sequence_removal": {
+              "attempted": 0,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "route_merge_removal": {
+              "attempted": 0,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            }
+          },
+          "repair": {
+            "random_order_best_repair": {
+              "attempted": 1,
+              "accepted": 1,
+              "acceptance_pct": 100.0,
+              "best_improvements": 1,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "regret_repair": {
+              "attempted": 0,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            }
+          },
+          "pairs": {
+            "random_removal+random_order_best_repair": {
+              "attempted": 1,
+              "accepted": 1,
+              "acceptance_pct": 100.0,
+              "best_improvements": 1,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "random_removal+regret_repair": {
+              "attempted": 0,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "worst_cost_removal+random_order_best_repair": {
+              "attempted": 0,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "worst_cost_removal+regret_repair": {
+              "attempted": 0,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "shaw_related_removal+random_order_best_repair": {
+              "attempted": 0,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "shaw_related_removal+regret_repair": {
+              "attempted": 0,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "sequence_removal+random_order_best_repair": {
+              "attempted": 0,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "sequence_removal+regret_repair": {
+              "attempted": 0,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "route_merge_removal+random_order_best_repair": {
+              "attempted": 0,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "route_merge_removal+regret_repair": {
+              "attempted": 0,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            }
+          }
+        }
+      },
+      "alns_diagnostics": {
+        "merge_tail": {
+          "enabled": true,
+          "ran": false,
+          "iterations": 0,
+          "accepted": 0,
+          "best_improvements": 0,
+          "served_start": 0,
+          "served_end": 0,
+          "active_buses_start": 0,
+          "active_buses_end": 0
+        }
+      },
+      "insertion_debug": {
+        "routes_checked": 256,
+        "routes_bbox_pruned": 0,
+        "candidates_considered": 936,
+        "valid_insertions": 1697
+      },
+      "matrix_precompute": {
+        "source": "loaded_from_pkl",
+        "loaded_from_pkl": true,
+        "saved_to_pkl": false,
+        "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/distance_matrix_cache.pkl",
+        "load_time_s": 0.6801,
+        "compute_time_s": 0.0,
+        "save_time_s": 0.0,
+        "total_time_s": 1.6704,
+        "critical_nodes_count": 229,
+        "matrix_nodes_count": 229,
+        "cache_key_prefix": "8f4f80883d56",
+        "cache_entry_node_count": 229,
+        "cache_loaded_finite_ratio": 1.0,
+        "cache_loaded_inf_pairs": 0,
+        "cache_loaded_finite_pairs": 52212
+      },
+      "synthetic_edges_timing": {
+        "source": "generated_synthetic",
+        "prepare_time_s": 2.0209,
+        "pkl_load_time_s": 0.0,
+        "generate_time_s": 1.6808,
+        "auto_save_pkl_time_s": 0.0,
+        "pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/crossings_nodes_injection.pkl"
+      },
+      "unsafe_crossings": 0,
+      "walk_stats": {
+        "avg_walk_dist_m": null,
+        "median_walk_dist_m": 3.1,
+        "max_walk_dist_m": null,
+        "min_walk_dist_m": 0.0,
+        "avg_walk_time_min": null,
+        "avg_walk_utilisation_pct": 22.6
+      },
+      "students": [
+        {
+          "id": "S033",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 1.81,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S019",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.42,
+          "walk_distance_m": 86.1
+        },
+        {
+          "id": "S057",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.33,
+          "walk_distance_m": 74.3
+        },
+        {
+          "id": "S045",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.08,
+          "walk_distance_m": 33.3
+        },
+        {
+          "id": "S027",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 5.41,
+          "walk_distance_m": 29.5
+        },
+        {
+          "id": "S056",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 6.07,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S034",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 7.25,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S003",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 6.7,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S058",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.86,
+          "walk_distance_m": 37.1
+        },
+        {
+          "id": "S036",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 6.08,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S037",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 8.07,
+          "walk_distance_m": 32.4
+        },
+        {
+          "id": "S023",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 7.19,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S008",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 5.42,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S046",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 2.35,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S044",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 2.68,
+          "walk_distance_m": 47.0
+        },
+        {
+          "id": "S005",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 1.24,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S013",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 2.05,
+          "walk_distance_m": 137.2
+        },
+        {
+          "id": "S002",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 2.48,
+          "walk_distance_m": 43.9
+        },
+        {
+          "id": "S050",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 2.86,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S004",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.02,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S038",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 3.17,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S026",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.22,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S060",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.97,
+          "walk_distance_m": 85.6
+        },
+        {
+          "id": "S054",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.13,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S025",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 7.69,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S010",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 5.21,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S053",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 5.61,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S051",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.73,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S022",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.39,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S024",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.63,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S001",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 4.69,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S043",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 4.4,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S030",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 6.85,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S052",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 2.46,
+          "walk_distance_m": 122.4
+        },
+        {
+          "id": "S048",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 1.58,
+          "walk_distance_m": 83.1
+        },
+        {
+          "id": "S029",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 1.58,
+          "walk_distance_m": 254.0
+        },
+        {
+          "id": "S014",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 1.16,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S012",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 1.38,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S047",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 2.14,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S011",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 2.16,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S028",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.18,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S049",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.35,
+          "walk_distance_m": 342.2
+        },
+        {
+          "id": "S018",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.93,
+          "walk_distance_m": 85.6
+        },
+        {
+          "id": "S017",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 7.0,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S006",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.85,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S041",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 3.7,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S059",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.64,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S035",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 2.75,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S015",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 11.95,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S032",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 8.79,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S031",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 10.58,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S020",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 4.56,
+          "walk_distance_m": 131.4
+        },
+        {
+          "id": "S039",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 3.81,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S009",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.97,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S016",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.36,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S042",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 1.75,
+          "walk_distance_m": 151.0
+        }
+      ],
+      "buses_available": 4,
+      "bus_capacity": 22,
+      "buses_used": 4,
+      "ride_cap_violations_am": 0,
+      "ride_cap_checked_am": 56,
+      "ride_cap_violation_pct_am": 0.0,
+      "ride_cap_violations_pm": 11,
+      "ride_cap_checked_pm": 56,
+      "ride_cap_violation_pct_pm": 19.6,
+      "total_walk_time_min": null,
+      "total_time_with_walks_min": null,
+      "fleet_search": {
+        "buses_used": 4,
+        "summary": "No fleet size in range 3..4 served all students. Best: k=4 with 56/60 served, 4 unserved. 2 student(s) have walk_radius=0 but no valid insertion was found under current constraints/pruning. 2 student(s) likely unserved due to ALNS budget exhaustion — try increasing time_budget_seconds.",
+        "search_log": [
+          {
+            "k": 3,
+            "served": 39,
+            "unserved": 21,
+            "feasible": false,
+            "runtime_s": 281.91,
+            "matrix_precompute": {
+              "source": "loaded_from_pkl",
+              "loaded_from_pkl": true,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/distance_matrix_cache.pkl",
+              "load_time_s": 0.8874,
+              "compute_time_s": 0.0,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3672,
+              "critical_nodes_count": 229,
+              "matrix_nodes_count": 229,
+              "cache_key_prefix": "8f4f80883d56",
+              "cache_entry_node_count": 229,
+              "cache_loaded_finite_ratio": 1.0,
+              "cache_loaded_inf_pairs": 0,
+              "cache_loaded_finite_pairs": 52212
+            },
+            "rejection_reasons": {
+              "zero_walk_radius_no_valid_insertion": 11,
+              "search_budget_exhausted": 10
+            }
+          },
+          {
+            "k": 4,
+            "served": 56,
+            "unserved": 4,
+            "feasible": false,
+            "runtime_s": 183.87,
+            "matrix_precompute": {
+              "source": "loaded_from_pkl",
+              "loaded_from_pkl": true,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/distance_matrix_cache.pkl",
+              "load_time_s": 0.6801,
+              "compute_time_s": 0.0,
+              "save_time_s": 0.0,
+              "total_time_s": 1.6704,
+              "critical_nodes_count": 229,
+              "matrix_nodes_count": 229,
+              "cache_key_prefix": "8f4f80883d56",
+              "cache_entry_node_count": 229,
+              "cache_loaded_finite_ratio": 1.0,
+              "cache_loaded_inf_pairs": 0,
+              "cache_loaded_finite_pairs": 52212
+            },
+            "rejection_reasons": {
+              "zero_walk_radius_no_valid_insertion": 2,
+              "search_budget_exhausted": 2
+            }
+          }
+        ]
+      }
+    },
+    "weakly_constrained": {
+      "routes_created": 4,
+      "students_served": 60,
+      "students_unserved": 0,
+      "total_route_time_min": 163.71,
+      "base_route_time_min": 133.71,
+      "total_dwell_time_min": 30.0,
+      "dwell_time_per_stop_seconds": 30.0,
+      "total_route_dist_km": 74.63,
+      "avg_route_time_min": 40.93,
+      "alns_runtime_seconds": 9.87,
+      "mode_wall_time_seconds": null,
+      "operator_performance": {
+        "executed_iterations": 114,
+        "destroy": {
+          "random_removal": {
+            "count": 13,
+            "frequency_pct": 11.4,
+            "avg_time_s": 0.000191,
+            "best_time_s": 0.000111,
+            "worst_time_s": 0.000325,
+            "total_time_s": 0.002478
+          },
+          "worst_cost_removal": {
+            "count": 15,
+            "frequency_pct": 13.16,
+            "avg_time_s": 0.00081,
+            "best_time_s": 0.000631,
+            "worst_time_s": 0.001171,
+            "total_time_s": 0.012151
+          },
+          "shaw_related_removal": {
+            "count": 14,
+            "frequency_pct": 12.28,
+            "avg_time_s": 0.000347,
+            "best_time_s": 0.000258,
+            "worst_time_s": 0.000514,
+            "total_time_s": 0.004863
+          },
+          "sequence_removal": {
+            "count": 22,
+            "frequency_pct": 19.3,
+            "avg_time_s": 0.000206,
+            "best_time_s": 7.2e-05,
+            "worst_time_s": 0.000412,
+            "total_time_s": 0.004523
+          },
+          "route_merge_removal": {
+            "count": 80,
+            "frequency_pct": 70.18,
+            "avg_time_s": 9e-05,
+            "best_time_s": 6e-06,
+            "worst_time_s": 0.000187,
+            "total_time_s": 0.007193
+          }
+        },
+        "repair": {
+          "random_order_best_repair": {
+            "count": 87,
+            "frequency_pct": 76.32,
+            "avg_time_s": 0.057206,
+            "best_time_s": 0.022972,
+            "worst_time_s": 0.192457,
+            "total_time_s": 4.976911
+          },
+          "regret_repair": {
+            "count": 57,
+            "frequency_pct": 50.0,
+            "avg_time_s": 0.082518,
+            "best_time_s": 0.026263,
+            "worst_time_s": 0.252912,
+            "total_time_s": 4.703505
+          }
+        },
+        "effectiveness": {
+          "destroy": {
+            "random_removal": {
+              "attempted": 13,
+              "accepted": 11,
+              "acceptance_pct": 84.62,
+              "best_improvements": 1,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "worst_cost_removal": {
+              "attempted": 15,
+              "accepted": 12,
+              "acceptance_pct": 80.0,
+              "best_improvements": 2,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "shaw_related_removal": {
+              "attempted": 14,
+              "accepted": 12,
+              "acceptance_pct": 85.71,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "sequence_removal": {
+              "attempted": 22,
+              "accepted": 19,
+              "acceptance_pct": 86.36,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "route_merge_removal": {
+              "attempted": 80,
+              "accepted": 78,
+              "acceptance_pct": 97.5,
+              "best_improvements": 1,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            }
+          },
+          "repair": {
+            "random_order_best_repair": {
+              "attempted": 87,
+              "accepted": 79,
+              "acceptance_pct": 90.8,
+              "best_improvements": 4,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "regret_repair": {
+              "attempted": 57,
+              "accepted": 53,
+              "acceptance_pct": 92.98,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            }
+          },
+          "pairs": {
+            "random_removal+random_order_best_repair": {
+              "attempted": 8,
+              "accepted": 8,
+              "acceptance_pct": 100.0,
+              "best_improvements": 1,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "random_removal+regret_repair": {
+              "attempted": 5,
+              "accepted": 3,
+              "acceptance_pct": 60.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "worst_cost_removal+random_order_best_repair": {
+              "attempted": 11,
+              "accepted": 9,
+              "acceptance_pct": 81.82,
+              "best_improvements": 2,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "worst_cost_removal+regret_repair": {
+              "attempted": 4,
+              "accepted": 3,
+              "acceptance_pct": 75.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "shaw_related_removal+random_order_best_repair": {
+              "attempted": 10,
+              "accepted": 8,
+              "acceptance_pct": 80.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "shaw_related_removal+regret_repair": {
+              "attempted": 4,
+              "accepted": 4,
+              "acceptance_pct": 100.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "sequence_removal+random_order_best_repair": {
+              "attempted": 18,
+              "accepted": 16,
+              "acceptance_pct": 88.89,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "sequence_removal+regret_repair": {
+              "attempted": 4,
+              "accepted": 3,
+              "acceptance_pct": 75.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "route_merge_removal+random_order_best_repair": {
+              "attempted": 40,
+              "accepted": 38,
+              "acceptance_pct": 95.0,
+              "best_improvements": 1,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "route_merge_removal+regret_repair": {
+              "attempted": 40,
+              "accepted": 40,
+              "acceptance_pct": 100.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            }
+          }
+        }
+      },
+      "alns_diagnostics": {
+        "merge_tail": {
+          "enabled": true,
+          "ran": true,
+          "iterations": 30,
+          "accepted": 30,
+          "best_improvements": 0,
+          "served_start": 60,
+          "served_end": 60,
+          "active_buses_start": 4,
+          "active_buses_end": 4
+        }
+      },
+      "insertion_debug": {
+        "routes_checked": 6983,
+        "routes_bbox_pruned": 0,
+        "candidates_considered": 41799,
+        "valid_insertions": 45442
+      },
+      "matrix_precompute": {
+        "source": "loaded_from_pkl",
+        "loaded_from_pkl": true,
+        "saved_to_pkl": false,
+        "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/distance_matrix_cache.pkl",
+        "load_time_s": 0.6765,
+        "compute_time_s": 0.0,
+        "save_time_s": 0.0,
+        "total_time_s": 1.6735,
+        "critical_nodes_count": 345,
+        "matrix_nodes_count": 345,
+        "cache_key_prefix": "30f45a64ae1b",
+        "cache_entry_node_count": 345,
+        "cache_loaded_finite_ratio": 1.0,
+        "cache_loaded_inf_pairs": 0,
+        "cache_loaded_finite_pairs": 118680
+      },
+      "synthetic_edges_timing": {
+        "source": "generated_synthetic",
+        "prepare_time_s": 2.0209,
+        "pkl_load_time_s": 0.0,
+        "generate_time_s": 1.6808,
+        "auto_save_pkl_time_s": 0.0,
+        "pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/crossings_nodes_injection.pkl"
+      },
+      "unsafe_crossings": 0,
+      "walk_stats": {
+        "avg_walk_dist_m": 75.4,
+        "median_walk_dist_m": 49.3,
+        "max_walk_dist_m": 805.3,
+        "min_walk_dist_m": 0.0,
+        "avg_walk_time_min": 0.94,
+        "avg_walk_utilisation_pct": 17.7
+      },
+      "students": [
+        {
+          "id": "S017",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 7.0,
+          "walk_distance_m": 85.0
+        },
+        {
+          "id": "S006",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.85,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S018",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.93,
+          "walk_distance_m": 85.6
+        },
+        {
+          "id": "S007",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 5.03,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S030",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 6.85,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S021",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 7.34,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S015",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 11.95,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S040",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 8.14,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S023",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 7.19,
+          "walk_distance_m": 54.6
+        },
+        {
+          "id": "S037",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 8.07,
+          "walk_distance_m": 32.4
+        },
+        {
+          "id": "S008",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 5.42,
+          "walk_distance_m": 72.2
+        },
+        {
+          "id": "S051",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.73,
+          "walk_distance_m": 11.5
+        },
+        {
+          "id": "S025",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 7.69,
+          "walk_distance_m": 18.0
+        },
+        {
+          "id": "S053",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 5.61,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S010",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 5.21,
+          "walk_distance_m": 57.8
+        },
+        {
+          "id": "S054",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.13,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S060",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.97,
+          "walk_distance_m": 85.6
+        },
+        {
+          "id": "S026",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.22,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S038",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 3.17,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S004",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.02,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S050",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 2.86,
+          "walk_distance_m": 22.8
+        },
+        {
+          "id": "S002",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 2.48,
+          "walk_distance_m": 88.8
+        },
+        {
+          "id": "S046",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 2.35,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S041",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 3.7,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S055",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 6.5,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S059",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.64,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S035",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 2.75,
+          "walk_distance_m": 11.8
+        },
+        {
+          "id": "S042",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 1.75,
+          "walk_distance_m": 132.4
+        },
+        {
+          "id": "S012",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 1.38,
+          "walk_distance_m": 84.8
+        },
+        {
+          "id": "S047",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 2.14,
+          "walk_distance_m": 342.8
+        },
+        {
+          "id": "S014",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 1.16,
+          "walk_distance_m": 138.8
+        },
+        {
+          "id": "S029",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 1.58,
+          "walk_distance_m": 266.3
+        },
+        {
+          "id": "S052",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 2.46,
+          "walk_distance_m": 122.4
+        },
+        {
+          "id": "S024",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.63,
+          "walk_distance_m": 75.9
+        },
+        {
+          "id": "S001",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 4.69,
+          "walk_distance_m": 115.5
+        },
+        {
+          "id": "S043",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 4.4,
+          "walk_distance_m": 79.4
+        },
+        {
+          "id": "S022",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.39,
+          "walk_distance_m": 46.5
+        },
+        {
+          "id": "S049",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.35,
+          "walk_distance_m": 342.2
+        },
+        {
+          "id": "S048",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 1.58,
+          "walk_distance_m": 63.5
+        },
+        {
+          "id": "S028",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.18,
+          "walk_distance_m": 65.9
+        },
+        {
+          "id": "S011",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 2.16,
+          "walk_distance_m": 164.4
+        },
+        {
+          "id": "S033",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 1.81,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S005",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 1.24,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S013",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 2.05,
+          "walk_distance_m": 64.7
+        },
+        {
+          "id": "S044",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 2.68,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S036",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 6.08,
+          "walk_distance_m": 9.7
+        },
+        {
+          "id": "S058",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.86,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S031",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 10.58,
+          "walk_distance_m": 135.0
+        },
+        {
+          "id": "S056",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 6.07,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S034",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 7.25,
+          "walk_distance_m": 42.2
+        },
+        {
+          "id": "S003",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 6.7,
+          "walk_distance_m": 17.6
+        },
+        {
+          "id": "S032",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 8.79,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S020",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 4.56,
+          "walk_distance_m": 89.8
+        },
+        {
+          "id": "S027",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 5.41,
+          "walk_distance_m": 29.5
+        },
+        {
+          "id": "S045",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.08,
+          "walk_distance_m": 52.1
+        },
+        {
+          "id": "S057",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.33,
+          "walk_distance_m": 79.5
+        },
+        {
+          "id": "S019",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.42,
+          "walk_distance_m": 86.1
+        },
+        {
+          "id": "S039",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 3.81,
+          "walk_distance_m": 5.0
+        },
+        {
+          "id": "S009",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.97,
+          "walk_distance_m": 134.5
+        },
+        {
+          "id": "S016",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.36,
+          "walk_distance_m": 134.2
+        }
+      ],
+      "buses_available": 4,
+      "bus_capacity": 22,
+      "buses_used": 4,
+      "ride_cap_violations_am": 1,
+      "ride_cap_checked_am": 60,
+      "ride_cap_violation_pct_am": 1.7,
+      "ride_cap_violations_pm": 6,
+      "ride_cap_checked_pm": 60,
+      "ride_cap_violation_pct_pm": 10.0,
+      "total_walk_time_min": 56.4,
+      "total_time_with_walks_min": 220.11,
+      "fleet_search": {
+        "buses_used": 4,
+        "summary": "k=4 is the minimum feasible fleet size",
+        "search_log": [
+          {
+            "k": 3,
+            "served": 56,
+            "unserved": 4,
+            "feasible": false,
+            "runtime_s": 23.72,
+            "matrix_precompute": {
+              "source": "loaded_from_pkl",
+              "loaded_from_pkl": true,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/distance_matrix_cache.pkl",
+              "load_time_s": 0.7235,
+              "compute_time_s": 0.0,
+              "save_time_s": 0.0,
+              "total_time_s": 2.8901,
+              "critical_nodes_count": 345,
+              "matrix_nodes_count": 345,
+              "cache_key_prefix": "30f45a64ae1b",
+              "cache_entry_node_count": 345,
+              "cache_loaded_finite_ratio": 1.0,
+              "cache_loaded_inf_pairs": 0,
+              "cache_loaded_finite_pairs": 118680
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 4
+            }
+          },
+          {
+            "k": 4,
+            "served": 60,
+            "unserved": 0,
+            "feasible": true,
+            "runtime_s": 9.87,
+            "matrix_precompute": {
+              "source": "loaded_from_pkl",
+              "loaded_from_pkl": true,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/distance_matrix_cache.pkl",
+              "load_time_s": 0.6765,
+              "compute_time_s": 0.0,
+              "save_time_s": 0.0,
+              "total_time_s": 1.6735,
+              "critical_nodes_count": 345,
+              "matrix_nodes_count": 345,
+              "cache_key_prefix": "30f45a64ae1b",
+              "cache_entry_node_count": 345,
+              "cache_loaded_finite_ratio": 1.0,
+              "cache_loaded_inf_pairs": 0,
+              "cache_loaded_finite_pairs": 118680
+            },
+            "rejection_reasons": {}
+          }
+        ]
+      }
+    },
+    "door_to_door": {
+      "routes_created": 4,
+      "students_served": 55,
+      "students_unserved": 5,
+      "total_route_time_min": 171.57,
+      "base_route_time_min": 144.07,
+      "total_dwell_time_min": 27.5,
+      "dwell_time_per_stop_seconds": 30.0,
+      "total_route_dist_km": 72.59,
+      "avg_route_time_min": 42.89,
+      "alns_runtime_seconds": 3.66,
+      "mode_wall_time_seconds": null,
+      "operator_performance": {
+        "executed_iterations": 159,
+        "destroy": {
+          "random_removal": {
+            "count": 81,
+            "frequency_pct": 50.94,
+            "avg_time_s": 0.000157,
+            "best_time_s": 5e-06,
+            "worst_time_s": 0.000356,
+            "total_time_s": 0.012687
+          },
+          "worst_cost_removal": {
+            "count": 20,
+            "frequency_pct": 12.58,
+            "avg_time_s": 0.000587,
+            "best_time_s": 0.000528,
+            "worst_time_s": 0.000727,
+            "total_time_s": 0.011736
+          },
+          "shaw_related_removal": {
+            "count": 45,
+            "frequency_pct": 28.3,
+            "avg_time_s": 0.000283,
+            "best_time_s": 0.000183,
+            "worst_time_s": 0.000545,
+            "total_time_s": 0.01272
+          },
+          "sequence_removal": {
+            "count": 6,
+            "frequency_pct": 3.77,
+            "avg_time_s": 0.000164,
+            "best_time_s": 0.000129,
+            "worst_time_s": 0.000211,
+            "total_time_s": 0.000983
+          },
+          "route_merge_removal": {
+            "count": 7,
+            "frequency_pct": 4.4,
+            "avg_time_s": 0.000104,
+            "best_time_s": 8.4e-05,
+            "worst_time_s": 0.000119,
+            "total_time_s": 0.000728
+          }
+        },
+        "repair": {
+          "random_order_best_repair": {
+            "count": 144,
+            "frequency_pct": 90.57,
+            "avg_time_s": 0.020163,
+            "best_time_s": 0.011126,
+            "worst_time_s": 0.061682,
+            "total_time_s": 2.903529
+          },
+          "regret_repair": {
+            "count": 15,
+            "frequency_pct": 9.43,
+            "avg_time_s": 0.036319,
+            "best_time_s": 0.016005,
+            "worst_time_s": 0.064748,
+            "total_time_s": 0.54478
+          }
+        },
+        "effectiveness": {
+          "destroy": {
+            "random_removal": {
+              "attempted": 81,
+              "accepted": 48,
+              "acceptance_pct": 59.26,
+              "best_improvements": 6,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "worst_cost_removal": {
+              "attempted": 20,
+              "accepted": 2,
+              "acceptance_pct": 10.0,
+              "best_improvements": 1,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "shaw_related_removal": {
+              "attempted": 45,
+              "accepted": 18,
+              "acceptance_pct": 40.0,
+              "best_improvements": 1,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "sequence_removal": {
+              "attempted": 6,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "route_merge_removal": {
+              "attempted": 7,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            }
+          },
+          "repair": {
+            "random_order_best_repair": {
+              "attempted": 144,
+              "accepted": 62,
+              "acceptance_pct": 43.06,
+              "best_improvements": 8,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "regret_repair": {
+              "attempted": 15,
+              "accepted": 6,
+              "acceptance_pct": 40.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            }
+          },
+          "pairs": {
+            "random_removal+random_order_best_repair": {
+              "attempted": 74,
+              "accepted": 44,
+              "acceptance_pct": 59.46,
+              "best_improvements": 6,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "random_removal+regret_repair": {
+              "attempted": 7,
+              "accepted": 4,
+              "acceptance_pct": 57.14,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "worst_cost_removal+random_order_best_repair": {
+              "attempted": 18,
+              "accepted": 2,
+              "acceptance_pct": 11.11,
+              "best_improvements": 1,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "worst_cost_removal+regret_repair": {
+              "attempted": 2,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "shaw_related_removal+random_order_best_repair": {
+              "attempted": 41,
+              "accepted": 16,
+              "acceptance_pct": 39.02,
+              "best_improvements": 1,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "shaw_related_removal+regret_repair": {
+              "attempted": 4,
+              "accepted": 2,
+              "acceptance_pct": 50.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "sequence_removal+random_order_best_repair": {
+              "attempted": 4,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "sequence_removal+regret_repair": {
+              "attempted": 2,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "route_merge_removal+random_order_best_repair": {
+              "attempted": 7,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            },
+            "route_merge_removal+regret_repair": {
+              "attempted": 0,
+              "accepted": 0,
+              "acceptance_pct": 0.0,
+              "best_improvements": 0,
+              "bus_drop_events": 0,
+              "total_bus_drop": 0,
+              "bus_drop_per_accepted": 0.0,
+              "served_drop_events": 0,
+              "total_served_drop": 0,
+              "served_drop_per_accepted": 0.0
+            }
+          }
+        }
+      },
+      "alns_diagnostics": {
+        "merge_tail": {
+          "enabled": true,
+          "ran": false,
+          "iterations": 0,
+          "accepted": 0,
+          "best_improvements": 0,
+          "served_start": 0,
+          "served_end": 0,
+          "active_buses_start": 0,
+          "active_buses_end": 0
+        }
+      },
+      "insertion_debug": {
+        "routes_checked": 10370,
+        "routes_bbox_pruned": 0,
+        "candidates_considered": 10370,
+        "valid_insertions": 5425
+      },
+      "matrix_precompute": {
+        "source": "loaded_from_pkl",
+        "loaded_from_pkl": true,
+        "saved_to_pkl": false,
+        "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/distance_matrix_cache.pkl",
+        "load_time_s": 0.5529,
+        "compute_time_s": 0.0,
+        "save_time_s": 0.0,
+        "total_time_s": 1.533,
+        "critical_nodes_count": 61,
+        "matrix_nodes_count": 61,
+        "cache_key_prefix": "9c2bf61e56b6",
+        "cache_entry_node_count": 61,
+        "cache_loaded_finite_ratio": 1.0,
+        "cache_loaded_inf_pairs": 0,
+        "cache_loaded_finite_pairs": 3660
+      },
+      "synthetic_edges_timing": {
+        "source": "generated_synthetic",
+        "prepare_time_s": 2.0209,
+        "pkl_load_time_s": 0.0,
+        "generate_time_s": 1.6808,
+        "auto_save_pkl_time_s": 0.0,
+        "pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/crossings_nodes_injection.pkl"
+      },
+      "unsafe_crossings": 0,
+      "walk_stats": {
+        "avg_walk_dist_m": 4.9,
+        "median_walk_dist_m": 0.0,
+        "max_walk_dist_m": 50.9,
+        "min_walk_dist_m": 0.0,
+        "avg_walk_time_min": 0.06,
+        "avg_walk_utilisation_pct": null
+      },
+      "students": [
+        {
+          "id": "S002",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 2.48,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S050",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 2.86,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S004",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.02,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S038",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 3.17,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S026",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.22,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S052",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 2.46,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S022",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.39,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S001",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 4.69,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S024",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.63,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S043",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 4.4,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S049",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.35,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S048",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 1.58,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S014",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 1.16,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S012",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 1.38,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S042",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 1.75,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S009",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.97,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S016",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.36,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S033",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 1.81,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S005",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 1.24,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S013",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 2.05,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S041",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 3.7,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S059",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.64,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S055",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 6.5,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S003",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 6.7,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S034",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 7.25,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S056",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 6.07,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S032",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 8.79,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S037",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 8.07,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S036",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 6.08,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S058",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.86,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S020",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 4.56,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S044",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 2.68,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S015",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 11.95,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S025",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 7.69,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S051",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.73,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S023",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 7.19,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S008",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 5.42,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S046",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 2.35,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S045",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.08,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S027",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 5.41,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S057",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.33,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S019",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.42,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S039",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 3.81,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S060",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.97,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S054",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.13,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S053",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 5.61,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S010",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 5.21,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S029",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 1.58,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S047",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 2.14,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S011",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 2.16,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S028",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.18,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S018",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.93,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S017",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 7.0,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S006",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.85,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S035",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 2.75,
+          "walk_distance_m": 0.0
+        }
+      ],
+      "buses_available": 4,
+      "bus_capacity": 22,
+      "buses_used": 4,
+      "ride_cap_violations_am": 0,
+      "ride_cap_checked_am": 55,
+      "ride_cap_violation_pct_am": 0.0,
+      "ride_cap_violations_pm": 12,
+      "ride_cap_checked_pm": 55,
+      "ride_cap_violation_pct_pm": 21.8,
+      "total_walk_time_min": 3.3,
+      "total_time_with_walks_min": 174.87,
+      "fleet_search": {
+        "buses_used": 4,
+        "summary": "No fleet size in range 3..4 served all students. Best: k=4 with 55/60 served, 5 unserved. 5 student(s) have walk_radius=0 but no valid insertion was found under current constraints/pruning.",
+        "search_log": [
+          {
+            "k": 3,
+            "served": 49,
+            "unserved": 11,
+            "feasible": false,
+            "runtime_s": 6.06,
+            "matrix_precompute": {
+              "source": "loaded_from_pkl",
+              "loaded_from_pkl": true,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/distance_matrix_cache.pkl",
+              "load_time_s": -1.7857,
+              "compute_time_s": 0.0,
+              "save_time_s": 0.0,
+              "total_time_s": -0.8136,
+              "critical_nodes_count": 61,
+              "matrix_nodes_count": 61,
+              "cache_key_prefix": "9c2bf61e56b6",
+              "cache_entry_node_count": 61,
+              "cache_loaded_finite_ratio": 1.0,
+              "cache_loaded_inf_pairs": 0,
+              "cache_loaded_finite_pairs": 3660
+            },
+            "rejection_reasons": {
+              "zero_walk_radius_no_valid_insertion": 11
+            }
+          },
+          {
+            "k": 4,
+            "served": 55,
+            "unserved": 5,
+            "feasible": false,
+            "runtime_s": 3.66,
+            "matrix_precompute": {
+              "source": "loaded_from_pkl",
+              "loaded_from_pkl": true,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/distance_matrix_cache.pkl",
+              "load_time_s": 0.5529,
+              "compute_time_s": 0.0,
+              "save_time_s": 0.0,
+              "total_time_s": 1.533,
+              "critical_nodes_count": 61,
+              "matrix_nodes_count": 61,
+              "cache_key_prefix": "9c2bf61e56b6",
+              "cache_entry_node_count": 61,
+              "cache_loaded_finite_ratio": 1.0,
+              "cache_loaded_inf_pairs": 0,
+              "cache_loaded_finite_pairs": 3660
+            },
+            "rejection_reasons": {
+              "zero_walk_radius_no_valid_insertion": 5
+            }
+          }
+        ]
+      }
+    }
+  },
+  "comparison": {
+    "efficiency_gain_vs_d2d_pct": 3.2,
+    "safety_cost_vs_weakly_constrained_pct": 1.4,
+    "crossings_eliminated_vs_weakly_constrained": 0,
+    "strictly_constrained_total_time_min": 166.02,
+    "weakly_constrained_total_time_min": 163.71,
+    "door_to_door_total_time_min": 171.57
+  }
+}

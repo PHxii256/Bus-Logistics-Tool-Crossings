@@ -1,0 +1,165 @@
+{
+  "mode": "B",
+  "mode_name": "Weakly Constrained (Any Walking)",
+  "buses_used": 9,
+  "iterations_configured": 10000,
+  "log_interval_iterations": 10,
+  "operator_performance": {
+    "executed_iterations": 89,
+    "destroy": {
+      "random_removal": {
+        "count": 5,
+        "frequency_pct": 5.62,
+        "avg_time_s": 0.001091,
+        "best_time_s": 0.000505,
+        "worst_time_s": 0.002277,
+        "total_time_s": 0.005455
+      },
+      "worst_cost_removal": {
+        "count": 32,
+        "frequency_pct": 35.96,
+        "avg_time_s": 0.003043,
+        "best_time_s": 0.001956,
+        "worst_time_s": 0.005122,
+        "total_time_s": 0.097369
+      },
+      "shaw_related_removal": {
+        "count": 18,
+        "frequency_pct": 20.22,
+        "avg_time_s": 0.001351,
+        "best_time_s": 1.1e-05,
+        "worst_time_s": 0.002683,
+        "total_time_s": 0.024325
+      },
+      "sequence_removal": {
+        "count": 10,
+        "frequency_pct": 11.24,
+        "avg_time_s": 0.000842,
+        "best_time_s": 0.000304,
+        "worst_time_s": 0.001382,
+        "total_time_s": 0.008423
+      },
+      "route_merge_removal": {
+        "count": 24,
+        "frequency_pct": 26.97,
+        "avg_time_s": 0.000255,
+        "best_time_s": 0.000104,
+        "worst_time_s": 0.000804,
+        "total_time_s": 0.006114
+      }
+    },
+    "repair": {
+      "random_order_best_repair": {
+        "count": 58,
+        "frequency_pct": 65.17,
+        "avg_time_s": 0.471148,
+        "best_time_s": 0.099911,
+        "worst_time_s": 1.583484,
+        "total_time_s": 27.326595
+      },
+      "regret_repair": {
+        "count": 31,
+        "frequency_pct": 34.83,
+        "avg_time_s": 1.040562,
+        "best_time_s": -0.527309,
+        "worst_time_s": 2.857664,
+        "total_time_s": 32.257433
+      }
+    }
+  },
+  "matrix_precompute": {
+    "source": "computed_osrm",
+    "loaded_from_pkl": false,
+    "saved_to_pkl": true,
+    "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/distance_matrix_cache.pkl",
+    "load_time_s": 1.6104,
+    "compute_time_s": 2.7038,
+    "save_time_s": 3.1578,
+    "total_time_s": 12.1994,
+    "critical_nodes_count": 825,
+    "matrix_nodes_count": 825,
+    "cache_key_prefix": "a589c1652f7b",
+    "cache_entry_node_count": null,
+    "cache_loaded_finite_ratio": null,
+    "cache_loaded_inf_pairs": null,
+    "cache_loaded_finite_pairs": null,
+    "cache_guard_min_finite_ratio": 0.0001,
+    "cache_load_rejected": false,
+    "cache_load_reject_reason": null,
+    "cache_recomputed_after_reject": false
+  },
+  "synthetic_edges_timing": {
+    "source": "generated_synthetic",
+    "prepare_time_s": 1.9036,
+    "pkl_load_time_s": 0.0,
+    "generate_time_s": 1.5637,
+    "auto_save_pkl_time_s": 0.0,
+    "pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/crossings_nodes_injection.pkl"
+  },
+  "entries": [
+    {
+      "iteration": 10,
+      "temperature": 817.072807,
+      "objective_value": 1624687.79,
+      "best_objective": 1624687.79,
+      "students_served": 167,
+      "block_elapsed_seconds": 8.41
+    },
+    {
+      "iteration": 20,
+      "temperature": 667.607972,
+      "objective_value": 1694699.42,
+      "best_objective": 1694699.42,
+      "students_served": 174,
+      "block_elapsed_seconds": 6.139
+    },
+    {
+      "iteration": 30,
+      "temperature": 545.484319,
+      "objective_value": 1734693.41,
+      "best_objective": 1734693.41,
+      "students_served": 178,
+      "block_elapsed_seconds": 5.438
+    },
+    {
+      "iteration": 40,
+      "temperature": 445.700404,
+      "objective_value": 1744702.48,
+      "best_objective": 1744702.48,
+      "students_served": 179,
+      "block_elapsed_seconds": 7.073
+    },
+    {
+      "iteration": 50,
+      "temperature": 364.16968,
+      "objective_value": 1744717.54,
+      "best_objective": 1744717.54,
+      "students_served": 179,
+      "block_elapsed_seconds": 9.378
+    },
+    {
+      "iteration": 60,
+      "temperature": 297.553143,
+      "objective_value": 1744717.54,
+      "best_objective": 1744717.54,
+      "students_served": 179,
+      "block_elapsed_seconds": 6.21
+    },
+    {
+      "iteration": 70,
+      "temperature": 243.122581,
+      "objective_value": 1744717.54,
+      "best_objective": 1744717.54,
+      "students_served": 179,
+      "block_elapsed_seconds": 5.55
+    },
+    {
+      "iteration": 80,
+      "temperature": 198.64885,
+      "objective_value": 1744741.95,
+      "best_objective": 1744741.95,
+      "students_served": 179,
+      "block_elapsed_seconds": 5.745
+    }
+  ]
+}

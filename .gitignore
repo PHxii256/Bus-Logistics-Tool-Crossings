@@ -44,3 +44,7 @@ temp*.py
 
 osrm/
 *.osrm*
+
+
+distance_matrix_cache.pkl
+crossings_nodes_injection.pkl

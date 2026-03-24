@@ -7,8 +7,8 @@
     "longitude": 31.270319
   },
 
-  "n_students": 180,
-  "seed": 10000,
+  "n_students": 60,
+  "seed": 500,
 
   "stage_distribution": {
     "KG": 0.25,
@@ -25,7 +25,7 @@
   },
 
   "buses": {
-    "count": 10,
+    "count": 4,
     "capacity": 22
   },
 
