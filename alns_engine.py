@@ -621,7 +621,11 @@ class ALNSEngine:
                  time_budget_seconds=None, max_candidates_per_student=None,
                  early_stop_patience=None, min_improvement=1e-6,
                  freeze_temp_threshold=0.05, freeze_patience=None,
-                 merge_tail_iterations=30):
+                 merge_tail_iterations=30,
+                 min_early_stop_iterations=None,
+                 max_repair_seconds_per_iteration=None,
+                 destroy_fraction_min=None,
+                 destroy_fraction_max=None):
         # Configure module-level candidate settings.
         # NOTE: do NOT clear _student_candidate_cache here — the cache is
         # keyed by student-id and stays valid across fleet-search iterations
@@ -644,7 +648,54 @@ class ALNSEngine:
         self.freeze_temp_threshold = float(freeze_temp_threshold)
         self.freeze_patience = int(freeze_patience) if freeze_patience else None
         self.merge_tail_iterations = max(0, int(merge_tail_iterations or 0))
+        self.min_early_stop_iterations = max(0, int(min_early_stop_iterations or 0))
+
+        # Optional guardrail: cap repair work per iteration so one expensive
+        # regret-repair call cannot consume nearly the full run budget.
+        self.max_repair_seconds_per_iteration = (
+            float(max_repair_seconds_per_iteration)
+            if max_repair_seconds_per_iteration is not None
+            else None
+        )
+
+        # Optional fixed destroy fractions. If not provided, run() uses
+        # adaptive bounds by problem size.
+        self.destroy_fraction_min = (
+            float(destroy_fraction_min) if destroy_fraction_min is not None else None
+        )
+        self.destroy_fraction_max = (
+            float(destroy_fraction_max) if destroy_fraction_max is not None else None
+        )
+
+        n_students = len(initial_solution.students)
+        if self.max_repair_seconds_per_iteration is None and self.time_budget_seconds:
+            if n_students >= 250:
+                self.max_repair_seconds_per_iteration = max(
+                    2.0, min(10.0, float(self.time_budget_seconds) * 0.20)
+                )
+            elif n_students >= 120:
+                self.max_repair_seconds_per_iteration = max(
+                    1.5, min(8.0, float(self.time_budget_seconds) * 0.18)
+                )
+
+        if self.destroy_fraction_min is not None:
+            self.destroy_fraction_min = max(0.01, min(0.6, self.destroy_fraction_min))
+        if self.destroy_fraction_max is not None:
+            self.destroy_fraction_max = max(0.01, min(0.6, self.destroy_fraction_max))
+        if (
+            self.destroy_fraction_min is not None
+            and self.destroy_fraction_max is not None
+            and self.destroy_fraction_min > self.destroy_fraction_max
+        ):
+            self.destroy_fraction_min, self.destroy_fraction_max = (
+                self.destroy_fraction_max,
+                self.destroy_fraction_min,
+            )
+
         self.run_diagnostics = {
+            "stop_reason": None,
+            "stop_iteration": 0,
+            "stop_no_improve_iters": 0,
             "merge_tail": {
                 "enabled": self.merge_tail_iterations > 0,
                 "ran": False,
@@ -725,9 +776,10 @@ class ALNSEngine:
     def run(self):
         reset_insertion_debug_stats()
         t = self.temp
-        start_time = time.time()
-        deadline = (start_time + self.time_budget_seconds) if self.time_budget_seconds else None
-        block_start_time = start_time
+        start_wall = time.time()
+        start_perf = time.perf_counter()
+        deadline = (start_wall + self.time_budget_seconds) if self.time_budget_seconds else None
+        block_start_perf = start_perf
         best_obj = self.best_sol.calculate_objective()
         no_improve_iters = 0
         executed_iters = 0
@@ -741,8 +793,11 @@ class ALNSEngine:
 
         for i in range(self.iterations):
             # ── Time-budget early exit ──
-            if self.time_budget_seconds and (time.time() - start_time) >= self.time_budget_seconds:
+            if self.time_budget_seconds and (time.time() - start_wall) >= self.time_budget_seconds:
                 print(f"  Time budget of {self.time_budget_seconds}s reached at iteration {i+1} — stopping.")
+                self.run_diagnostics["stop_reason"] = "time_budget"
+                self.run_diagnostics["stop_iteration"] = i + 1
+                self.run_diagnostics["stop_no_improve_iters"] = no_improve_iters
                 break
             # Selection
             d_idx = self._select_op(self.d_weights)
@@ -751,16 +806,35 @@ class ALNSEngine:
             
             new_sol = self.curr_sol.clone()
             
-            # Destroy: Remove between 5% and 25% of students
-            n_remove = max(1, int(len(new_sol.students) * random.uniform(0.05, 0.25)))
-            _td = time.time()
+            # Destroy size: adaptive by instance size to avoid massive per-iteration
+            # repairs on large problems while preserving diversification.
+            if self.destroy_fraction_min is not None and self.destroy_fraction_max is not None:
+                frac_min, frac_max = self.destroy_fraction_min, self.destroy_fraction_max
+            else:
+                n_students = len(new_sol.students)
+                if n_students >= 300:
+                    frac_min, frac_max = 0.02, 0.10
+                elif n_students >= 150:
+                    frac_min, frac_max = 0.03, 0.15
+                elif n_students >= 80:
+                    frac_min, frac_max = 0.04, 0.20
+                else:
+                    frac_min, frac_max = 0.05, 0.25
+
+            n_remove = max(1, int(len(new_sol.students) * random.uniform(frac_min, frac_max)))
+            _td = time.perf_counter()
             self.destroy_ops[d_idx](new_sol, n_remove)
-            self._record_op_timing("destroy", self.destroy_ops[d_idx].__name__, time.time() - _td)
+            self._record_op_timing("destroy", self.destroy_ops[d_idx].__name__, time.perf_counter() - _td)
             
             # Repair
-            _tr = time.time()
-            self.repair_ops[r_idx](new_sol, deadline=deadline)
-            self._record_op_timing("repair", self.repair_ops[r_idx].__name__, time.time() - _tr)
+            repair_deadline = deadline
+            if self.max_repair_seconds_per_iteration is not None:
+                iter_repair_deadline = time.time() + self.max_repair_seconds_per_iteration
+                repair_deadline = min(deadline, iter_repair_deadline) if deadline else iter_repair_deadline
+
+            _tr = time.perf_counter()
+            self.repair_ops[r_idx](new_sol, deadline=repair_deadline)
+            self._record_op_timing("repair", self.repair_ops[r_idx].__name__, time.perf_counter() - _tr)
             
             # Score calculation
             new_obj = new_sol.calculate_objective()
@@ -815,33 +889,41 @@ class ALNSEngine:
             else:
                 effective_patience = self.early_stop_patience
 
-            if effective_patience and no_improve_iters >= effective_patience:
-                if effective_patience == 30 and self.early_stop_patience != 30:
-                    print(
-                        f"  Early stop: Theoretical Optimum hit! Polished for "
-                        f"{no_improve_iters} iterations with no further objective improvement."
-                    )
-                else:
-                    print(
-                        f"  Early stop: no best-objective improvement for "
-                        f"{no_improve_iters} iterations."
-                    )
-                break
+            if (i + 1) >= self.min_early_stop_iterations:
+                if effective_patience and no_improve_iters >= effective_patience:
+                    if effective_patience == 30 and self.early_stop_patience != 30:
+                        print(
+                            f"  Early stop: Theoretical Optimum hit! Polished for "
+                            f"{no_improve_iters} iterations with no further objective improvement."
+                        )
+                        self.run_diagnostics["stop_reason"] = "theoretical_optimum_polish"
+                    else:
+                        print(
+                            f"  Early stop: no best-objective improvement for "
+                            f"{no_improve_iters} iterations."
+                        )
+                        self.run_diagnostics["stop_reason"] = "no_improve_patience"
+                    self.run_diagnostics["stop_iteration"] = i + 1
+                    self.run_diagnostics["stop_no_improve_iters"] = no_improve_iters
+                    break
 
-            if (
-                self.freeze_patience
-                and t <= self.freeze_temp_threshold
-                and no_improve_iters >= self.freeze_patience
-            ):
-                print(
-                    f"  Early stop: temperature <= {self.freeze_temp_threshold:g} and "
-                    f"no improvement for {no_improve_iters} iterations."
-                )
-                break
+                if (
+                    self.freeze_patience
+                    and t <= self.freeze_temp_threshold
+                    and no_improve_iters >= self.freeze_patience
+                ):
+                    print(
+                        f"  Early stop: temperature <= {self.freeze_temp_threshold:g} and "
+                        f"no improvement for {no_improve_iters} iterations."
+                    )
+                    self.run_diagnostics["stop_reason"] = "freeze_patience"
+                    self.run_diagnostics["stop_iteration"] = i + 1
+                    self.run_diagnostics["stop_no_improve_iters"] = no_improve_iters
+                    break
             
             if (i+1) % 10 == 0:
-                block_end_time = time.time()
-                block_elapsed = block_end_time - block_start_time
+                block_end_perf = time.perf_counter()
+                block_elapsed = block_end_perf - block_start_perf
                 print(f"Iteration {i+1}: Best Obj = {best_obj:.2f}, Temp = {t:.1f}, Last 10 iter: {block_elapsed:.2f}s")
                 self.iteration_log.append({
                     "iteration":             i + 1,
@@ -851,9 +933,14 @@ class ALNSEngine:
                     "students_served":       sum(1 for s in self.best_sol.students if s.is_served),
                     "block_elapsed_seconds": round(block_elapsed, 3)
                 })
-                block_start_time = block_end_time
+                block_start_perf = block_end_perf
 
-        total_elapsed = time.time() - start_time
+        if self.run_diagnostics.get("stop_reason") is None:
+            self.run_diagnostics["stop_reason"] = "iterations_completed"
+            self.run_diagnostics["stop_iteration"] = executed_iters
+            self.run_diagnostics["stop_no_improve_iters"] = no_improve_iters
+
+        total_elapsed = time.perf_counter() - start_perf
 
         # Short post-loop phase: force fleet-consolidation attempts while preserving speed.
         total_students = len(self.best_sol.students)
@@ -871,13 +958,13 @@ class ALNSEngine:
         )
         if should_run_tail:
             if self.time_budget_seconds:
-                remaining = self.time_budget_seconds - (time.time() - start_time)
+                remaining = self.time_budget_seconds - (time.time() - start_wall)
                 if remaining <= 0:
                     should_run_tail = False
             if should_run_tail:
                 self._run_merge_focused_tail(best_obj, deadline)
 
-        total_elapsed = time.time() - start_time
+        total_elapsed = time.perf_counter() - start_perf
         print(f"Optimization Complete.")
         print(f"Total Time: {total_elapsed:.2f}s")
         print(f"Final State: {self.best_sol}")

@@ -619,6 +619,10 @@ def run_algorithm(data: dict, G, iterations: int = None,
     freeze_temp_threshold = algo_cfg.get("early_stop_freeze_temp", 0.05)
     freeze_patience = algo_cfg.get("early_stop_freeze_patience", None)
     merge_tail_iterations = algo_cfg.get("merge_tail_iterations", 30)
+    min_early_stop_iterations = algo_cfg.get("min_early_stop_iterations", None)
+    max_repair_seconds_per_iteration = algo_cfg.get("max_repair_seconds_per_iteration", None)
+    destroy_fraction_min = algo_cfg.get("destroy_fraction_min", None)
+    destroy_fraction_max = algo_cfg.get("destroy_fraction_max", None)
     cache_context = {
         "seed": data.get("seed", data.get("meta", {}).get("seed")),
         "student_count": len(students),
@@ -643,7 +647,11 @@ def run_algorithm(data: dict, G, iterations: int = None,
                          min_improvement=min_improvement,
                          freeze_temp_threshold=freeze_temp_threshold,
                          freeze_patience=freeze_patience,
-                         merge_tail_iterations=merge_tail_iterations)
+                         merge_tail_iterations=merge_tail_iterations,
+                         min_early_stop_iterations=min_early_stop_iterations,
+                         max_repair_seconds_per_iteration=max_repair_seconds_per_iteration,
+                         destroy_fraction_min=destroy_fraction_min,
+                         destroy_fraction_max=destroy_fraction_max)
     t0      = _time.time()
     best    = engine.run()
     elapsed = _time.time() - t0
@@ -732,11 +740,16 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
 
     fleet_log   = []
     total_fleet_search_runtime = 0.0
+    prev_executed_iters = None
 
     for k in range(k_min, k_max + 1):
         k_budget_s = None
         if base_budget_s is not None:
             scale = first_k_budget_scale if k == k_min else followup_k_budget_scale
+            # If the previous k run barely executed any ALNS iterations, avoid
+            # starving this k with an aggressively downscaled follow-up budget.
+            if k > k_min and prev_executed_iters is not None and prev_executed_iters <= 3:
+                scale = max(scale, 0.9)
             scale = max(0.05, float(scale))
             k_budget_s = max(1.0, float(base_budget_s) * scale)
             if max_per_k_s is not None:
@@ -763,6 +776,10 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
 
         unserved_students = [s for s in sol.students if not s.is_served]
         reasons = _diagnose_unserved(unserved_students, sol, capacity_k, constraints)
+        op_perf = stats.get("operator_performance") or {}
+        executed_iters = int(op_perf.get("executed_iterations") or 0)
+        stop_reason = (stats.get("alns_diagnostics") or {}).get("stop_reason")
+        prev_executed_iters = executed_iters
 
         fleet_log.append({
             "k":                k,
@@ -771,6 +788,8 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
             "feasible":         served == total,
             "runtime_s":        stats["runtime"],
             "time_budget_s":    round(k_budget_s, 2) if k_budget_s is not None else None,
+            "executed_iterations": executed_iters,
+            "stop_reason":      stop_reason,
             "matrix_precompute": stats.get("matrix_precompute"),
             "rejection_reasons": reasons,
         })
