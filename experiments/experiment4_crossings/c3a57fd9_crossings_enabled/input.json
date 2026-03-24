@@ -7,7 +7,7 @@
     "longitude": 31.270319
   },
 
-  "n_students": 400,
+  "n_students": 60,
   "seed": 2000,
 
   "stage_distribution": {
@@ -25,7 +25,7 @@
   },
 
   "buses": {
-    "count": 20,
+    "count": 4,
     "capacity": 22
   },
 
@@ -69,12 +69,12 @@
   },
 
   "distance_matrix_cache": {
-    "enabled": false,
+    "enabled": true,
     "pkl_path": ""
   },
 
 "algorithm": {
-    "iterations": 10000,
+    "iterations": 1000,
     "time_budget_seconds": 60,
     "max_candidates_per_student": 6,
     "minimize_buses": true,
