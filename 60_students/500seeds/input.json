@@ -8,7 +8,7 @@
   },
 
   "n_students": 60,
-  "seed": 1000,
+  "seed": 500,
 
   "stage_distribution": {
     "KG": 0.25,
@@ -70,17 +70,17 @@
 
   "distance_matrix_cache": {
     "enabled": true,
-    "pkl_path": ""
+    "pkl_path": "experiments/experiment4_crossings/distance_matrix_cache.pkl"
   },
 
-"algorithm": {
+  "algorithm": {
     "iterations": 1000,
     "time_budget_seconds": 60,
     "max_candidates_per_student": 6,
     "minimize_buses": true,
     "early_stop_patience": 100,
-    "early_stop_min_improvement": 10,
-    "early_stop_freeze_temp": 1,
+    "early_stop_min_improvement": 0.1,
+    "early_stop_freeze_temp": 0.1,
     "early_stop_freeze_patience": 20
   },
 
