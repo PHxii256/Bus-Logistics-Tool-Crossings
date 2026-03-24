@@ -226,7 +226,8 @@ def _set_last_matrix_precompute_stats(stats):
 
 def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
                       max_candidates=15, matrix_cache_pkl_path=None,
-                      matrix_cache_min_finite_ratio=0.0001):
+                      matrix_cache_min_finite_ratio=0.0001,
+                      cache_context=None):
     """Build the distance matrix for ALNS.
 
     Parameters
@@ -265,7 +266,12 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
         "cache_load_rejected": False,
         "cache_load_reject_reason": None,
         "cache_recomputed_after_reject": False,
+        "cache_context_seed": None,
+        "cache_context_student_count": None,
     }
+    if isinstance(cache_context, dict):
+        _stats["cache_context_seed"] = cache_context.get("seed")
+        _stats["cache_context_student_count"] = cache_context.get("student_count")
     critical_nodes = set()
     student_frontages = {}
     # Collect ALL candidate nodes ALNS will actually use so the precomputed
@@ -302,7 +308,7 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
     matrix_nodes = sorted(critical_nodes, key=lambda x: str(x))
     _stats["matrix_nodes_count"] = len(matrix_nodes)
     if matrix_cache_pkl_path:
-        cache_key = _build_matrix_cache_key(G_drive, matrix_nodes)
+        cache_key = _build_matrix_cache_key(G_drive, matrix_nodes, cache_context=cache_context)
         _stats["cache_key_prefix"] = cache_key[:12]
         _tl = _t.time()
         loaded = _load_matrix_cache_from_disk(matrix_cache_pkl_path, cache_key)
@@ -363,9 +369,14 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
     _stats["compute_time_s"] = round(_t.time() - _tc, 4)
 
     if matrix_cache_pkl_path:
-        cache_key = _build_matrix_cache_key(G_drive, matrix_nodes)
+        cache_key = _build_matrix_cache_key(G_drive, matrix_nodes, cache_context=cache_context)
         _ts = _t.time()
-        _stats["saved_to_pkl"] = _save_matrix_cache_to_disk(matrix_cache_pkl_path, cache_key, matrix_nodes)
+        _stats["saved_to_pkl"] = _save_matrix_cache_to_disk(
+            matrix_cache_pkl_path,
+            cache_key,
+            matrix_nodes,
+            cache_context=cache_context,
+        )
         _stats["save_time_s"] = round(_t.time() - _ts, 4)
 
     _stats["total_time_s"] = round(_t.time() - _t_start, 4)
@@ -373,10 +384,16 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
     return critical_nodes, student_frontages
 
 
-def _build_matrix_cache_key(graph, node_ids):
+def _build_matrix_cache_key(graph, node_ids, cache_context=None):
     graph_sig = f"n={graph.number_of_nodes()}|e={graph.number_of_edges()}|k={len(node_ids)}"
     node_sig = "|".join(str(n) for n in node_ids)
-    return hashlib.sha1(f"{graph_sig}|{node_sig}".encode("utf-8")).hexdigest()
+    seed = None
+    student_count = None
+    if isinstance(cache_context, dict):
+        seed = cache_context.get("seed")
+        student_count = cache_context.get("student_count")
+    ctx_sig = f"seed={seed}|students={student_count}"
+    return hashlib.sha1(f"{graph_sig}|{ctx_sig}|{node_sig}".encode("utf-8")).hexdigest()
 
 
 def _load_matrix_cache_from_disk(pkl_path, cache_key):
@@ -438,7 +455,7 @@ def _load_matrix_cache_from_disk(pkl_path, cache_key):
         return False
 
 
-def _save_matrix_cache_to_disk(pkl_path, cache_key, node_ids):
+def _save_matrix_cache_to_disk(pkl_path, cache_key, node_ids, cache_context=None):
     try:
         if not pkl_path:
             return False
@@ -479,6 +496,8 @@ def _save_matrix_cache_to_disk(pkl_path, cache_key, node_ids):
             "distances_m": distances,
             "created_unix": _t.time(),
             "size": size,
+            "seed": (cache_context or {}).get("seed") if isinstance(cache_context, dict) else None,
+            "student_count": (cache_context or {}).get("student_count") if isinstance(cache_context, dict) else None,
         }
 
         with open(pkl_path, "wb") as fh:
@@ -497,7 +516,15 @@ def run_generate_routes(data, G, input_file_path):
     _run_start = _t.time()
     students, buses, routes, school_coords, constraints, algo_config = load_mode1_input(data, G)
     print_input_summary(students, buses, routes, school_coords)
-    precompute_matrix(students, routes, G)
+    precompute_matrix(
+        students,
+        routes,
+        G,
+        cache_context={
+            "seed": data.get("seed", data.get("meta", {}).get("seed")),
+            "student_count": len(students),
+        },
+    )
     print(f"\nRUNNING ALNS OPTIMIZATION ({algo_config.get('iterations', 60)} iters)")
     initial_sol = ServiceSolution(students, routes, G)
     optimizer = ALNSEngine(initial_sol, iterations=algo_config.get('iterations', 60))
@@ -578,14 +605,16 @@ def run_algorithm(data: dict, G, iterations: int = None,
 
     iters  = iterations or algo_cfg.get("iterations", 60)
     budget = time_budget_seconds or algo_cfg.get("time_budget_seconds", None)
-    max_cands = max(6, int(algo_cfg.get("max_candidates_per_student", 15) or 15))
+    max_cands = algo_cfg.get("max_candidates_per_student", 15)
     early_stop_patience = algo_cfg.get("early_stop_patience", None)
     min_improvement = algo_cfg.get("early_stop_min_improvement", 1e-6)
     freeze_temp_threshold = algo_cfg.get("early_stop_freeze_temp", 0.05)
     freeze_patience = algo_cfg.get("early_stop_freeze_patience", None)
     merge_tail_iterations = algo_cfg.get("merge_tail_iterations", 30)
-    empty_route_probe_limit = int(algo_cfg.get("empty_route_probe_limit", 1) or 1)
-    bootstrap_empty_route_count = int(algo_cfg.get("bootstrap_empty_route_count", 2) or 2)
+    cache_context = {
+        "seed": data.get("seed", data.get("meta", {}).get("seed")),
+        "student_count": len(students),
+    }
     # Walking BFS uses G (may be constrained); bus routing uses G_drive (unconstrained)
     precompute_matrix(
         students,
@@ -595,6 +624,7 @@ def run_algorithm(data: dict, G, iterations: int = None,
         max_candidates=max_cands,
         matrix_cache_pkl_path=matrix_cache_pkl_path,
         matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio,
+        cache_context=cache_context,
     )
     matrix_precompute = get_last_matrix_precompute_stats()
 
@@ -605,9 +635,7 @@ def run_algorithm(data: dict, G, iterations: int = None,
                          min_improvement=min_improvement,
                          freeze_temp_threshold=freeze_temp_threshold,
                          freeze_patience=freeze_patience,
-                         merge_tail_iterations=merge_tail_iterations,
-                         empty_route_probe_limit=empty_route_probe_limit,
-                         bootstrap_empty_route_count=bootstrap_empty_route_count)
+                         merge_tail_iterations=merge_tail_iterations)
     t0      = _time.time()
     best    = engine.run()
     elapsed = _time.time() - t0

@@ -245,7 +245,7 @@ def random_order_best_repair(solution, deadline=None):
         if deadline is not None and time.time() >= deadline:
             break
         all_options = []
-        for route in _candidate_routes_for_repair(solution):
+        for route in solution.routes:
             if deadline is not None and time.time() >= deadline:
                 break
             all_options.extend(
@@ -288,7 +288,7 @@ def regret_repair(solution, k=2, deadline=None):
         if deadline is not None and time.time() >= deadline:
             return
         student_route_options[s.id] = {}
-        for route in _candidate_routes_for_repair(solution):
+        for route in solution.routes:
             if deadline is not None and time.time() >= deadline:
                 return
             student_route_options[s.id][route.route_id] = _get_insertions_for_route(
@@ -352,13 +352,6 @@ def regret_repair(solution, k=2, deadline=None):
                 student_route_options[s.id][affected_route.route_id] = _get_insertions_for_route(
                     s, affected_route, solution.graph, student_frontages[s.id], deadline=deadline
                 )
-                # If a formerly-empty route became active, add it to the option map once.
-                if affected_route.get_student_count() == 1:
-                    for route in _candidate_routes_for_repair(solution):
-                        if route.route_id not in student_route_options[s.id]:
-                            student_route_options[s.id][route.route_id] = _get_insertions_for_route(
-                                s, route, solution.graph, student_frontages[s.id], deadline=deadline
-                            )
             if timeout_hit:
                 break
         else:
@@ -389,32 +382,6 @@ def get_insertion_debug_stats():
 
 # Candidate configuration set by ALNSEngine before each run (max_candidates_per_student, etc.)
 _alns_candidate_cfg = {}
-_alns_operator_cfg = {}
-
-
-def _candidate_routes_for_repair(solution):
-    """Select insertion routes with a consolidation bias.
-
-    Probe active routes first and only a limited number of empty routes. This
-    lowers repair complexity under time budgets and avoids spreading students
-    across many lightly-used routes.
-    """
-    routes = list(solution.routes)
-    if not routes:
-        return routes
-
-    active = [r for r in routes if r.get_student_count() > 0]
-    empty = [r for r in routes if r.get_student_count() == 0]
-
-    if not active:
-        bootstrap_count = max(1, int(_alns_operator_cfg.get("bootstrap_empty_route_count", 2)))
-        return empty[:bootstrap_count] if empty else routes
-
-    empty_probe_limit = max(1, int(_alns_operator_cfg.get("empty_route_probe_limit", 1)))
-    has_spare_capacity = any(r.get_student_count() < getattr(r.bus, "capacity", 0) for r in active)
-    extra_empty = empty_probe_limit if has_spare_capacity else max(2, empty_probe_limit)
-
-    return active + empty[:extra_empty]
 
 
 def _reorder_candidates_with_shared_boost(student_id, candidate_nodes):
@@ -479,7 +446,7 @@ def _get_insertions_for_route(student, route, graph, frontage_info, deadline=Non
     if student.id in _student_candidate_cache:
         candidate_nodes = _student_candidate_cache[student.id]
     else:
-        max_k = max(6, int(_alns_candidate_cfg.get("max_candidates_per_student", 15)))
+        max_k = _alns_candidate_cfg.get("max_candidates_per_student", 15)
         # Build candidate list: frontage node + walk candidates (if applicable)
         candidate_nodes = [(frontage_node_id, frontage_coords)]
         dist_map = {frontage_node_id: 0.0}  # node_id -> walk distance (metres)
@@ -654,23 +621,17 @@ class ALNSEngine:
                  time_budget_seconds=None, max_candidates_per_student=None,
                  early_stop_patience=None, min_improvement=1e-6,
                  freeze_temp_threshold=0.05, freeze_patience=None,
-                 merge_tail_iterations=30,
-                 empty_route_probe_limit=1,
-                 bootstrap_empty_route_count=2):
+                 merge_tail_iterations=30):
         # Configure module-level candidate settings.
         # NOTE: do NOT clear _student_candidate_cache here — the cache is
         # keyed by student-id and stays valid across fleet-search iterations
         # (same students, same graph, same walk radii).  Clearing is handled
         # by _reset_caches() in run_comparison.py between MODES, not between
         # fleet-search k values.
-        global _alns_candidate_cfg, _alns_operator_cfg
+        global _alns_candidate_cfg
         _alns_candidate_cfg = {}
         if max_candidates_per_student is not None:
             _alns_candidate_cfg["max_candidates_per_student"] = max_candidates_per_student
-        _alns_operator_cfg = {
-            "empty_route_probe_limit": max(1, int(empty_route_probe_limit or 1)),
-            "bootstrap_empty_route_count": max(1, int(bootstrap_empty_route_count or 2)),
-        }
 
         self.curr_sol = initial_solution.clone()
         self.best_sol = initial_solution.clone()
@@ -920,16 +881,6 @@ class ALNSEngine:
         print(f"Optimization Complete.")
         print(f"Total Time: {total_elapsed:.2f}s")
         print(f"Final State: {self.best_sol}")
-
-        if not self.iteration_log and executed_iters > 0:
-            self.iteration_log.append({
-                "iteration": int(executed_iters),
-                "temperature": round(float(t), 6),
-                "objective_value": round(float(best_obj), 2),
-                "best_objective": round(float(best_obj), 2),
-                "students_served": sum(1 for s in self.best_sol.students if s.is_served),
-                "block_elapsed_seconds": round(float(total_elapsed), 3),
-            })
 
         # ── Final repair pass: rescue any remaining unserved students ──
         unserved_count = sum(1 for s in self.best_sol.students if not s.is_served)
