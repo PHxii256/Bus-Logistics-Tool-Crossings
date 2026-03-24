@@ -578,12 +578,14 @@ def run_algorithm(data: dict, G, iterations: int = None,
 
     iters  = iterations or algo_cfg.get("iterations", 60)
     budget = time_budget_seconds or algo_cfg.get("time_budget_seconds", None)
-    max_cands = algo_cfg.get("max_candidates_per_student", 15)
+    max_cands = max(6, int(algo_cfg.get("max_candidates_per_student", 15) or 15))
     early_stop_patience = algo_cfg.get("early_stop_patience", None)
     min_improvement = algo_cfg.get("early_stop_min_improvement", 1e-6)
     freeze_temp_threshold = algo_cfg.get("early_stop_freeze_temp", 0.05)
     freeze_patience = algo_cfg.get("early_stop_freeze_patience", None)
     merge_tail_iterations = algo_cfg.get("merge_tail_iterations", 30)
+    empty_route_probe_limit = int(algo_cfg.get("empty_route_probe_limit", 1) or 1)
+    bootstrap_empty_route_count = int(algo_cfg.get("bootstrap_empty_route_count", 2) or 2)
     # Walking BFS uses G (may be constrained); bus routing uses G_drive (unconstrained)
     precompute_matrix(
         students,
@@ -603,7 +605,9 @@ def run_algorithm(data: dict, G, iterations: int = None,
                          min_improvement=min_improvement,
                          freeze_temp_threshold=freeze_temp_threshold,
                          freeze_patience=freeze_patience,
-                         merge_tail_iterations=merge_tail_iterations)
+                         merge_tail_iterations=merge_tail_iterations,
+                         empty_route_probe_limit=empty_route_probe_limit,
+                         bootstrap_empty_route_count=bootstrap_empty_route_count)
     t0      = _time.time()
     best    = engine.run()
     elapsed = _time.time() - t0
