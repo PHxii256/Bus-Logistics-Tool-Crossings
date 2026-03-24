@@ -278,12 +278,20 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
     # matrix covers every node the optimizer can insert at.  The old [:5]
     # limit caused massive A* fallback spikes on 600K-node graphs.
     for s in students:
-        node_id, _ = snap_address_to_edge(s.coords, G)
+        # Keep matrix critical nodes in the same node space used by ALNS insertions
+        # (solution.graph == G_drive). This avoids Mode A candidate/matrix mismatches.
+        node_id, _ = snap_address_to_edge(s.coords, G_drive)
         critical_nodes.add(node_id)
         student_frontages[s.id] = node_id
         if s.walk_radius > 0:
-            walk_g = _get_walk_graph(G)  # Use walk graph with crossings if available
-            safe_nodes = find_safe_nodes_within_radius(s.coords, G, 500, s.walk_radius, walk_graph=walk_g)
+            walk_g = _get_walk_graph(G_drive)  # Uses configured walk graph when provided
+            safe_nodes = find_safe_nodes_within_radius(
+                s.coords,
+                G_drive,
+                500,
+                s.walk_radius,
+                walk_graph=walk_g,
+            )
             for safe_node_id, _ in safe_nodes[:max_candidates]:
                 critical_nodes.add(safe_node_id)
     school_node = None
