@@ -69,7 +69,7 @@
   },
 
   "distance_matrix_cache": {
-    "enabled": true,
+    "enabled": false,
     "pkl_path": ""
   },
 
