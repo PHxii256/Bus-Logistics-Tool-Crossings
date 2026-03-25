@@ -1,0 +1,143 @@
+{
+  "mode": "C",
+  "mode_name": "Door-to-Door (No Walking)",
+  "buses_used": 28,
+  "iterations_configured": 10000,
+  "log_interval_iterations": 10,
+  "operator_performance": {
+    "executed_iterations": 58,
+    "destroy": {
+      "random_removal": {
+        "count": 12,
+        "frequency_pct": 20.69,
+        "avg_time_s": 0.001243,
+        "best_time_s": 0.000439,
+        "worst_time_s": 0.002213,
+        "total_time_s": 0.014912
+      },
+      "worst_cost_removal": {
+        "count": 4,
+        "frequency_pct": 6.9,
+        "avg_time_s": 0.010638,
+        "best_time_s": 0.009814,
+        "worst_time_s": 0.011117,
+        "total_time_s": 0.042553
+      },
+      "shaw_related_removal": {
+        "count": 17,
+        "frequency_pct": 29.31,
+        "avg_time_s": 0.002208,
+        "best_time_s": 0.00142,
+        "worst_time_s": 0.003421,
+        "total_time_s": 0.037533
+      },
+      "sequence_removal": {
+        "count": 1,
+        "frequency_pct": 1.72,
+        "avg_time_s": 0.000709,
+        "best_time_s": 0.000709,
+        "worst_time_s": 0.000709,
+        "total_time_s": 0.000709
+      },
+      "route_merge_removal": {
+        "count": 24,
+        "frequency_pct": 41.38,
+        "avg_time_s": 0.000229,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.000464,
+        "total_time_s": 0.0055
+      }
+    },
+    "repair": {
+      "random_order_best_repair": {
+        "count": 23,
+        "frequency_pct": 39.66,
+        "avg_time_s": 0.885726,
+        "best_time_s": 0.252488,
+        "worst_time_s": 1.278513,
+        "total_time_s": 20.371702
+      },
+      "regret_repair": {
+        "count": 35,
+        "frequency_pct": 60.34,
+        "avg_time_s": 1.102852,
+        "best_time_s": 0.294159,
+        "worst_time_s": 3.144525,
+        "total_time_s": 38.599823
+      }
+    }
+  },
+  "matrix_precompute": {
+    "source": "computed_osrm",
+    "loaded_from_pkl": false,
+    "saved_to_pkl": false,
+    "matrix_cache_pkl_path": null,
+    "load_time_s": 0.0,
+    "compute_time_s": 1.1936,
+    "save_time_s": 0.0,
+    "total_time_s": 1.1947,
+    "critical_nodes_count": 519,
+    "matrix_nodes_count": 519,
+    "cache_key_prefix": null,
+    "cache_entry_node_count": null,
+    "cache_loaded_finite_ratio": null,
+    "cache_loaded_inf_pairs": null,
+    "cache_loaded_finite_pairs": null,
+    "cache_guard_min_finite_ratio": 0.0001,
+    "cache_load_rejected": false,
+    "cache_load_reject_reason": null,
+    "cache_recomputed_after_reject": false,
+    "cache_context_seed": null,
+    "cache_context_student_count": 600
+  },
+  "synthetic_edges_timing": {
+    "source": "generated_synthetic",
+    "prepare_time_s": 2.0681,
+    "pkl_load_time_s": 0.0,
+    "generate_time_s": 1.6561,
+    "auto_save_pkl_time_s": 0.0,
+    "pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/crossings_nodes_injection.pkl"
+  },
+  "entries": [
+    {
+      "iteration": 10,
+      "temperature": 817.072807,
+      "objective_value": 4098704.09,
+      "best_objective": 4098704.09,
+      "students_served": 424,
+      "block_elapsed_seconds": 7.774
+    },
+    {
+      "iteration": 20,
+      "temperature": 667.607972,
+      "objective_value": 4848589.82,
+      "best_objective": 4848589.82,
+      "students_served": 499,
+      "block_elapsed_seconds": 10.561
+    },
+    {
+      "iteration": 30,
+      "temperature": 545.484319,
+      "objective_value": 4968541.71,
+      "best_objective": 4968541.71,
+      "students_served": 511,
+      "block_elapsed_seconds": 12.341
+    },
+    {
+      "iteration": 40,
+      "temperature": 445.700404,
+      "objective_value": 5388519.92,
+      "best_objective": 5388519.92,
+      "students_served": 553,
+      "block_elapsed_seconds": 14.349
+    },
+    {
+      "iteration": 50,
+      "temperature": 364.16968,
+      "objective_value": 5698525.16,
+      "best_objective": 5698525.16,
+      "students_served": 584,
+      "block_elapsed_seconds": 13.632
+    }
+  ]
+}

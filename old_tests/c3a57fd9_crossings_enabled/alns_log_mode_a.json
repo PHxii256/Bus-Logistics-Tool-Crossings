@@ -1,0 +1,102 @@
+{
+  "mode": "A",
+  "mode_name": "Strictly Constrained (Safe Walking)",
+  "buses_used": 4,
+  "iterations_configured": 1000,
+  "log_interval_iterations": 10,
+  "operator_performance": {
+    "executed_iterations": 1,
+    "destroy": {
+      "random_removal": {
+        "count": 0,
+        "frequency_pct": 0.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "worst_cost_removal": {
+        "count": 0,
+        "frequency_pct": 0.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "shaw_related_removal": {
+        "count": 1,
+        "frequency_pct": 100.0,
+        "avg_time_s": 9e-06,
+        "best_time_s": 9e-06,
+        "worst_time_s": 9e-06,
+        "total_time_s": 9e-06
+      },
+      "sequence_removal": {
+        "count": 0,
+        "frequency_pct": 0.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "route_merge_removal": {
+        "count": 0,
+        "frequency_pct": 0.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      }
+    },
+    "repair": {
+      "random_order_best_repair": {
+        "count": 1,
+        "frequency_pct": 100.0,
+        "avg_time_s": 42.615331,
+        "best_time_s": 42.615331,
+        "worst_time_s": 42.615331,
+        "total_time_s": 42.615331
+      },
+      "regret_repair": {
+        "count": 0,
+        "frequency_pct": 0.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      }
+    }
+  },
+  "matrix_precompute": {
+    "source": "loaded_from_pkl",
+    "loaded_from_pkl": true,
+    "saved_to_pkl": false,
+    "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/c3a57fd9_crossings_enabled/distance_matrix_cache.pkl",
+    "load_time_s": 0.0373,
+    "compute_time_s": 0.0,
+    "save_time_s": 0.0,
+    "total_time_s": 1.1016,
+    "critical_nodes_count": 199,
+    "matrix_nodes_count": 199,
+    "cache_key_prefix": "273014be263a",
+    "cache_entry_node_count": 199,
+    "cache_loaded_finite_ratio": 1.0,
+    "cache_loaded_inf_pairs": 0,
+    "cache_loaded_finite_pairs": 39402,
+    "cache_guard_min_finite_ratio": 0.0001,
+    "cache_load_rejected": false,
+    "cache_load_reject_reason": null,
+    "cache_recomputed_after_reject": false,
+    "cache_context_seed": null,
+    "cache_context_student_count": 60
+  },
+  "synthetic_edges_timing": {
+    "source": "generated_synthetic",
+    "prepare_time_s": 2.3573,
+    "pkl_load_time_s": 0.0,
+    "generate_time_s": 1.9479,
+    "auto_save_pkl_time_s": 0.0,
+    "pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/crossings_nodes_injection.pkl"
+  },
+  "entries": []
+}
