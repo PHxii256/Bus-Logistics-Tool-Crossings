@@ -1,0 +1,135 @@
+{
+  "mode": "B",
+  "mode_name": "Weakly Constrained (Any Walking)",
+  "buses_used": 19,
+  "iterations_configured": 10000,
+  "log_interval_iterations": 10,
+  "operator_performance": {
+    "executed_iterations": 46,
+    "destroy": {
+      "random_removal": {
+        "count": 4,
+        "frequency_pct": 8.7,
+        "avg_time_s": 0.000745,
+        "best_time_s": 0.000446,
+        "worst_time_s": 0.001402,
+        "total_time_s": 0.00298
+      },
+      "worst_cost_removal": {
+        "count": 12,
+        "frequency_pct": 26.09,
+        "avg_time_s": 0.006094,
+        "best_time_s": 0.004964,
+        "worst_time_s": 0.009884,
+        "total_time_s": 0.073123
+      },
+      "shaw_related_removal": {
+        "count": 0,
+        "frequency_pct": 0.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "sequence_removal": {
+        "count": 16,
+        "frequency_pct": 34.78,
+        "avg_time_s": 0.000453,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.000824,
+        "total_time_s": 0.007252
+      },
+      "route_merge_removal": {
+        "count": 14,
+        "frequency_pct": 30.43,
+        "avg_time_s": 0.000254,
+        "best_time_s": 0.000149,
+        "worst_time_s": 0.000391,
+        "total_time_s": 0.003555
+      }
+    },
+    "repair": {
+      "random_order_best_repair": {
+        "count": 25,
+        "frequency_pct": 54.35,
+        "avg_time_s": 0.933175,
+        "best_time_s": 0.47123,
+        "worst_time_s": 2.567042,
+        "total_time_s": 23.329383
+      },
+      "regret_repair": {
+        "count": 21,
+        "frequency_pct": 45.65,
+        "avg_time_s": 1.903244,
+        "best_time_s": 0.649703,
+        "worst_time_s": 5.49811,
+        "total_time_s": 39.968128
+      }
+    }
+  },
+  "matrix_precompute": {
+    "source": "computed_osrm",
+    "loaded_from_pkl": false,
+    "saved_to_pkl": false,
+    "matrix_cache_pkl_path": null,
+    "load_time_s": 0.0,
+    "compute_time_s": 8.2929,
+    "save_time_s": 0.0,
+    "total_time_s": 11.3818,
+    "critical_nodes_count": 1487,
+    "matrix_nodes_count": 1487,
+    "cache_key_prefix": null,
+    "cache_entry_node_count": null,
+    "cache_loaded_finite_ratio": null,
+    "cache_loaded_inf_pairs": null,
+    "cache_loaded_finite_pairs": null,
+    "cache_guard_min_finite_ratio": 0.0001,
+    "cache_load_rejected": false,
+    "cache_load_reject_reason": null,
+    "cache_recomputed_after_reject": false,
+    "cache_context_seed": null,
+    "cache_context_student_count": 400
+  },
+  "synthetic_edges_timing": {
+    "source": "generated_synthetic",
+    "prepare_time_s": 1.8434,
+    "pkl_load_time_s": 0.0,
+    "generate_time_s": 1.5119,
+    "auto_save_pkl_time_s": 0.0,
+    "pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/crossings_nodes_injection.pkl"
+  },
+  "entries": [
+    {
+      "iteration": 10,
+      "temperature": 817.072807,
+      "objective_value": 3744329.18,
+      "best_objective": 3744329.18,
+      "students_served": 384,
+      "block_elapsed_seconds": 20.453
+    },
+    {
+      "iteration": 20,
+      "temperature": 667.607972,
+      "objective_value": 3754438.26,
+      "best_objective": 3754438.26,
+      "students_served": 385,
+      "block_elapsed_seconds": 12.851
+    },
+    {
+      "iteration": 30,
+      "temperature": 545.484319,
+      "objective_value": 3754448.84,
+      "best_objective": 3754448.84,
+      "students_served": 385,
+      "block_elapsed_seconds": 10.585
+    },
+    {
+      "iteration": 40,
+      "temperature": 445.700404,
+      "objective_value": 3759468.56,
+      "best_objective": 3759468.56,
+      "students_served": 385,
+      "block_elapsed_seconds": 9.558
+    }
+  ]
+}

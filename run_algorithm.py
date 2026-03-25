@@ -736,21 +736,29 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
     algo_cfg = data.get("meta", {}).get("algorithm", {})
     base_budget_s = time_budget_seconds if time_budget_seconds is not None else algo_cfg.get("time_budget_seconds", None)
     first_k_budget_scale = float(algo_cfg.get("fleet_search_first_k_budget_scale", 1.0))
-    followup_k_budget_scale = float(algo_cfg.get("fleet_search_followup_k_budget_scale", 0.65))
+    followup_k_budget_scale = float(algo_cfg.get("fleet_search_followup_k_budget_scale", 0.8))
     trailing_early_stop_ratio = float(algo_cfg.get("fleet_search_trailing_early_stop_ratio", 0.9))
     trailing_min_gap = int(algo_cfg.get("fleet_search_trailing_min_served_gap", 1))
     max_per_k_s_cfg = algo_cfg.get("fleet_search_max_per_k_seconds", None)
     max_per_k_s = float(max_per_k_s_cfg) if max_per_k_s_cfg is not None else None
     rescue_enabled = bool(algo_cfg.get("fleet_search_spare_bus_rescue_enabled", True))
     rescue_min_extra_buses = int(algo_cfg.get("fleet_search_spare_bus_rescue_min_extra_buses", 1))
-    rescue_budget_s = float(algo_cfg.get("fleet_search_spare_bus_rescue_budget_seconds", 8.0))
-    rescue_repair_calls = int(algo_cfg.get("fleet_search_spare_bus_rescue_repair_calls", 2))
+    default_rescue_budget_s = 8.0
+    if base_budget_s is not None:
+        # Keep rescue bounded but meaningful for large instances.
+        default_rescue_budget_s = max(8.0, min(24.0, float(base_budget_s) * 0.35))
+    rescue_budget_s = float(algo_cfg.get("fleet_search_spare_bus_rescue_budget_seconds", default_rescue_budget_s))
+    default_rescue_calls = 4 if n_students >= 250 else 3
+    rescue_repair_calls = int(algo_cfg.get("fleet_search_spare_bus_rescue_repair_calls", default_rescue_calls))
     rescue_repair_calls = max(1, rescue_repair_calls)
     rescue_budget_s = max(1.0, rescue_budget_s)
 
     fleet_log   = []
     total_fleet_search_runtime = 0.0
     prev_executed_iters = None
+    prev_stop_reason = None
+    prev_served = None
+    prev_total = None
 
     for k in range(k_min, k_max + 1):
         k_budget_s = None
@@ -760,6 +768,16 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
             # starving this k with an aggressively downscaled follow-up budget.
             if k > k_min and prev_executed_iters is not None and prev_executed_iters <= 3:
                 scale = max(scale, 0.9)
+            # If previous k ran out of time with unserved students, keep a higher
+            # follow-up budget to reduce local-optimum lock-in at larger k.
+            if (
+                k > k_min
+                and prev_stop_reason == "time_budget"
+                and prev_served is not None
+                and prev_total is not None
+                and prev_served < prev_total
+            ):
+                scale = max(scale, 0.85)
             scale = max(0.05, float(scale))
             k_budget_s = max(1.0, float(base_budget_s) * scale)
             if max_per_k_s is not None:
@@ -794,9 +812,11 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
             "extra_buses_available": max(0, k_max - k),
             "budget_seconds": rescue_budget_s,
             "repair_calls": rescue_repair_calls,
+            "strategy": "multi_phase_repair_with_kick",
             "served_before": served,
             "served_after": served,
             "rescued_students": 0,
+            "kick_attempts": 0,
             "trigger_reason": None,
         }
 
@@ -817,12 +837,44 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
                 if _t.time() >= _rescue_deadline:
                     break
                 before = sum(1 for s in sol.students if s.is_served)
-                _alns.greedy_repair(sol, deadline=_rescue_deadline)
-                after = sum(1 for s in sol.students if s.is_served)
-                if after <= before:
-                    # Stop early if no additional students were rescued in this call.
+
+                # Work on a clone and only accept non-worse states; this lets us
+                # try disruptive rescue moves without sacrificing already served students.
+                cand = sol.clone()
+                _alns.regret_repair(cand, deadline=_rescue_deadline)
+                if _t.time() < _rescue_deadline:
+                    _alns.greedy_repair(cand, deadline=_rescue_deadline)
+
+                cand_after = sum(1 for s in cand.students if s.is_served)
+                if cand_after >= before:
+                    if cand_after > before:
+                        rescued_total += (cand_after - before)
+                    sol = cand
+                    continue
+
+                # Fallback: small kick-and-repair to escape local minima where
+                # pure insertion cannot place remaining students.
+                if _t.time() < _rescue_deadline:
+                    rescue_diag["kick_attempts"] += 1
+                    kick = sol.clone()
+                    served_now = sum(1 for s in kick.students if s.is_served)
+                    kick_n = max(1, min(12, int(max(1, served_now) * 0.03)))
+                    removed = _alns.worst_cost_removal(kick, kick_n)
+                    if removed:
+                        _alns.regret_repair(kick, deadline=_rescue_deadline)
+                        if _t.time() < _rescue_deadline:
+                            _alns.greedy_repair(kick, deadline=_rescue_deadline)
+                        kick_after = sum(1 for s in kick.students if s.is_served)
+                        if kick_after >= before:
+                            if kick_after > before:
+                                rescued_total += (kick_after - before)
+                            sol = kick
+                            continue
+
+                # No gain this attempt; keep current incumbent and continue trying
+                # until budget/call limit is reached.
+                if _t.time() >= _rescue_deadline:
                     break
-                rescued_total += (after - before)
 
             # Refresh route metrics and stats from the potentially updated solution.
             for r in sol.routes:
@@ -849,6 +901,9 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
         unserved_students = [s for s in sol.students if not s.is_served]
         reasons = _diagnose_unserved(unserved_students, sol, capacity_k, constraints)
         prev_executed_iters = executed_iters
+        prev_stop_reason = stop_reason
+        prev_served = served
+        prev_total = total
 
         fleet_log.append({
             "k":                k,
