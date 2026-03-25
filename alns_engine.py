@@ -654,6 +654,7 @@ class ALNSEngine:
                  freeze_temp_threshold=0.05, freeze_patience=None,
                  merge_tail_iterations=30,
                  min_early_stop_iterations=None,
+                 min_iterations_floor=None,
                  max_repair_seconds_per_iteration=None,
                  destroy_fraction_min=None,
                  destroy_fraction_max=None,
@@ -682,6 +683,7 @@ class ALNSEngine:
         self.freeze_patience = int(freeze_patience) if freeze_patience else None
         self.merge_tail_iterations = max(0, int(merge_tail_iterations or 0))
         self.min_early_stop_iterations = max(0, int(min_early_stop_iterations or 0))
+        self.min_iterations_floor = max(0, int(min_iterations_floor or 0))
 
         # Optional guardrail: cap repair work per iteration so one expensive
         # regret-repair call cannot consume nearly the full run budget.
@@ -738,7 +740,12 @@ class ALNSEngine:
         if self.regret_scan_limit is not None:
             self.regret_scan_limit = max(8, self.regret_scan_limit)
 
-        if n_students >= 300:
+        if n_students >= 500:
+            if self.repair_max_unassigned_per_call is None:
+                self.repair_max_unassigned_per_call = 64
+            if self.regret_scan_limit is None:
+                self.regret_scan_limit = 40
+        elif n_students >= 300:
             if self.repair_max_unassigned_per_call is None:
                 self.repair_max_unassigned_per_call = 120
             if self.regret_scan_limit is None:
@@ -855,7 +862,8 @@ class ALNSEngine:
 
         for i in range(self.iterations):
             # ── Time-budget early exit ──
-            if self.time_budget_seconds and (time.time() - start_wall) >= self.time_budget_seconds:
+            floor_reached = (i + 1) > self.min_iterations_floor
+            if self.time_budget_seconds and floor_reached and (time.time() - start_wall) >= self.time_budget_seconds:
                 print(f"  Time budget of {self.time_budget_seconds}s reached at iteration {i+1} — stopping.")
                 self.run_diagnostics["stop_reason"] = "time_budget"
                 self.run_diagnostics["stop_iteration"] = i + 1
@@ -901,7 +909,8 @@ class ALNSEngine:
             self._record_op_timing("destroy", self.destroy_ops[d_idx].__name__, d_elapsed)
             
             # Repair
-            repair_deadline = deadline
+            enforce_budget_deadline = (self.min_iterations_floor <= 0) or ((i + 1) >= self.min_iterations_floor)
+            repair_deadline = deadline if enforce_budget_deadline else None
             # Apply per-iteration repair cap only after we have a reasonably dense solution.
             if self.max_repair_seconds_per_iteration is not None and served_ratio >= 0.80:
                 iter_repair_deadline = time.time() + self.max_repair_seconds_per_iteration
@@ -909,8 +918,12 @@ class ALNSEngine:
 
             # In sparse phase, bias toward regret repair to quickly build coverage.
             if sparse_phase:
-                regret_idx = next((ix for ix, op in enumerate(self.repair_ops) if op.__name__ == "regret_repair"), r_idx)
-                r_idx = regret_idx
+                if total_students >= 500 and (i % 3) != 0:
+                    fast_idx = next((ix for ix, op in enumerate(self.repair_ops) if op.__name__ == "random_order_best_repair"), r_idx)
+                    r_idx = fast_idx
+                else:
+                    regret_idx = next((ix for ix, op in enumerate(self.repair_ops) if op.__name__ == "regret_repair"), r_idx)
+                    r_idx = regret_idx
 
             _tr = time.perf_counter()
             self.repair_ops[r_idx](new_sol, deadline=repair_deadline)
@@ -969,7 +982,7 @@ class ALNSEngine:
             else:
                 effective_patience = self.early_stop_patience
 
-            if (i + 1) >= self.min_early_stop_iterations:
+            if (i + 1) >= max(self.min_early_stop_iterations, self.min_iterations_floor):
                 if effective_patience and no_improve_iters >= effective_patience:
                     if effective_patience == 30 and self.early_stop_patience != 30:
                         print(

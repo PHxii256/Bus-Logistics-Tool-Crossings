@@ -613,6 +613,25 @@ def run_algorithm(data: dict, G, iterations: int = None,
 
     iters  = iterations or algo_cfg.get("iterations", 60)
     budget = time_budget_seconds or algo_cfg.get("time_budget_seconds", None)
+    min_iterations_floor = int(algo_cfg.get("min_iterations_floor", 100))
+    min_iterations_floor = max(0, min_iterations_floor)
+
+    # For large instances, raise default runtime budget so the solver can
+    # realistically hit the iteration floor and escape shallow local basins.
+    n_students_local = len(students)
+    floor_sec_per_iter = algo_cfg.get("min_iterations_floor_seconds_per_iteration", None)
+    if floor_sec_per_iter is None:
+        if n_students_local >= 500:
+            floor_sec_per_iter = 5.0
+        elif n_students_local >= 300:
+            floor_sec_per_iter = 3.0
+        else:
+            floor_sec_per_iter = 1.5
+    floor_sec_per_iter = max(0.1, float(floor_sec_per_iter))
+    if budget is not None and min_iterations_floor > 0:
+        min_budget_for_floor = float(min_iterations_floor) * floor_sec_per_iter
+        budget = max(float(budget), min_budget_for_floor)
+
     max_cands = algo_cfg.get("max_candidates_per_student", 15)
     early_stop_patience = algo_cfg.get("early_stop_patience", None)
     min_improvement = algo_cfg.get("early_stop_min_improvement", 1e-6)
@@ -651,6 +670,7 @@ def run_algorithm(data: dict, G, iterations: int = None,
                          freeze_patience=freeze_patience,
                          merge_tail_iterations=merge_tail_iterations,
                          min_early_stop_iterations=min_early_stop_iterations,
+                         min_iterations_floor=min_iterations_floor,
                          max_repair_seconds_per_iteration=max_repair_seconds_per_iteration,
                          destroy_fraction_min=destroy_fraction_min,
                          destroy_fraction_max=destroy_fraction_max,
@@ -735,6 +755,20 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
     constraints = data.get("meta", {}).get("constraints", {})
     algo_cfg = data.get("meta", {}).get("algorithm", {})
     base_budget_s = time_budget_seconds if time_budget_seconds is not None else algo_cfg.get("time_budget_seconds", None)
+    min_iterations_floor = int(algo_cfg.get("min_iterations_floor", 100))
+    min_iterations_floor = max(0, min_iterations_floor)
+    floor_sec_per_iter = algo_cfg.get("min_iterations_floor_seconds_per_iteration", None)
+    if floor_sec_per_iter is None:
+        if n_students >= 500:
+            floor_sec_per_iter = 5.0
+        elif n_students >= 300:
+            floor_sec_per_iter = 3.0
+        else:
+            floor_sec_per_iter = 1.5
+    floor_sec_per_iter = max(0.1, float(floor_sec_per_iter))
+    if base_budget_s is not None and min_iterations_floor > 0:
+        min_budget_for_floor = float(min_iterations_floor) * floor_sec_per_iter
+        base_budget_s = max(float(base_budget_s), min_budget_for_floor)
     first_k_budget_scale = float(algo_cfg.get("fleet_search_first_k_budget_scale", 1.0))
     followup_k_budget_scale = float(algo_cfg.get("fleet_search_followup_k_budget_scale", 0.8))
     trailing_early_stop_ratio = float(algo_cfg.get("fleet_search_trailing_early_stop_ratio", 0.9))
@@ -950,6 +984,8 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
     best_stats["fleet_search_summary"] = _summarise_fleet_search(fleet_log)
     best_stats["fleet_search_budget_policy"] = {
         "base_time_budget_seconds": base_budget_s,
+        "min_iterations_floor": min_iterations_floor,
+        "min_iterations_floor_seconds_per_iteration": floor_sec_per_iter,
         "first_k_budget_scale": first_k_budget_scale,
         "followup_k_budget_scale": followup_k_budget_scale,
         "max_per_k_seconds": max_per_k_s,
