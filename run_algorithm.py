@@ -783,6 +783,9 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
         served  = stats["served"]
         total   = stats["total"]
         capacity_k = trial["data"]["buses"][0].get("capacity", 60)
+        op_perf = stats.get("operator_performance") or {}
+        executed_iters = int(op_perf.get("executed_iterations") or 0)
+        stop_reason = (stats.get("alns_diagnostics") or {}).get("stop_reason")
 
         rescue_diag = {
             "enabled": rescue_enabled,
@@ -845,9 +848,6 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
 
         unserved_students = [s for s in sol.students if not s.is_served]
         reasons = _diagnose_unserved(unserved_students, sol, capacity_k, constraints)
-        op_perf = stats.get("operator_performance") or {}
-        executed_iters = int(op_perf.get("executed_iterations") or 0)
-        stop_reason = (stats.get("alns_diagnostics") or {}).get("stop_reason")
         prev_executed_iters = executed_iters
 
         fleet_log.append({
