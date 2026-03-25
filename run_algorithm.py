@@ -623,6 +623,8 @@ def run_algorithm(data: dict, G, iterations: int = None,
     max_repair_seconds_per_iteration = algo_cfg.get("max_repair_seconds_per_iteration", None)
     destroy_fraction_min = algo_cfg.get("destroy_fraction_min", None)
     destroy_fraction_max = algo_cfg.get("destroy_fraction_max", None)
+    repair_max_unassigned_per_call = algo_cfg.get("repair_max_unassigned_per_call", None)
+    regret_scan_limit = algo_cfg.get("regret_scan_limit", None)
     cache_context = {
         "seed": data.get("seed", data.get("meta", {}).get("seed")),
         "student_count": len(students),
@@ -651,7 +653,9 @@ def run_algorithm(data: dict, G, iterations: int = None,
                          min_early_stop_iterations=min_early_stop_iterations,
                          max_repair_seconds_per_iteration=max_repair_seconds_per_iteration,
                          destroy_fraction_min=destroy_fraction_min,
-                         destroy_fraction_max=destroy_fraction_max)
+                         destroy_fraction_max=destroy_fraction_max,
+                         repair_max_unassigned_per_call=repair_max_unassigned_per_call,
+                         regret_scan_limit=regret_scan_limit)
     t0      = _time.time()
     best    = engine.run()
     elapsed = _time.time() - t0

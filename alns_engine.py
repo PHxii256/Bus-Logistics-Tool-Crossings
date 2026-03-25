@@ -229,19 +229,43 @@ def _remove_student_from_solution(solution, student):
 #             _apply_insertion(solution, student, result)
 
 
-def random_order_best_repair(solution, deadline=None):
+def _select_repair_workset(unassigned, limit):
+    """Return a bounded workset for one repair call.
+
+    Prioritize hard students (walk_radius <= 0) and fill remaining slots with a
+    random sample so each ALNS iteration stays fast on large instances.
+    """
+    if not unassigned or limit is None or limit <= 0 or len(unassigned) <= limit:
+        return list(unassigned)
+
+    hard = [s for s in unassigned if getattr(s, "walk_radius", 0) <= 0]
+    easy = [s for s in unassigned if getattr(s, "walk_radius", 0) > 0]
+
+    hard_cap = max(1, min(len(hard), int(limit * 0.5)))
+    keep_hard = random.sample(hard, hard_cap) if len(hard) > hard_cap else list(hard)
+    remaining = max(0, limit - len(keep_hard))
+    keep_easy = random.sample(easy, remaining) if len(easy) > remaining else list(easy)
+
+    workset = keep_hard + keep_easy
+    random.shuffle(workset)
+    return workset
+
+
+def random_order_best_repair(solution, deadline=None, respect_batch_limit=True):
     """I5-style insertion: random customer order, best insertion position."""
     unassigned = [s for s in solution.students if not s.is_served]
     if not unassigned:
         return
 
-    random.shuffle(unassigned)
+    batch_limit = _alns_candidate_cfg.get("repair_max_unassigned_per_call") if respect_batch_limit else None
+    workset = _select_repair_workset(unassigned, batch_limit)
+    random.shuffle(workset)
 
     student_frontages = {}
-    for s in unassigned:
+    for s in workset:
         student_frontages[s.id] = snap_address_to_edge(s.coords, solution.graph)
 
-    for student in unassigned:
+    for student in workset:
         if deadline is not None and time.time() >= deadline:
             break
         all_options = []
@@ -265,13 +289,18 @@ def random_order_best_repair(solution, deadline=None):
 
 def greedy_repair(solution, deadline=None):
     """Backwards-compatible alias for the random-order best-position insertion."""
-    random_order_best_repair(solution, deadline=deadline)
+    random_order_best_repair(solution, deadline=deadline, respect_batch_limit=False)
 
 def regret_repair(solution, k=2, deadline=None):
     """Inserts students with the highest 'regret' cost between best and k-best options.
     Optimized to minimize redundant calculations.
     """
     unassigned = [s for s in solution.students if not s.is_served]
+    if not unassigned:
+        return
+
+    batch_limit = _alns_candidate_cfg.get("repair_max_unassigned_per_call")
+    unassigned = _select_repair_workset(unassigned, batch_limit)
     if not unassigned:
         return
 
@@ -303,7 +332,9 @@ def regret_repair(solution, k=2, deadline=None):
         target_insertion = None
         timeout_hit = False
 
-        for student in unassigned:
+        scan_limit = _alns_candidate_cfg.get("regret_scan_limit")
+        scan_students = _select_repair_workset(unassigned, scan_limit)
+        for student in scan_students:
             if deadline is not None and time.time() >= deadline:
                 timeout_hit = True
                 break
@@ -625,7 +656,9 @@ class ALNSEngine:
                  min_early_stop_iterations=None,
                  max_repair_seconds_per_iteration=None,
                  destroy_fraction_min=None,
-                 destroy_fraction_max=None):
+                 destroy_fraction_max=None,
+                 repair_max_unassigned_per_call=None,
+                 regret_scan_limit=None):
         # Configure module-level candidate settings.
         # NOTE: do NOT clear _student_candidate_cache here — the cache is
         # keyed by student-id and stays valid across fleet-search iterations
@@ -691,6 +724,35 @@ class ALNSEngine:
                 self.destroy_fraction_max,
                 self.destroy_fraction_min,
             )
+
+        self.repair_max_unassigned_per_call = (
+            int(repair_max_unassigned_per_call)
+            if repair_max_unassigned_per_call is not None
+            else None
+        )
+        self.regret_scan_limit = (
+            int(regret_scan_limit) if regret_scan_limit is not None else None
+        )
+        if self.repair_max_unassigned_per_call is not None:
+            self.repair_max_unassigned_per_call = max(8, self.repair_max_unassigned_per_call)
+        if self.regret_scan_limit is not None:
+            self.regret_scan_limit = max(8, self.regret_scan_limit)
+
+        if n_students >= 300:
+            if self.repair_max_unassigned_per_call is None:
+                self.repair_max_unassigned_per_call = 120
+            if self.regret_scan_limit is None:
+                self.regret_scan_limit = 80
+        elif n_students >= 150:
+            if self.repair_max_unassigned_per_call is None:
+                self.repair_max_unassigned_per_call = 90
+            if self.regret_scan_limit is None:
+                self.regret_scan_limit = 60
+
+        if self.repair_max_unassigned_per_call is not None:
+            _alns_candidate_cfg["repair_max_unassigned_per_call"] = self.repair_max_unassigned_per_call
+        if self.regret_scan_limit is not None:
+            _alns_candidate_cfg["regret_scan_limit"] = self.regret_scan_limit
 
         self.run_diagnostics = {
             "stop_reason": None,
@@ -805,13 +867,16 @@ class ALNSEngine:
             executed_iters = i + 1
             
             new_sol = self.curr_sol.clone()
+            total_students = len(new_sol.students)
+            served_curr = sum(1 for s in new_sol.students if s.is_served)
+            served_ratio = (served_curr / total_students) if total_students > 0 else 0.0
             
             # Destroy size: adaptive by instance size to avoid massive per-iteration
             # repairs on large problems while preserving diversification.
             if self.destroy_fraction_min is not None and self.destroy_fraction_max is not None:
                 frac_min, frac_max = self.destroy_fraction_min, self.destroy_fraction_max
             else:
-                n_students = len(new_sol.students)
+                n_students = total_students
                 if n_students >= 300:
                     frac_min, frac_max = 0.02, 0.10
                 elif n_students >= 150:
@@ -821,16 +886,31 @@ class ALNSEngine:
                 else:
                     frac_min, frac_max = 0.05, 0.25
 
-            n_remove = max(1, int(len(new_sol.students) * random.uniform(frac_min, frac_max)))
-            _td = time.perf_counter()
-            self.destroy_ops[d_idx](new_sol, n_remove)
-            self._record_op_timing("destroy", self.destroy_ops[d_idx].__name__, time.perf_counter() - _td)
+            # Scale destruction by currently served students (not total students).
+            # This avoids repeatedly wiping out a sparse partial solution.
+            n_remove = max(1, int(served_curr * random.uniform(frac_min, frac_max))) if served_curr > 0 else 0
+
+            # Construction phase: when still sparse, skip destroy and focus on insertion.
+            sparse_phase = served_curr < max(20, int(total_students * 0.25))
+            if n_remove <= 0 or sparse_phase:
+                d_elapsed = 0.0
+            else:
+                _td = time.perf_counter()
+                self.destroy_ops[d_idx](new_sol, n_remove)
+                d_elapsed = time.perf_counter() - _td
+            self._record_op_timing("destroy", self.destroy_ops[d_idx].__name__, d_elapsed)
             
             # Repair
             repair_deadline = deadline
-            if self.max_repair_seconds_per_iteration is not None:
+            # Apply per-iteration repair cap only after we have a reasonably dense solution.
+            if self.max_repair_seconds_per_iteration is not None and served_ratio >= 0.80:
                 iter_repair_deadline = time.time() + self.max_repair_seconds_per_iteration
                 repair_deadline = min(deadline, iter_repair_deadline) if deadline else iter_repair_deadline
+
+            # In sparse phase, bias toward regret repair to quickly build coverage.
+            if sparse_phase:
+                regret_idx = next((ix for ix, op in enumerate(self.repair_ops) if op.__name__ == "regret_repair"), r_idx)
+                r_idx = regret_idx
 
             _tr = time.perf_counter()
             self.repair_ops[r_idx](new_sol, deadline=repair_deadline)
