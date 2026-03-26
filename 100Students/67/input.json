@@ -8,7 +8,7 @@
   },
 
   "n_students": 100,
-  "seed": 2000,
+  "seed": 67,
 
   "stage_distribution": {
     "KG": 0.25,
