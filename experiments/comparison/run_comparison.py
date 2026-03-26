@@ -397,6 +397,120 @@ def _apply_dwell_time_to_stats(sol, stats, dwell_seconds_per_stop):
     return stats
 
 
+def _refresh_solution_totals(sol, stats, G_drive):
+    """Recompute route metrics + aggregate stats for a modified solution."""
+    from detour_engine import (
+        calculate_route_time_from_matrix,
+        calculate_route_distance_from_matrix,
+    )
+
+    for route in sol.routes:
+        tt = calculate_route_time_from_matrix(route.stops, G_drive)
+        route.total_time = tt if tt is not None else 0.0
+        dd = calculate_route_distance_from_matrix(route.stops, G_drive)
+        route.total_distance = dd if dd is not None else 0.0
+
+    served = sum(1 for s in sol.students if s.is_served)
+    active = [r for r in sol.routes if r.get_student_count() > 0]
+    stats["served"] = served
+    stats["total"] = len(sol.students)
+    stats["routes"] = len(active)
+    stats["total_time"] = round(sum(r.total_time for r in active), 2)
+    stats["total_dist"] = round(sum(r.total_distance for r in active), 2)
+    stats["objective"] = round(sol.calculate_objective(), 2)
+    return stats
+
+
+def _run_final_unserved_micro_pass(sol, stats, G_drive, algo_cfg=None, mode_key="?"):
+    """Run a short final pass focused on unserved students only.
+
+    The pass is bounded by both wall-clock budget and max repair calls.
+    """
+    cfg = algo_cfg or {}
+    enabled = bool(cfg.get("final_unserved_micro_pass_enabled", True))
+    budget_s = max(0.0, float(cfg.get("final_unserved_micro_pass_seconds", 60.0) or 0.0))
+    default_calls = 6 if len(sol.students) >= 250 else 4
+    repair_calls = max(1, int(cfg.get("final_unserved_micro_pass_repair_calls", default_calls) or default_calls))
+
+    diag = {
+        "enabled": enabled,
+        "ran": False,
+        "mode": mode_key,
+        "budget_seconds": budget_s,
+        "repair_calls": repair_calls,
+        "repair_calls_executed": 0,
+        "kick_attempts": 0,
+        "served_before": sum(1 for s in sol.students if s.is_served),
+        "served_after": sum(1 for s in sol.students if s.is_served),
+        "rescued_students": 0,
+        "elapsed_seconds": 0.0,
+        "trigger_reason": None,
+    }
+
+    if not enabled or budget_s <= 0:
+        stats["endgame_micro_pass"] = diag
+        return sol, stats
+
+    if diag["served_before"] >= len(sol.students):
+        diag["trigger_reason"] = "already_fully_served"
+        stats["endgame_micro_pass"] = diag
+        return sol, stats
+
+    diag["ran"] = True
+    diag["trigger_reason"] = "final_unserved_cleanup"
+    start_t = time.time()
+    deadline = start_t + budget_s
+    rescued_total = 0
+
+    for _ in range(repair_calls):
+        if time.time() >= deadline:
+            break
+        diag["repair_calls_executed"] += 1
+
+        before = sum(1 for s in sol.students if s.is_served)
+
+        cand = sol.clone()
+        _alns.regret_repair(cand, deadline=deadline)
+        if time.time() < deadline:
+            _alns.greedy_repair(cand, deadline=deadline)
+
+        cand_after = sum(1 for s in cand.students if s.is_served)
+        if cand_after > before:
+            rescued_total += (cand_after - before)
+            sol = cand
+            continue
+
+        # Keep non-worse plateau states, then try a bounded kick.
+        if cand_after == before:
+            sol = cand
+
+        if time.time() < deadline:
+            diag["kick_attempts"] += 1
+            kick = sol.clone()
+            served_now = sum(1 for s in kick.students if s.is_served)
+            kick_n = max(1, min(12, int(max(1, served_now) * 0.03)))
+            removed = _alns.worst_cost_removal(kick, kick_n)
+            if removed:
+                _alns.regret_repair(kick, deadline=deadline)
+                if time.time() < deadline:
+                    _alns.greedy_repair(kick, deadline=deadline)
+                kick_after = sum(1 for s in kick.students if s.is_served)
+                if kick_after >= before:
+                    if kick_after > before:
+                        rescued_total += (kick_after - before)
+                    sol = kick
+
+    elapsed = time.time() - start_t
+    _refresh_solution_totals(sol, stats, G_drive)
+    stats["runtime"] = round(float(stats.get("runtime", 0.0) or 0.0) + elapsed, 2)
+
+    diag["served_after"] = stats.get("served", diag["served_before"])
+    diag["rescued_students"] = max(0, int(rescued_total))
+    diag["elapsed_seconds"] = round(elapsed, 2)
+    stats["endgame_micro_pass"] = diag
+    return sol, stats
+
+
 def _prebuild_ball_tree(G):
     print("  Pre-building BallTree …", end="", flush=True)
     t0 = time.time()
@@ -2509,6 +2623,7 @@ def run(input_path=None, output_path=None, iterations=None):
         stats_a["buses_used"] = int(force_k)
     if "buses_used" not in stats_a:
         stats_a["buses_used"] = meta.get("buses", {}).get("count")
+    sol_a, stats_a = _run_final_unserved_micro_pass(sol_a, stats_a, G_unc, algo_cfg=algo_cfg, mode_key="A")
     _apply_dwell_time_to_stats(sol_a, stats_a, dwell_time_seconds_per_stop)
     stats_a["synthetic_edges_timing"] = dict(synthetic_edges_timing)
     # Snapshot candidate data before caches are cleared for next mode
@@ -2567,6 +2682,7 @@ def run(input_path=None, output_path=None, iterations=None):
         stats_b["buses_used"] = int(force_k)
     if "buses_used" not in stats_b:
         stats_b["buses_used"] = meta.get("buses", {}).get("count")
+    sol_b, stats_b = _run_final_unserved_micro_pass(sol_b, stats_b, G_unc, algo_cfg=algo_cfg, mode_key="B")
     _apply_dwell_time_to_stats(sol_b, stats_b, dwell_time_seconds_per_stop)
     stats_b["synthetic_edges_timing"] = dict(synthetic_edges_timing)
     cands_b    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
@@ -2619,6 +2735,7 @@ def run(input_path=None, output_path=None, iterations=None):
         stats_c["buses_used"] = int(force_k)
     if "buses_used" not in stats_c:
         stats_c["buses_used"] = meta.get("buses", {}).get("count")
+    sol_c, stats_c = _run_final_unserved_micro_pass(sol_c, stats_c, G_unc, algo_cfg=algo_cfg, mode_key="C")
     _apply_dwell_time_to_stats(sol_c, stats_c, dwell_time_seconds_per_stop)
     stats_c["synthetic_edges_timing"] = dict(synthetic_edges_timing)
     cands_c    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}

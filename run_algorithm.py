@@ -880,11 +880,15 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
                     _alns.greedy_repair(cand, deadline=_rescue_deadline)
 
                 cand_after = sum(1 for s in cand.students if s.is_served)
-                if cand_after >= before:
-                    if cand_after > before:
-                        rescued_total += (cand_after - before)
+                if cand_after > before:
+                    rescued_total += (cand_after - before)
                     sol = cand
                     continue
+
+                # Plateau handling: keep non-worse candidate state, then still
+                # try a bounded kick to escape flat local minima.
+                if cand_after == before:
+                    sol = cand
 
                 # Fallback: small kick-and-repair to escape local minima where
                 # pure insertion cannot place remaining students.
