@@ -7,8 +7,8 @@
     "longitude": 31.270319
   },
 
-  "n_students": 400,
-  "seed": 2000,
+  "n_students": 60,
+  "seed": 500,
 
   "stage_distribution": {
     "KG": 0.25,
@@ -25,7 +25,7 @@
   },
 
   "buses": {
-    "count": 20,
+    "count": 4,
     "capacity": 22
   },
 
@@ -69,18 +69,18 @@
   },
 
   "distance_matrix_cache": {
-    "enabled": false,
-    "pkl_path": ""
+    "enabled": true,
+    "pkl_path": "experiments/experiment4_crossings/distance_matrix_cache.pkl"
   },
 
-"algorithm": {
-    "iterations": 10000,
+  "algorithm": {
+    "iterations": 1000,
     "time_budget_seconds": 60,
     "max_candidates_per_student": 6,
     "minimize_buses": true,
     "early_stop_patience": 100,
-    "early_stop_min_improvement": 10,
-    "early_stop_freeze_temp": 1,
+    "early_stop_min_improvement": 0.1,
+    "early_stop_freeze_temp": 0.1,
     "early_stop_freeze_patience": 20
   },
 

@@ -1,0 +1,143 @@
+{
+  "mode": "C",
+  "mode_name": "Door-to-Door (No Walking)",
+  "buses_used": 19,
+  "iterations_configured": 10000,
+  "log_interval_iterations": 10,
+  "operator_performance": {
+    "executed_iterations": 53,
+    "destroy": {
+      "random_removal": {
+        "count": 13,
+        "frequency_pct": 24.53,
+        "avg_time_s": 0.001115,
+        "best_time_s": 0.000652,
+        "worst_time_s": 0.001766,
+        "total_time_s": 0.014498
+      },
+      "worst_cost_removal": {
+        "count": 2,
+        "frequency_pct": 3.77,
+        "avg_time_s": 0.006232,
+        "best_time_s": 0.005413,
+        "worst_time_s": 0.007051,
+        "total_time_s": 0.012464
+      },
+      "shaw_related_removal": {
+        "count": 1,
+        "frequency_pct": 1.89,
+        "avg_time_s": 0.001193,
+        "best_time_s": 0.001193,
+        "worst_time_s": 0.001193,
+        "total_time_s": 0.001193
+      },
+      "sequence_removal": {
+        "count": 12,
+        "frequency_pct": 22.64,
+        "avg_time_s": 0.000603,
+        "best_time_s": 0.000318,
+        "worst_time_s": 0.001222,
+        "total_time_s": 0.007232
+      },
+      "route_merge_removal": {
+        "count": 25,
+        "frequency_pct": 47.17,
+        "avg_time_s": 0.000224,
+        "best_time_s": 2e-05,
+        "worst_time_s": 0.000612,
+        "total_time_s": 0.005597
+      }
+    },
+    "repair": {
+      "random_order_best_repair": {
+        "count": 20,
+        "frequency_pct": 37.74,
+        "avg_time_s": 0.808266,
+        "best_time_s": 0.392717,
+        "worst_time_s": 1.63629,
+        "total_time_s": 16.165311
+      },
+      "regret_repair": {
+        "count": 33,
+        "frequency_pct": 62.26,
+        "avg_time_s": 1.431715,
+        "best_time_s": 0.68474,
+        "worst_time_s": 3.423913,
+        "total_time_s": 47.246604
+      }
+    }
+  },
+  "matrix_precompute": {
+    "source": "computed_osrm",
+    "loaded_from_pkl": false,
+    "saved_to_pkl": false,
+    "matrix_cache_pkl_path": null,
+    "load_time_s": 0.0,
+    "compute_time_s": 0.5765,
+    "save_time_s": 0.0,
+    "total_time_s": 0.5774,
+    "critical_nodes_count": 360,
+    "matrix_nodes_count": 360,
+    "cache_key_prefix": null,
+    "cache_entry_node_count": null,
+    "cache_loaded_finite_ratio": null,
+    "cache_loaded_inf_pairs": null,
+    "cache_loaded_finite_pairs": null,
+    "cache_guard_min_finite_ratio": 0.0001,
+    "cache_load_rejected": false,
+    "cache_load_reject_reason": null,
+    "cache_recomputed_after_reject": false,
+    "cache_context_seed": null,
+    "cache_context_student_count": 400
+  },
+  "synthetic_edges_timing": {
+    "source": "generated_synthetic",
+    "prepare_time_s": 2.0396,
+    "pkl_load_time_s": 0.0,
+    "generate_time_s": 1.6706,
+    "auto_save_pkl_time_s": 0.0,
+    "pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/crossings_nodes_injection.pkl"
+  },
+  "entries": [
+    {
+      "iteration": 10,
+      "temperature": 817.072807,
+      "objective_value": 2834027.84,
+      "best_objective": 2834027.84,
+      "students_served": 293,
+      "block_elapsed_seconds": 11.116
+    },
+    {
+      "iteration": 20,
+      "temperature": 667.607972,
+      "objective_value": 2994024.98,
+      "best_objective": 2994024.98,
+      "students_served": 309,
+      "block_elapsed_seconds": 11.719
+    },
+    {
+      "iteration": 30,
+      "temperature": 545.484319,
+      "objective_value": 3104015.14,
+      "best_objective": 3104015.14,
+      "students_served": 320,
+      "block_elapsed_seconds": 14.951
+    },
+    {
+      "iteration": 40,
+      "temperature": 445.700404,
+      "objective_value": 3344002.18,
+      "best_objective": 3344002.18,
+      "students_served": 344,
+      "block_elapsed_seconds": 12.134
+    },
+    {
+      "iteration": 50,
+      "temperature": 364.16968,
+      "objective_value": 3514027.28,
+      "best_objective": 3514027.28,
+      "students_served": 361,
+      "block_elapsed_seconds": 10.617
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+{
+  "mode": "B",
+  "mode_name": "Weakly Constrained (Any Walking)",
+  "buses_used": 10,
+  "iterations_configured": 10000,
+  "log_interval_iterations": 10,
+  "operator_performance": {
+    "executed_iterations": 56,
+    "destroy": {
+      "random_removal": {
+        "count": 13,
+        "frequency_pct": 23.21,
+        "avg_time_s": 0.000642,
+        "best_time_s": 0.000313,
+        "worst_time_s": 0.000977,
+        "total_time_s": 0.008342
+      },
+      "worst_cost_removal": {
+        "count": 17,
+        "frequency_pct": 30.36,
+        "avg_time_s": 0.00224,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.003022,
+        "total_time_s": 0.038087
+      },
+      "shaw_related_removal": {
+        "count": 10,
+        "frequency_pct": 17.86,
+        "avg_time_s": 0.000904,
+        "best_time_s": 0.000507,
+        "worst_time_s": 0.001364,
+        "total_time_s": 0.009038
+      },
+      "sequence_removal": {
+        "count": 0,
+        "frequency_pct": 0.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "route_merge_removal": {
+        "count": 16,
+        "frequency_pct": 28.57,
+        "avg_time_s": 0.000185,
+        "best_time_s": 5.3e-05,
+        "worst_time_s": 0.000349,
+        "total_time_s": 0.002966
+      }
+    },
+    "repair": {
+      "random_order_best_repair": {
+        "count": 4,
+        "frequency_pct": 7.14,
+        "avg_time_s": 0.39234,
+        "best_time_s": 0.123562,
+        "worst_time_s": 0.589643,
+        "total_time_s": 1.56936
+      },
+      "regret_repair": {
+        "count": 52,
+        "frequency_pct": 92.86,
+        "avg_time_s": 1.180951,
+        "best_time_s": 0.104124,
+        "worst_time_s": 6.719606,
+        "total_time_s": 61.409447
+      }
+    }
+  },
+  "matrix_precompute": {
+    "source": "computed_osrm",
+    "loaded_from_pkl": false,
+    "saved_to_pkl": false,
+    "matrix_cache_pkl_path": null,
+    "load_time_s": 0.0,
+    "compute_time_s": 3.6037,
+    "save_time_s": 0.0,
+    "total_time_s": 5.5414,
+    "critical_nodes_count": 896,
+    "matrix_nodes_count": 896,
+    "cache_key_prefix": null,
+    "cache_entry_node_count": null,
+    "cache_loaded_finite_ratio": null,
+    "cache_loaded_inf_pairs": null,
+    "cache_loaded_finite_pairs": null,
+    "cache_guard_min_finite_ratio": 0.0001,
+    "cache_load_rejected": false,
+    "cache_load_reject_reason": null,
+    "cache_recomputed_after_reject": false,
+    "cache_context_seed": null,
+    "cache_context_student_count": 200
+  },
+  "synthetic_edges_timing": {
+    "source": "generated_synthetic",
+    "prepare_time_s": 5.6134,
+    "pkl_load_time_s": 0.0,
+    "generate_time_s": 1.6126,
+    "auto_save_pkl_time_s": 0.0,
+    "pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/crossings_nodes_injection.pkl"
+  },
+  "entries": [
+    {
+      "iteration": 10,
+      "temperature": 817.072807,
+      "objective_value": 1829667.04,
+      "best_objective": 1829667.04,
+      "students_served": 188,
+      "block_elapsed_seconds": 23.287
+    },
+    {
+      "iteration": 20,
+      "temperature": 667.607972,
+      "objective_value": 1859670.68,
+      "best_objective": 1859670.68,
+      "students_served": 191,
+      "block_elapsed_seconds": 11.104
+    },
+    {
+      "iteration": 30,
+      "temperature": 545.484319,
+      "objective_value": 1859717.66,
+      "best_objective": 1859717.66,
+      "students_served": 191,
+      "block_elapsed_seconds": 8.551
+    },
+    {
+      "iteration": 40,
+      "temperature": 445.700404,
+      "objective_value": 1859717.66,
+      "best_objective": 1859717.66,
+      "students_served": 191,
+      "block_elapsed_seconds": 6.716
+    },
+    {
+      "iteration": 50,
+      "temperature": 364.16968,
+      "objective_value": 1864708.55,
+      "best_objective": 1864708.55,
+      "students_served": 191,
+      "block_elapsed_seconds": 5.759
+    }
+  ]
+}
