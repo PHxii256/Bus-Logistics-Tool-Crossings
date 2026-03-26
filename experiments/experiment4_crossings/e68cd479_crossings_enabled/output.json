@@ -1,0 +1,3740 @@
+{
+  "generated_at": "26/03/26 04:39 pm",
+  "total_wall_time_seconds": 685.2,
+  "debug_stats": {
+    "step_times": {
+      "generate_dataset_s": 21.63,
+      "build_constrained_graph_s": 23.43,
+      "build_unconstrained_graph_s": 21.75,
+      "build_walk_graph_s": 2.11,
+      "synthetic_edges_prepare_s": 2.1064,
+      "synthetic_edges_generate_s": 1.7598,
+      "synthetic_edges_pkl_load_s": 0.0,
+      "synthetic_edges_auto_save_pkl_s": 0.0,
+      "build_map_s": 4.79
+    },
+    "mode_breakdown": {
+      "A": {
+        "mode_wall_time_s": 36.9,
+        "total_alns_solve_s": 28.32,
+        "successful_run_s": 13.66,
+        "actual_setup_overhead_s": 8.58,
+        "alns_iterations": null,
+        "operator_performance": {
+          "executed_iterations": 202,
+          "destroy": {
+            "random_removal": {
+              "count": 71,
+              "frequency_pct": 35.15,
+              "avg_time_s": 0.000165,
+              "best_time_s": 6.6e-05,
+              "worst_time_s": 0.000561,
+              "total_time_s": 0.011736
+            },
+            "worst_cost_removal": {
+              "count": 31,
+              "frequency_pct": 15.35,
+              "avg_time_s": 0.000688,
+              "best_time_s": 0.000443,
+              "worst_time_s": 0.001267,
+              "total_time_s": 0.021318
+            },
+            "shaw_related_removal": {
+              "count": 41,
+              "frequency_pct": 20.3,
+              "avg_time_s": 0.00031,
+              "best_time_s": 0.000204,
+              "worst_time_s": 0.00079,
+              "total_time_s": 0.012696
+            },
+            "sequence_removal": {
+              "count": 35,
+              "frequency_pct": 17.33,
+              "avg_time_s": 0.000143,
+              "best_time_s": 0.0,
+              "worst_time_s": 0.000259,
+              "total_time_s": 0.005002
+            },
+            "route_merge_removal": {
+              "count": 54,
+              "frequency_pct": 26.73,
+              "avg_time_s": 0.000125,
+              "best_time_s": 7.9e-05,
+              "worst_time_s": 0.000212,
+              "total_time_s": 0.006772
+            }
+          },
+          "repair": {
+            "random_order_best_repair": {
+              "count": 77,
+              "frequency_pct": 38.12,
+              "avg_time_s": 0.03321,
+              "best_time_s": 0.00392,
+              "worst_time_s": 0.072166,
+              "total_time_s": 2.557149
+            },
+            "regret_repair": {
+              "count": 155,
+              "frequency_pct": 76.73,
+              "avg_time_s": 0.069632,
+              "best_time_s": 0.005607,
+              "worst_time_s": 0.543994,
+              "total_time_s": 10.792914
+            }
+          }
+        },
+        "matrix_precompute_total_s": 0.1699,
+        "matrix_precompute_source": "computed_osrm",
+        "matrix_precompute_load_s": 0.0,
+        "matrix_precompute_compute_s": 0.1696,
+        "matrix_precompute_save_s": 0.0,
+        "matrix_critical_nodes_count": 180,
+        "matrix_nodes_count": 180,
+        "matrix_cache_key_prefix": null,
+        "matrix_cache_entry_node_count": null,
+        "matrix_cache_loaded_finite_ratio": null,
+        "synthetic_edges_source": "generated_synthetic",
+        "synthetic_edges_prepare_s": 2.1064,
+        "synthetic_edges_pkl_load_s": 0.0,
+        "synthetic_edges_generate_s": 1.7598,
+        "synthetic_edges_auto_save_pkl_s": 0.0,
+        "insertion_debug": {
+          "routes_checked": 19074,
+          "routes_bbox_pruned": 0,
+          "candidates_considered": 62433,
+          "valid_insertions": 56878
+        },
+        "alns_diagnostics": {
+          "stop_reason": "no_improve_patience",
+          "stop_iteration": 202,
+          "stop_no_improve_iters": 100,
+          "merge_tail": {
+            "enabled": true,
+            "ran": true,
+            "iterations": 30,
+            "accepted": 0,
+            "best_improvements": 0,
+            "served_start": 60,
+            "served_end": 60,
+            "active_buses_start": 4,
+            "active_buses_end": 4
+          }
+        },
+        "n_candidates_per_student": 1.0
+      },
+      "B": {
+        "mode_wall_time_s": 555.97,
+        "total_alns_solve_s": 544.05,
+        "successful_run_s": 19.29,
+        "actual_setup_overhead_s": 11.92,
+        "alns_iterations": null,
+        "operator_performance": {
+          "executed_iterations": 167,
+          "destroy": {
+            "random_removal": {
+              "count": 39,
+              "frequency_pct": 23.35,
+              "avg_time_s": 0.000163,
+              "best_time_s": 6.7e-05,
+              "worst_time_s": 0.000289,
+              "total_time_s": 0.00634
+            },
+            "worst_cost_removal": {
+              "count": 40,
+              "frequency_pct": 23.95,
+              "avg_time_s": 0.000593,
+              "best_time_s": 0.0,
+              "worst_time_s": 0.000922,
+              "total_time_s": 0.02373
+            },
+            "shaw_related_removal": {
+              "count": 32,
+              "frequency_pct": 19.16,
+              "avg_time_s": 0.000289,
+              "best_time_s": 0.000199,
+              "worst_time_s": 0.000441,
+              "total_time_s": 0.009243
+            },
+            "sequence_removal": {
+              "count": 38,
+              "frequency_pct": 22.75,
+              "avg_time_s": 0.000137,
+              "best_time_s": 7.3e-05,
+              "worst_time_s": 0.000277,
+              "total_time_s": 0.005192
+            },
+            "route_merge_removal": {
+              "count": 18,
+              "frequency_pct": 10.78,
+              "avg_time_s": 9.6e-05,
+              "best_time_s": 5.6e-05,
+              "worst_time_s": 0.000194,
+              "total_time_s": 0.001736
+            }
+          },
+          "repair": {
+            "random_order_best_repair": {
+              "count": 63,
+              "frequency_pct": 37.72,
+              "avg_time_s": 0.066127,
+              "best_time_s": 0.039202,
+              "worst_time_s": 0.097444,
+              "total_time_s": 4.166001
+            },
+            "regret_repair": {
+              "count": 104,
+              "frequency_pct": 62.28,
+              "avg_time_s": 0.165528,
+              "best_time_s": 0.045519,
+              "worst_time_s": 1.107799,
+              "total_time_s": 17.214899
+            }
+          }
+        },
+        "matrix_precompute_total_s": 0.3431,
+        "matrix_precompute_source": "computed_osrm",
+        "matrix_precompute_load_s": 0.0,
+        "matrix_precompute_compute_s": 0.3426,
+        "matrix_precompute_save_s": 0.0,
+        "matrix_critical_nodes_count": 282,
+        "matrix_nodes_count": 282,
+        "matrix_cache_key_prefix": null,
+        "matrix_cache_entry_node_count": null,
+        "matrix_cache_loaded_finite_ratio": null,
+        "synthetic_edges_source": "generated_synthetic",
+        "synthetic_edges_prepare_s": 2.1064,
+        "synthetic_edges_pkl_load_s": 0.0,
+        "synthetic_edges_generate_s": 1.7598,
+        "synthetic_edges_auto_save_pkl_s": 0.0,
+        "insertion_debug": {
+          "routes_checked": 16646,
+          "routes_bbox_pruned": 0,
+          "candidates_considered": 96519,
+          "valid_insertions": 83077
+        },
+        "alns_diagnostics": {
+          "stop_reason": "no_improve_patience",
+          "stop_iteration": 167,
+          "stop_no_improve_iters": 100,
+          "merge_tail": {
+            "enabled": true,
+            "ran": false,
+            "iterations": 0,
+            "accepted": 0,
+            "best_improvements": 0,
+            "served_start": 0,
+            "served_end": 0,
+            "active_buses_start": 0,
+            "active_buses_end": 0
+          }
+        },
+        "n_candidates_per_student": 1.0
+      },
+      "C": {
+        "mode_wall_time_s": 18.55,
+        "total_alns_solve_s": 18.41,
+        "successful_run_s": 2.82,
+        "actual_setup_overhead_s": 0.14,
+        "alns_iterations": null,
+        "operator_performance": {
+          "executed_iterations": 119,
+          "destroy": {
+            "random_removal": {
+              "count": 20,
+              "frequency_pct": 16.81,
+              "avg_time_s": 0.000154,
+              "best_time_s": 6.9e-05,
+              "worst_time_s": 0.000287,
+              "total_time_s": 0.003089
+            },
+            "worst_cost_removal": {
+              "count": 32,
+              "frequency_pct": 26.89,
+              "avg_time_s": 0.000657,
+              "best_time_s": 0.0,
+              "worst_time_s": 0.001361,
+              "total_time_s": 0.021011
+            },
+            "shaw_related_removal": {
+              "count": 30,
+              "frequency_pct": 25.21,
+              "avg_time_s": 0.000315,
+              "best_time_s": 0.000231,
+              "worst_time_s": 0.000637,
+              "total_time_s": 0.00946
+            },
+            "sequence_removal": {
+              "count": 14,
+              "frequency_pct": 11.76,
+              "avg_time_s": 0.000151,
+              "best_time_s": 8.9e-05,
+              "worst_time_s": 0.000336,
+              "total_time_s": 0.002113
+            },
+            "route_merge_removal": {
+              "count": 53,
+              "frequency_pct": 44.54,
+              "avg_time_s": 7.3e-05,
+              "best_time_s": 4e-05,
+              "worst_time_s": 0.000124,
+              "total_time_s": 0.003891
+            }
+          },
+          "repair": {
+            "random_order_best_repair": {
+              "count": 58,
+              "frequency_pct": 48.74,
+              "avg_time_s": 0.01257,
+              "best_time_s": 0.004496,
+              "worst_time_s": 0.031477,
+              "total_time_s": 0.729039
+            },
+            "regret_repair": {
+              "count": 91,
+              "frequency_pct": 76.47,
+              "avg_time_s": 0.02053,
+              "best_time_s": 0.004409,
+              "worst_time_s": 0.25006,
+              "total_time_s": 1.868239
+            }
+          }
+        },
+        "matrix_precompute_total_s": 0.0465,
+        "matrix_precompute_source": "computed_osrm",
+        "matrix_precompute_load_s": 0.0,
+        "matrix_precompute_compute_s": 0.0464,
+        "matrix_precompute_save_s": 0.0,
+        "matrix_critical_nodes_count": 59,
+        "matrix_nodes_count": 59,
+        "matrix_cache_key_prefix": null,
+        "matrix_cache_entry_node_count": null,
+        "matrix_cache_loaded_finite_ratio": null,
+        "synthetic_edges_source": "generated_synthetic",
+        "synthetic_edges_prepare_s": 2.1064,
+        "synthetic_edges_pkl_load_s": 0.0,
+        "synthetic_edges_generate_s": 1.7598,
+        "synthetic_edges_auto_save_pkl_s": 0.0,
+        "insertion_debug": {
+          "routes_checked": 9964,
+          "routes_bbox_pruned": 0,
+          "candidates_considered": 9964,
+          "valid_insertions": 15625
+        },
+        "alns_diagnostics": {
+          "stop_reason": "no_improve_patience",
+          "stop_iteration": 119,
+          "stop_no_improve_iters": 100,
+          "merge_tail": {
+            "enabled": true,
+            "ran": true,
+            "iterations": 30,
+            "accepted": 30,
+            "best_improvements": 0,
+            "served_start": 60,
+            "served_end": 60,
+            "active_buses_start": 5,
+            "active_buses_end": 5
+          }
+        },
+        "n_candidates_per_student": 1.0
+      }
+    },
+    "synthetic_crossings": {
+      "strategy": "drive_node_crossings",
+      "drive_edges_found": 356,
+      "drive_nodes_extracted": 406,
+      "roads_found": 33,
+      "roads_with_both_directions": 23,
+      "real_to_real_crossings": 55,
+      "real_to_synthetic_crossings": 90,
+      "synthetic_nodes_created": 90,
+      "rejected_no_opposite": 10,
+      "pairing_attempts": 1660,
+      "pairing_rejected_distance_too_short": 0,
+      "pairing_rejected_distance_too_long": 1426,
+      "pairing_rejected_angle": 5,
+      "pairing_rejected_bearing_calc_failed": 0,
+      "rejected_distance": 62,
+      "rejected_angle": 0,
+      "rejected_spacing": 11,
+      "skipped_global_connection_lock": 45,
+      "rejected_fallback_geometry": 0,
+      "fallback_reused_existing_nodes": 32,
+      "fallback_projected_with_spacing": 51,
+      "fallback_projected_no_spacing": 29,
+      "fallback_guaranteed": 19,
+      "fallback_failed_completely": 0,
+      "checked_drive_nodes": 339,
+      "candidate_pairs_checked": 143,
+      "rejected_lane_pair": 26,
+      "rejected_existing_edge": 27,
+      "rejected_existing_walk_short": 15,
+      "rejected_not_perpendicular": 2
+    }
+  },
+  "config": {
+    "n_students": 60,
+    "seed": 42,
+    "iterations": 10000,
+    "buses_count": 29,
+    "buses_capacity": 22,
+    "minimize_buses": true,
+    "force_fleet_size": null,
+    "constraints_enabled": true,
+    "soft_ride_caps": false,
+    "time_budget_seconds": 60,
+    "max_candidates_per_student": 6,
+    "merge_tail_iterations": 30,
+    "distance_matrix_cache": {
+      "enabled": false,
+      "force_disable": false,
+      "isolate_per_run": false,
+      "min_finite_ratio": 0.0001,
+      "pkl_path": ""
+    },
+    "stage_walk_limits": {
+      "KG": 0,
+      "ELEMENTARY": 0,
+      "MIDDLE": 250,
+      "HIGH": 500
+    },
+    "stage_distribution": {
+      "KG": 0.25,
+      "ELEMENTARY": 0.25,
+      "MIDDLE": 0.25,
+      "HIGH": 0.25
+    },
+    "constraints": {
+      "enabled": true,
+      "soft_ride_caps": false,
+      "ride_time_multiplier": 3,
+      "floor_minutes": 30,
+      "ceiling_minutes": 60,
+      "bidirectional_check": true
+    },
+    "algorithm": {
+      "time_budget_seconds": 60,
+      "max_candidates_per_student": 6,
+      "minimize_buses": true,
+      "force_fleet_size": null,
+      "dwell_time_seconds_per_stop": 30
+    }
+  },
+  "modes": {
+    "strictly_constrained": {
+      "routes_created": 4,
+      "students_served": 60,
+      "students_unserved": 0,
+      "total_route_time_min": 166.74,
+      "base_route_time_min": 139.24,
+      "total_dwell_time_min": 27.5,
+      "dwell_time_per_stop_seconds": 30.0,
+      "total_route_dist_km": 79.0,
+      "avg_route_time_min": 41.69,
+      "alns_runtime_seconds": 13.66,
+      "mode_wall_time_seconds": null,
+      "operator_performance": {
+        "executed_iterations": 202,
+        "destroy": {
+          "random_removal": {
+            "count": 71,
+            "frequency_pct": 35.15,
+            "avg_time_s": 0.000165,
+            "best_time_s": 6.6e-05,
+            "worst_time_s": 0.000561,
+            "total_time_s": 0.011736
+          },
+          "worst_cost_removal": {
+            "count": 31,
+            "frequency_pct": 15.35,
+            "avg_time_s": 0.000688,
+            "best_time_s": 0.000443,
+            "worst_time_s": 0.001267,
+            "total_time_s": 0.021318
+          },
+          "shaw_related_removal": {
+            "count": 41,
+            "frequency_pct": 20.3,
+            "avg_time_s": 0.00031,
+            "best_time_s": 0.000204,
+            "worst_time_s": 0.00079,
+            "total_time_s": 0.012696
+          },
+          "sequence_removal": {
+            "count": 35,
+            "frequency_pct": 17.33,
+            "avg_time_s": 0.000143,
+            "best_time_s": 0.0,
+            "worst_time_s": 0.000259,
+            "total_time_s": 0.005002
+          },
+          "route_merge_removal": {
+            "count": 54,
+            "frequency_pct": 26.73,
+            "avg_time_s": 0.000125,
+            "best_time_s": 7.9e-05,
+            "worst_time_s": 0.000212,
+            "total_time_s": 0.006772
+          }
+        },
+        "repair": {
+          "random_order_best_repair": {
+            "count": 77,
+            "frequency_pct": 38.12,
+            "avg_time_s": 0.03321,
+            "best_time_s": 0.00392,
+            "worst_time_s": 0.072166,
+            "total_time_s": 2.557149
+          },
+          "regret_repair": {
+            "count": 155,
+            "frequency_pct": 76.73,
+            "avg_time_s": 0.069632,
+            "best_time_s": 0.005607,
+            "worst_time_s": 0.543994,
+            "total_time_s": 10.792914
+          }
+        }
+      },
+      "alns_diagnostics": {
+        "stop_reason": "no_improve_patience",
+        "stop_iteration": 202,
+        "stop_no_improve_iters": 100,
+        "merge_tail": {
+          "enabled": true,
+          "ran": true,
+          "iterations": 30,
+          "accepted": 0,
+          "best_improvements": 0,
+          "served_start": 60,
+          "served_end": 60,
+          "active_buses_start": 4,
+          "active_buses_end": 4
+        }
+      },
+      "insertion_debug": {
+        "routes_checked": 19074,
+        "routes_bbox_pruned": 0,
+        "candidates_considered": 62433,
+        "valid_insertions": 56878
+      },
+      "matrix_precompute": {
+        "source": "computed_osrm",
+        "loaded_from_pkl": false,
+        "saved_to_pkl": false,
+        "matrix_cache_pkl_path": null,
+        "load_time_s": 0.0,
+        "compute_time_s": 0.1696,
+        "save_time_s": 0.0,
+        "total_time_s": 0.1699,
+        "critical_nodes_count": 180,
+        "matrix_nodes_count": 180,
+        "cache_key_prefix": null,
+        "cache_entry_node_count": null,
+        "cache_loaded_finite_ratio": null,
+        "cache_loaded_inf_pairs": null,
+        "cache_loaded_finite_pairs": null,
+        "cache_guard_min_finite_ratio": 0.0001,
+        "cache_load_rejected": false,
+        "cache_load_reject_reason": null,
+        "cache_recomputed_after_reject": false,
+        "cache_context_seed": null,
+        "cache_context_student_count": 60
+      },
+      "synthetic_edges_timing": {
+        "source": "generated_synthetic",
+        "prepare_time_s": 2.1064,
+        "pkl_load_time_s": 0.0,
+        "generate_time_s": 1.7598,
+        "auto_save_pkl_time_s": 0.0,
+        "pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/crossings_nodes_injection.pkl"
+      },
+      "unsafe_crossings": 0,
+      "walk_stats": {
+        "avg_walk_dist_m": 102.9,
+        "median_walk_dist_m": 16.0,
+        "max_walk_dist_m": 1901.5,
+        "min_walk_dist_m": 0.0,
+        "avg_walk_time_min": 1.29,
+        "avg_walk_utilisation_pct": 36.0
+      },
+      "students": [
+        {
+          "id": "S051",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.44,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S048",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.81,
+          "walk_distance_m": 104.0
+        },
+        {
+          "id": "S023",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.98,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S043",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 3.63,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S054",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.04,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S044",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 5.04,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S038",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.9,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S041",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 5.95,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S024",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 6.8,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S042",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 6.07,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S017",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 7.22,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S012",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 8.86,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S056",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 8.26,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S039",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 6.28,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S006",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 6.05,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S018",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 3.95,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S008",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 4.08,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S020",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 2.35,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S057",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 1.82,
+          "walk_distance_m": 153.2
+        },
+        {
+          "id": "S011",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 1.91,
+          "walk_distance_m": 191.1
+        },
+        {
+          "id": "S037",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 2.22,
+          "walk_distance_m": 271.5
+        },
+        {
+          "id": "S015",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 1.49,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S007",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.67,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S059",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.58,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S045",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 5.49,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S028",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 8.46,
+          "walk_distance_m": 1901.5
+        },
+        {
+          "id": "S046",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 7.06,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S019",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 2.75,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S009",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 4.55,
+          "walk_distance_m": 114.5
+        },
+        {
+          "id": "S027",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 6.11,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S025",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 7.41,
+          "walk_distance_m": 43.1
+        },
+        {
+          "id": "S001",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 5.22,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S052",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.31,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S013",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 1.38,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S035",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 4.54,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S049",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 6.05,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S040",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 6.05,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S003",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 6.96,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S029",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 8.88,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S034",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 8.29,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S030",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 8.83,
+          "walk_distance_m": 28.8
+        },
+        {
+          "id": "S060",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 7.75,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S021",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.06,
+          "walk_distance_m": 66.2
+        },
+        {
+          "id": "S004",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 1.59,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S032",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.38,
+          "walk_distance_m": 18.9
+        },
+        {
+          "id": "S005",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 3.4,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S026",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 3.17,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S010",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 1.07,
+          "walk_distance_m": 109.9
+        },
+        {
+          "id": "S058",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 0.83,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S036",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 9.18,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S033",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 2.76,
+          "walk_distance_m": 120.3
+        },
+        {
+          "id": "S053",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.48,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S047",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 3.48,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S055",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 4.74,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S031",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.39,
+          "walk_distance_m": 14.9
+        },
+        {
+          "id": "S002",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 4.36,
+          "walk_distance_m": 57.4
+        },
+        {
+          "id": "S050",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 4.86,
+          "walk_distance_m": 203.9
+        },
+        {
+          "id": "S014",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.51,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S022",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 5.51,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S016",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 3.48,
+          "walk_distance_m": 900.3
+        }
+      ],
+      "buses_available": 29,
+      "bus_capacity": 22,
+      "buses_used": 4,
+      "ride_cap_violations_am": 0,
+      "ride_cap_checked_am": 60,
+      "ride_cap_violation_pct_am": 0.0,
+      "ride_cap_violations_pm": 13,
+      "ride_cap_checked_pm": 60,
+      "ride_cap_violation_pct_pm": 21.7,
+      "total_walk_time_min": 77.4,
+      "total_time_with_walks_min": 244.14,
+      "fleet_search": {
+        "buses_used": 4,
+        "summary": "k=4 is the minimum feasible fleet size",
+        "search_log": [
+          {
+            "k": 3,
+            "served": 51,
+            "unserved": 9,
+            "feasible": false,
+            "runtime_s": 14.66,
+            "time_budget_s": 150.0,
+            "executed_iterations": 194,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 26,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 51,
+              "served_after": 51,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.2255,
+              "save_time_s": 0.0,
+              "total_time_s": 2.0096,
+              "critical_nodes_count": 180,
+              "matrix_nodes_count": 180,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "zero_walk_radius_no_valid_insertion": 4,
+              "search_budget_exhausted": 5
+            }
+          },
+          {
+            "k": 4,
+            "served": 60,
+            "unserved": 0,
+            "feasible": true,
+            "runtime_s": 13.66,
+            "time_budget_s": 120.0,
+            "executed_iterations": 202,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 25,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 60,
+              "served_after": 60,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.1696,
+              "save_time_s": 0.0,
+              "total_time_s": 0.1699,
+              "critical_nodes_count": 180,
+              "matrix_nodes_count": 180,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {}
+          }
+        ]
+      }
+    },
+    "weakly_constrained": {
+      "routes_created": 4,
+      "students_served": 57,
+      "students_unserved": 3,
+      "total_route_time_min": 151.59,
+      "base_route_time_min": 127.09,
+      "total_dwell_time_min": 24.5,
+      "dwell_time_per_stop_seconds": 30.0,
+      "total_route_dist_km": 70.89,
+      "avg_route_time_min": 37.9,
+      "alns_runtime_seconds": 19.29,
+      "mode_wall_time_seconds": null,
+      "operator_performance": {
+        "executed_iterations": 167,
+        "destroy": {
+          "random_removal": {
+            "count": 39,
+            "frequency_pct": 23.35,
+            "avg_time_s": 0.000163,
+            "best_time_s": 6.7e-05,
+            "worst_time_s": 0.000289,
+            "total_time_s": 0.00634
+          },
+          "worst_cost_removal": {
+            "count": 40,
+            "frequency_pct": 23.95,
+            "avg_time_s": 0.000593,
+            "best_time_s": 0.0,
+            "worst_time_s": 0.000922,
+            "total_time_s": 0.02373
+          },
+          "shaw_related_removal": {
+            "count": 32,
+            "frequency_pct": 19.16,
+            "avg_time_s": 0.000289,
+            "best_time_s": 0.000199,
+            "worst_time_s": 0.000441,
+            "total_time_s": 0.009243
+          },
+          "sequence_removal": {
+            "count": 38,
+            "frequency_pct": 22.75,
+            "avg_time_s": 0.000137,
+            "best_time_s": 7.3e-05,
+            "worst_time_s": 0.000277,
+            "total_time_s": 0.005192
+          },
+          "route_merge_removal": {
+            "count": 18,
+            "frequency_pct": 10.78,
+            "avg_time_s": 9.6e-05,
+            "best_time_s": 5.6e-05,
+            "worst_time_s": 0.000194,
+            "total_time_s": 0.001736
+          }
+        },
+        "repair": {
+          "random_order_best_repair": {
+            "count": 63,
+            "frequency_pct": 37.72,
+            "avg_time_s": 0.066127,
+            "best_time_s": 0.039202,
+            "worst_time_s": 0.097444,
+            "total_time_s": 4.166001
+          },
+          "regret_repair": {
+            "count": 104,
+            "frequency_pct": 62.28,
+            "avg_time_s": 0.165528,
+            "best_time_s": 0.045519,
+            "worst_time_s": 1.107799,
+            "total_time_s": 17.214899
+          }
+        }
+      },
+      "alns_diagnostics": {
+        "stop_reason": "no_improve_patience",
+        "stop_iteration": 167,
+        "stop_no_improve_iters": 100,
+        "merge_tail": {
+          "enabled": true,
+          "ran": false,
+          "iterations": 0,
+          "accepted": 0,
+          "best_improvements": 0,
+          "served_start": 0,
+          "served_end": 0,
+          "active_buses_start": 0,
+          "active_buses_end": 0
+        }
+      },
+      "insertion_debug": {
+        "routes_checked": 16646,
+        "routes_bbox_pruned": 0,
+        "candidates_considered": 96519,
+        "valid_insertions": 83077
+      },
+      "matrix_precompute": {
+        "source": "computed_osrm",
+        "loaded_from_pkl": false,
+        "saved_to_pkl": false,
+        "matrix_cache_pkl_path": null,
+        "load_time_s": 0.0,
+        "compute_time_s": 0.3426,
+        "save_time_s": 0.0,
+        "total_time_s": 0.3431,
+        "critical_nodes_count": 282,
+        "matrix_nodes_count": 282,
+        "cache_key_prefix": null,
+        "cache_entry_node_count": null,
+        "cache_loaded_finite_ratio": null,
+        "cache_loaded_inf_pairs": null,
+        "cache_loaded_finite_pairs": null,
+        "cache_guard_min_finite_ratio": 0.0001,
+        "cache_load_rejected": false,
+        "cache_load_reject_reason": null,
+        "cache_recomputed_after_reject": false,
+        "cache_context_seed": null,
+        "cache_context_student_count": 60
+      },
+      "synthetic_edges_timing": {
+        "source": "generated_synthetic",
+        "prepare_time_s": 2.1064,
+        "pkl_load_time_s": 0.0,
+        "generate_time_s": 1.7598,
+        "auto_save_pkl_time_s": 0.0,
+        "pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/crossings_nodes_injection.pkl"
+      },
+      "unsafe_crossings": 0,
+      "walk_stats": {
+        "avg_walk_dist_m": 82.4,
+        "median_walk_dist_m": 39.1,
+        "max_walk_dist_m": 388.3,
+        "min_walk_dist_m": 0.0,
+        "avg_walk_time_min": 1.03,
+        "avg_walk_utilisation_pct": 29.4
+      },
+      "students": [
+        {
+          "id": "S028",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 8.46,
+          "walk_distance_m": 208.2
+        },
+        {
+          "id": "S059",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.58,
+          "walk_distance_m": 52.9
+        },
+        {
+          "id": "S045",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 5.49,
+          "walk_distance_m": 388.3
+        },
+        {
+          "id": "S016",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 3.48,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S052",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.31,
+          "walk_distance_m": 8.9
+        },
+        {
+          "id": "S025",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 7.41,
+          "walk_distance_m": 20.1
+        },
+        {
+          "id": "S001",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 5.22,
+          "walk_distance_m": 53.0
+        },
+        {
+          "id": "S027",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 6.11,
+          "walk_distance_m": 10.1
+        },
+        {
+          "id": "S009",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 4.55,
+          "walk_distance_m": 35.9
+        },
+        {
+          "id": "S018",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 3.95,
+          "walk_distance_m": 38.8
+        },
+        {
+          "id": "S019",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 2.75,
+          "walk_distance_m": 11.8
+        },
+        {
+          "id": "S005",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 3.4,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S026",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 3.17,
+          "walk_distance_m": 2.0
+        },
+        {
+          "id": "S010",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 1.07,
+          "walk_distance_m": 109.9
+        },
+        {
+          "id": "S058",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 0.83,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S032",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.38,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S051",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.44,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S048",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.81,
+          "walk_distance_m": 106.5
+        },
+        {
+          "id": "S054",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.04,
+          "walk_distance_m": 106.5
+        },
+        {
+          "id": "S023",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.98,
+          "walk_distance_m": 88.6
+        },
+        {
+          "id": "S043",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 3.63,
+          "walk_distance_m": 88.6
+        },
+        {
+          "id": "S038",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.9,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S044",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 5.04,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S042",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 6.07,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S024",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 6.8,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S017",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 7.22,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S012",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 8.86,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S041",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 5.95,
+          "walk_distance_m": 181.9
+        },
+        {
+          "id": "S039",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 6.28,
+          "walk_distance_m": 28.4
+        },
+        {
+          "id": "S006",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 6.05,
+          "walk_distance_m": 63.8
+        },
+        {
+          "id": "S020",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 2.35,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S036",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 9.18,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S003",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 6.96,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S029",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 8.88,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S034",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 8.29,
+          "walk_distance_m": 135.2
+        },
+        {
+          "id": "S060",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 7.75,
+          "walk_distance_m": 29.1
+        },
+        {
+          "id": "S030",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 8.83,
+          "walk_distance_m": 147.0
+        },
+        {
+          "id": "S021",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.06,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S055",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 4.74,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S031",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.39,
+          "walk_distance_m": 14.9
+        },
+        {
+          "id": "S046",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 7.06,
+          "walk_distance_m": 328.7
+        },
+        {
+          "id": "S004",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 1.59,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S057",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 1.82,
+          "walk_distance_m": 153.2
+        },
+        {
+          "id": "S011",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 1.91,
+          "walk_distance_m": 191.1
+        },
+        {
+          "id": "S015",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 1.49,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S037",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 2.22,
+          "walk_distance_m": 271.5
+        },
+        {
+          "id": "S007",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.67,
+          "walk_distance_m": 61.4
+        },
+        {
+          "id": "S035",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 4.54,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S022",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 5.51,
+          "walk_distance_m": 183.5
+        },
+        {
+          "id": "S014",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.51,
+          "walk_distance_m": 183.5
+        },
+        {
+          "id": "S050",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 4.86,
+          "walk_distance_m": 203.9
+        },
+        {
+          "id": "S002",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 4.36,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S047",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 3.48,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S053",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.48,
+          "walk_distance_m": 32.0
+        },
+        {
+          "id": "S008",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 4.08,
+          "walk_distance_m": 40.5
+        },
+        {
+          "id": "S033",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 2.76,
+          "walk_distance_m": 95.0
+        },
+        {
+          "id": "S013",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 1.38,
+          "walk_distance_m": 0.0
+        }
+      ],
+      "buses_available": 29,
+      "bus_capacity": 22,
+      "buses_used": 4,
+      "ride_cap_violations_am": 0,
+      "ride_cap_checked_am": 57,
+      "ride_cap_violation_pct_am": 0.0,
+      "ride_cap_violations_pm": 6,
+      "ride_cap_checked_pm": 57,
+      "ride_cap_violation_pct_pm": 10.5,
+      "total_walk_time_min": 58.71,
+      "total_time_with_walks_min": 210.3,
+      "fleet_search": {
+        "buses_used": 4,
+        "summary": "No fleet size in range 3..29 served all students. Best: k=4 with 57/60 served, 3 unserved. 3 student(s) likely unserved due to ALNS budget exhaustion — try increasing time_budget_seconds.",
+        "search_log": [
+          {
+            "k": 3,
+            "served": 51,
+            "unserved": 9,
+            "feasible": false,
+            "runtime_s": 26.93,
+            "time_budget_s": 150.0,
+            "executed_iterations": 168,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 26,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 51,
+              "served_after": 51,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3511,
+              "save_time_s": 0.0,
+              "total_time_s": 1.2512,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 9
+            }
+          },
+          {
+            "k": 4,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 19.29,
+            "time_budget_s": 120.0,
+            "executed_iterations": 167,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 25,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3426,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3431,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 5,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 20.87,
+            "time_budget_s": 120.0,
+            "executed_iterations": 210,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 24,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3775,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3779,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 6,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 19.99,
+            "time_budget_s": 120.0,
+            "executed_iterations": 197,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 23,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3454,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3458,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 7,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 14.66,
+            "time_budget_s": 120.0,
+            "executed_iterations": 153,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 22,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3135,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3139,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 8,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 13.64,
+            "time_budget_s": 120.0,
+            "executed_iterations": 157,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 21,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3628,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3631,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 9,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 23.32,
+            "time_budget_s": 120.0,
+            "executed_iterations": 210,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 20,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3553,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3557,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 10,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 23.56,
+            "time_budget_s": 120.0,
+            "executed_iterations": 249,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 19,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3702,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3706,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 11,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 22.54,
+            "time_budget_s": 120.0,
+            "executed_iterations": 241,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 18,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3266,
+              "save_time_s": 0.0,
+              "total_time_s": 0.327,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 12,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 20.04,
+            "time_budget_s": 120.0,
+            "executed_iterations": 199,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 17,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.346,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3463,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 13,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 16.68,
+            "time_budget_s": 120.0,
+            "executed_iterations": 136,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 16,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3684,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3688,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 14,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 23.87,
+            "time_budget_s": 120.0,
+            "executed_iterations": 228,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 15,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.327,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3273,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 15,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 13.32,
+            "time_budget_s": 120.0,
+            "executed_iterations": 133,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 14,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3271,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3274,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 16,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 17.06,
+            "time_budget_s": 120.0,
+            "executed_iterations": 163,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 13,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3204,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3207,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 17,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 16.34,
+            "time_budget_s": 120.0,
+            "executed_iterations": 149,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 12,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.4143,
+              "save_time_s": 0.0,
+              "total_time_s": 0.4148,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 18,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 25.8,
+            "time_budget_s": 120.0,
+            "executed_iterations": 233,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 11,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3336,
+              "save_time_s": 0.0,
+              "total_time_s": 0.334,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 19,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 16.9,
+            "time_budget_s": 120.0,
+            "executed_iterations": 180,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 10,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3646,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3651,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 20,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 20.95,
+            "time_budget_s": 120.0,
+            "executed_iterations": 192,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 9,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3575,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3579,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 21,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 17.83,
+            "time_budget_s": 120.0,
+            "executed_iterations": 126,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 8,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3423,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3427,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 22,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 25.22,
+            "time_budget_s": 120.0,
+            "executed_iterations": 254,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 7,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3496,
+              "save_time_s": 0.0,
+              "total_time_s": 0.35,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 23,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 15.89,
+            "time_budget_s": 120.0,
+            "executed_iterations": 148,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 6,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3343,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3346,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 24,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 25.19,
+            "time_budget_s": 120.0,
+            "executed_iterations": 216,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 5,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3235,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3238,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 25,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 20.32,
+            "time_budget_s": 120.0,
+            "executed_iterations": 167,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 4,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3551,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3555,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 26,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 14.41,
+            "time_budget_s": 120.0,
+            "executed_iterations": 141,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 3,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3212,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3215,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 27,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 27.1,
+            "time_budget_s": 120.0,
+            "executed_iterations": 223,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 2,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3216,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3219,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 28,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 27.61,
+            "time_budget_s": 120.0,
+            "executed_iterations": 214,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 1,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3437,
+              "save_time_s": 0.0,
+              "total_time_s": 0.344,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          },
+          {
+            "k": 29,
+            "served": 57,
+            "unserved": 3,
+            "feasible": false,
+            "runtime_s": 14.72,
+            "time_budget_s": 120.0,
+            "executed_iterations": 135,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 0,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 57,
+              "served_after": 57,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.3142,
+              "save_time_s": 0.0,
+              "total_time_s": 0.3145,
+              "critical_nodes_count": 282,
+              "matrix_nodes_count": 282,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "search_budget_exhausted": 3
+            }
+          }
+        ]
+      }
+    },
+    "door_to_door": {
+      "routes_created": 5,
+      "students_served": 60,
+      "students_unserved": 0,
+      "total_route_time_min": 190.59,
+      "base_route_time_min": 161.59,
+      "total_dwell_time_min": 29.0,
+      "dwell_time_per_stop_seconds": 30.0,
+      "total_route_dist_km": 86.85,
+      "avg_route_time_min": 38.12,
+      "alns_runtime_seconds": 2.82,
+      "mode_wall_time_seconds": null,
+      "operator_performance": {
+        "executed_iterations": 119,
+        "destroy": {
+          "random_removal": {
+            "count": 20,
+            "frequency_pct": 16.81,
+            "avg_time_s": 0.000154,
+            "best_time_s": 6.9e-05,
+            "worst_time_s": 0.000287,
+            "total_time_s": 0.003089
+          },
+          "worst_cost_removal": {
+            "count": 32,
+            "frequency_pct": 26.89,
+            "avg_time_s": 0.000657,
+            "best_time_s": 0.0,
+            "worst_time_s": 0.001361,
+            "total_time_s": 0.021011
+          },
+          "shaw_related_removal": {
+            "count": 30,
+            "frequency_pct": 25.21,
+            "avg_time_s": 0.000315,
+            "best_time_s": 0.000231,
+            "worst_time_s": 0.000637,
+            "total_time_s": 0.00946
+          },
+          "sequence_removal": {
+            "count": 14,
+            "frequency_pct": 11.76,
+            "avg_time_s": 0.000151,
+            "best_time_s": 8.9e-05,
+            "worst_time_s": 0.000336,
+            "total_time_s": 0.002113
+          },
+          "route_merge_removal": {
+            "count": 53,
+            "frequency_pct": 44.54,
+            "avg_time_s": 7.3e-05,
+            "best_time_s": 4e-05,
+            "worst_time_s": 0.000124,
+            "total_time_s": 0.003891
+          }
+        },
+        "repair": {
+          "random_order_best_repair": {
+            "count": 58,
+            "frequency_pct": 48.74,
+            "avg_time_s": 0.01257,
+            "best_time_s": 0.004496,
+            "worst_time_s": 0.031477,
+            "total_time_s": 0.729039
+          },
+          "regret_repair": {
+            "count": 91,
+            "frequency_pct": 76.47,
+            "avg_time_s": 0.02053,
+            "best_time_s": 0.004409,
+            "worst_time_s": 0.25006,
+            "total_time_s": 1.868239
+          }
+        }
+      },
+      "alns_diagnostics": {
+        "stop_reason": "no_improve_patience",
+        "stop_iteration": 119,
+        "stop_no_improve_iters": 100,
+        "merge_tail": {
+          "enabled": true,
+          "ran": true,
+          "iterations": 30,
+          "accepted": 30,
+          "best_improvements": 0,
+          "served_start": 60,
+          "served_end": 60,
+          "active_buses_start": 5,
+          "active_buses_end": 5
+        }
+      },
+      "insertion_debug": {
+        "routes_checked": 9964,
+        "routes_bbox_pruned": 0,
+        "candidates_considered": 9964,
+        "valid_insertions": 15625
+      },
+      "matrix_precompute": {
+        "source": "computed_osrm",
+        "loaded_from_pkl": false,
+        "saved_to_pkl": false,
+        "matrix_cache_pkl_path": null,
+        "load_time_s": 0.0,
+        "compute_time_s": 0.0464,
+        "save_time_s": 0.0,
+        "total_time_s": 0.0465,
+        "critical_nodes_count": 59,
+        "matrix_nodes_count": 59,
+        "cache_key_prefix": null,
+        "cache_entry_node_count": null,
+        "cache_loaded_finite_ratio": null,
+        "cache_loaded_inf_pairs": null,
+        "cache_loaded_finite_pairs": null,
+        "cache_guard_min_finite_ratio": 0.0001,
+        "cache_load_rejected": false,
+        "cache_load_reject_reason": null,
+        "cache_recomputed_after_reject": false,
+        "cache_context_seed": null,
+        "cache_context_student_count": 60
+      },
+      "synthetic_edges_timing": {
+        "source": "generated_synthetic",
+        "prepare_time_s": 2.1064,
+        "pkl_load_time_s": 0.0,
+        "generate_time_s": 1.7598,
+        "auto_save_pkl_time_s": 0.0,
+        "pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/crossings_nodes_injection.pkl"
+      },
+      "unsafe_crossings": 0,
+      "walk_stats": {
+        "avg_walk_dist_m": 34.3,
+        "median_walk_dist_m": 0.0,
+        "max_walk_dist_m": 319.3,
+        "min_walk_dist_m": 0.0,
+        "avg_walk_time_min": 0.43,
+        "avg_walk_utilisation_pct": null
+      },
+      "students": [
+        {
+          "id": "S008",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 4.08,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S027",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 6.11,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S001",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 5.22,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S025",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 7.41,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S036",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 9.18,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S037",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 2.22,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S057",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 1.82,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S010",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 1.07,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S007",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.67,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S059",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.58,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S045",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 5.49,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S028",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 8.46,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S046",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 7.06,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S054",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.04,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S048",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.81,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S032",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.38,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S026",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 3.17,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S058",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 0.83,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S004",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 1.59,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S020",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 2.35,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S038",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.9,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S033",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 2.76,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S053",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.48,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S052",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 4.31,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S047",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 3.48,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S055",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 4.74,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S031",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 3.39,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S016",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 3.48,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S009",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 4.55,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S018",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 3.95,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S006",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 6.05,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S039",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 6.28,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S012",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 8.86,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S056",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 8.26,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S017",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 7.22,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S024",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 6.8,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S042",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 6.07,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S041",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 5.95,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S044",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 5.04,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S051",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 4.44,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S023",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 3.98,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S043",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 3.63,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S019",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 2.75,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S005",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 3.4,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S011",
+          "stage": "HIGH",
+          "ride_time_min": null,
+          "direct_potential_min": 1.91,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S015",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 1.49,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S035",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 4.54,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S049",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 6.05,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S040",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 6.05,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S003",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 6.96,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S029",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 8.88,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S034",
+          "stage": "KG",
+          "ride_time_min": null,
+          "direct_potential_min": 8.29,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S030",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 8.83,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S060",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 7.75,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S021",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.06,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S002",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 4.36,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S050",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 4.86,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S022",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 5.51,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S014",
+          "stage": "MIDDLE",
+          "ride_time_min": null,
+          "direct_potential_min": 5.51,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S013",
+          "stage": "ELEMENTARY",
+          "ride_time_min": null,
+          "direct_potential_min": 1.38,
+          "walk_distance_m": 0.0
+        }
+      ],
+      "buses_available": 29,
+      "bus_capacity": 22,
+      "buses_used": 5,
+      "ride_cap_violations_am": 0,
+      "ride_cap_checked_am": 60,
+      "ride_cap_violation_pct_am": 0.0,
+      "ride_cap_violations_pm": 13,
+      "ride_cap_checked_pm": 60,
+      "ride_cap_violation_pct_pm": 21.7,
+      "total_walk_time_min": 25.8,
+      "total_time_with_walks_min": 216.39,
+      "fleet_search": {
+        "buses_used": 5,
+        "summary": "k=5 is the minimum feasible fleet size",
+        "search_log": [
+          {
+            "k": 3,
+            "served": 52,
+            "unserved": 8,
+            "feasible": false,
+            "runtime_s": 7.47,
+            "time_budget_s": 150.0,
+            "executed_iterations": 183,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 26,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 52,
+              "served_after": 52,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.0371,
+              "save_time_s": 0.0,
+              "total_time_s": 0.0372,
+              "critical_nodes_count": 59,
+              "matrix_nodes_count": 59,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "zero_walk_radius_no_valid_insertion": 8
+            }
+          },
+          {
+            "k": 4,
+            "served": 58,
+            "unserved": 2,
+            "feasible": false,
+            "runtime_s": 8.12,
+            "time_budget_s": 120.0,
+            "executed_iterations": 276,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 25,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 58,
+              "served_after": 58,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.0373,
+              "save_time_s": 0.0,
+              "total_time_s": 0.0374,
+              "critical_nodes_count": 59,
+              "matrix_nodes_count": 59,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {
+              "zero_walk_radius_no_valid_insertion": 2
+            }
+          },
+          {
+            "k": 5,
+            "served": 60,
+            "unserved": 0,
+            "feasible": true,
+            "runtime_s": 2.82,
+            "time_budget_s": 120.0,
+            "executed_iterations": 119,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 24,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 60,
+              "served_after": 60,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": null,
+              "load_time_s": 0.0,
+              "compute_time_s": 0.0464,
+              "save_time_s": 0.0,
+              "total_time_s": 0.0465,
+              "critical_nodes_count": 59,
+              "matrix_nodes_count": 59,
+              "cache_key_prefix": null,
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 60
+            },
+            "rejection_reasons": {}
+          }
+        ]
+      }
+    }
+  },
+  "comparison": {
+    "efficiency_gain_vs_d2d_pct": 12.5,
+    "safety_cost_vs_weakly_constrained_pct": 10.0,
+    "crossings_eliminated_vs_weakly_constrained": 0,
+    "strictly_constrained_total_time_min": 166.74,
+    "weakly_constrained_total_time_min": 151.59,
+    "door_to_door_total_time_min": 190.59
+  }
+}
