@@ -21,6 +21,8 @@
 \usepackage{fourier} 
 \usepackage{array}
 \usepackage{makecell}
+\usepackage{placeins}
+\usepackage{booktabs}
 \setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
 \setlength{\floatsep}{8pt plus 2pt minus 2pt}
 \setlength{\intextsep}{8pt plus 2pt minus 2pt}
@@ -189,7 +191,7 @@ This section details the computational framework developed to solve the Welfare-
 \subsection{Pipeline Overview}
 The implemented workflow follows five stages:
 \begin{enumerate}
-    \item \textbf{Data Generation and Graph Construction:} Synthesize student populations via an annulus-based distribution around the school, build drive and pedestrian graphs from OpenStreetMap, and cache reusable artifacts.
+    \item \textbf{Data Generation and Graph Construction:} Synthesize student populations via an annulus-based distribution around the school (Algorithm~\ref{alg:synthetic_data_gen}), build drive and pedestrian graphs from OpenStreetMap, and cache reusable artifacts.
     \item \textbf{School-Stage-Tiered Candidate Generation:} For each student, perform safety-filtered pedestrian search to enumerate reachable pickup nodes under mode-specific crossing rules (Strictly-Constrained, Weakly-Constrained, or Direct).
     \item \textbf{Pedestrian Graph Augmentation:} Inject synthetic pedestrian crossings between opposite carriageways (when safety predicates hold) to model informal crossing behavior not represented in car-centric topology.
     \item \textbf{ALNS Route Optimization:} Solve the service-maximization objective with destroy-repair neighborhoods and simulated-annealing acceptance.
@@ -199,9 +201,25 @@ The implemented workflow follows five stages:
 \subsection{Synthetic Dataset Generation}
 Due to privacy constraints and the lack of publicly available school registries in the studied region, student home locations are synthetically generated using a Gaussian annulus-based spatial distribution model. Rather than distributing students uniformly across the map, this approach more accurately models real-world school catchments where the density of bus-riding students is highest in a "commuter ring" at a specific distance from the school.
 
-Centered on a selected real-world school node, the generation process samples a student's distance from the school using a bounded Gaussian distribution (e.g., concentrated around a peak distance of 2.0 km with a specified standard deviation). To prevent unrealistic edge cases, generated distances that fall outside predefined minimum (e.g., 0.4 km) and maximum bounds are discarded and resampled. Then a uniformly random angle ($0$ to $2\pi$) is selected to determine the direction bearing. Finally, these polar variables (distance and angle) are translated into geographical latitude and longitude coordinates. 
+Centered on a selected real-world school node, the generation process samples a student's distance from the school using a bounded Gaussian distribution (e.g., concentrated around a peak distance of 2.0 km with a specified standard deviation). To prevent unrealistic edge cases, generated distances that fall outside predefined minimum (e.g., 0.4 km) and maximum bounds are discarded and resampled. Then a uniformly random angle ($0$ to $2\pi$) is selected to determine the direction bearing. Finally, these polar variables (distance and angle) are translated into geographical latitude and longitude coordinates. Algorithm~\ref{alg:synthetic_data_gen} summarizes the exact generation workflow used for experiments.
 
 Each generated student is assigned a specific school stage based on the school's specific demographics; otherwise we assume a uniform distribution of students across all school stages, which subsequently governs their allowable walking limits and safety-filtered permissions for crossing roads.
+
+\begin{algorithm}[!t]
+\caption{Synthetic Student Dataset Generation (Annulus-Gaussian)}
+\label{alg:synthetic_data_gen}
+\KwIn{School center $(\phi_c,\lambda_c)$, number of students $N$, distance bounds $[d_{min}, d_{max}]$, Gaussian parameters $(\mu_d,\sigma_d)$, stage policy}
+\KwOut{Student set $S$ with coordinates and school stages}
+$S \leftarrow \emptyset$\;
+\For{$i \leftarrow 1$ \KwTo $N$}{
+    Sample $d \sim \mathcal{N}(\mu_d,\sigma_d)$ until $d_{min} \le d \le d_{max}$\;
+    Sample $\theta \sim \mathcal{U}(0, 2\pi)$\;
+    Convert polar offset $(d,\theta)$ around $(\phi_c,\lambda_c)$ to geographic point $(\phi_i,\lambda_i)$\;
+    Sample school stage $g_i$ from configured stage distribution (or uniform fallback)\;
+    Create student $s_i=(\phi_i,\lambda_i,g_i)$ and append to $S$\;
+}
+\Return{$S$}\;
+\end{algorithm}
 
 \subsection{Candidate Stop Generation and Safety Modes}
 Candidate stops are not predefined; they are generated dynamically from each student location using pedestrian reachability under road-class safety rules. The three comparison modes are:
@@ -232,16 +250,19 @@ Truncate to top-$K$ mode-dependent candidates\;
 \end{algorithm}
 
 \subsection{ALNS Design}
-The optimizer uses an Adaptive Large Neighbourhood Search (ALNS) to solve the service-maximization objective. ALNS employs roulette-wheel operator selection with adaptive weight updates, allowing the algorithm to dynamically choose the most effective destroy and repair strategies based on recent success. Destroy operators include random removal, worst-cost removal, relatedness (Shaw-style) removal, sequence removal, and route-merge removal. Repair uses regret-based insertion as the primary reconstruction policy, with random-order best insertion as a diversification companion. Acceptance follows a simulated annealing (SA) criterion. Early stopping is triggered when objective improvement stalls over a configurable patience window. To eliminate excessive computation when an optimal state is reached, the optimizer employs a \textit{satisficing polishing window}: if all students are served and the active fleet size matches the theoretical minimum ($\lceil |S| / C \rceil$), the patience window is dynamically reduced to a tight threshold (e.g., 30 iterations) to polish routing efficiency and walking distances before terminating.
+The optimizer uses an Adaptive Large Neighbourhood Search (ALNS) to solve the service-maximization objective. ALNS employs roulette-wheel operator selection with adaptive weight updates, allowing the algorithm to dynamically choose the most effective destroy and repair strategies based on recent success. Destroy operators include random removal, worst-cost removal, relatedness (Shaw-style) removal, sequence removal, and route-merge removal. Repair uses regret-based insertion as the primary reconstruction policy, with random-order best insertion as a diversification companion. Acceptance follows a simulated annealing (SA) criterion. Stopping is hybrid: no-improvement patience, freeze-based stopping when temperature becomes very low, and wall-clock budget termination (after a minimum-iteration floor). To eliminate excessive computation when an optimal state is reached, the optimizer employs a \textit{satisficing polishing window}: if all students are served and the active fleet size matches the theoretical minimum ($\lceil |S| / C \rceil$), the patience window is tightened to a small constant (30 iterations). After the main loop, if all students are served but active fleet exceeds the theoretical minimum, an optional short merge-focused tail (route-merge destroy + regret repair) attempts additional fleet consolidation. A final repair pass then attempts to insert any remaining unserved students.
 
-\begin{algorithm}[h]
+\begin{algorithm}[!t]
 \caption{ALNS Framework Loop}
 \label{alg:alns_loop}
-\KwIn{Initial solution $x_0$, destroy set $\mathcal{D}$, repair set $\mathcal{R}$, temperature $T_0$, cooling $\gamma$, patience limit $P_{max}$}
+\KwIn{Initial solution $x_0$, destroy set $\mathcal{D}$, repair set $\mathcal{R}$, temperature $T_0$, cooling $\gamma$, patience limit $P_{max}$, time budget $B$, iteration floor $I_{floor}$, freeze threshold $T_{freeze}$, freeze patience $P_{freeze}$, merge-tail iterations $M$}
 \KwOut{Best solution $x^*$}
 $x \leftarrow x_0$; $x^* \leftarrow x_0$; initialize operator weights and scores\;
 $P_{current} \leftarrow P_{max}$ ; $stagnation \leftarrow 0$\;
 \For{$it \leftarrow 1$ \KwTo $it_{max}$}{
+    \If{$it > I_{floor}$ and elapsed wall-clock $\ge B$}{
+        \textbf{break} \tcp*{Time budget stop}
+    }
     Select destroy $d \in \mathcal{D}$ and repair $r \in \mathcal{R}$ via roulette-wheel over adaptive weights\;
     $x' \leftarrow r(d(x))$\;
     \If{$f(x') > f(x)$}{
@@ -261,22 +282,29 @@ $P_{current} \leftarrow P_{max}$ ; $stagnation \leftarrow 0$\;
     \If{all served in $x^*$ and active buses $\le \lceil |S|/C \rceil$}{
         $P_{current} \leftarrow \min(P_{current}, 30)$ \tcp*{Polishing window}
     }
-    \If{$stagnation > P_{current}$}{
+    \If{$it \ge I_{floor}$ and $stagnation \ge P_{current}$}{
         \textbf{break} \tcp*{Early stop triggered}
+    }
+    \If{$it \ge I_{floor}$ and $T \le T_{freeze}$ and $stagnation \ge P_{freeze}$}{
+        \textbf{break} \tcp*{Frozen search stop}
     }
     $T \leftarrow \gamma T$\;
 }
+\If{merge-tail enabled and all served and active buses $> \lceil |S|/C \rceil$}{
+    run $M$ merge-focused iterations under remaining budget\;
+}
+run one final repair pass for any unserved students\;
 \Return{$x^*$}\;
 \end{algorithm}
 
-Algorithm~\ref{alg:alns_loop} presents the outer search loop. It showcases the integration of adaptive operator selection, solution acceptance, cooling within the simulated annealing framework, and dynamic satisfaction-driven early stopping. Each ALNS iteration costs one destroy, one repair, and one acceptance decision; empirical runtime is dominated by insertion feasibility checks inside repair.
+Algorithm~\ref{alg:alns_loop} presents the implemented outer search structure, including time-budget and freeze-aware stopping, the satisficing polishing window, and the post-loop consolidation/rescue phases. Each main ALNS iteration costs one destroy, one repair, and one acceptance decision; empirical runtime is dominated by insertion feasibility checks inside repair.
 
 \subsection{Constraint Handling in Search}
 Each insertion is validated through a feasibility routine that checks bus capacity and personalized ride-time caps. The ride-time check supports two policies: morning-only strict enforcement or bidirectional leniency (default), where an insertion is rejected only if both AM and PM exceed the personalized cap. This design preserves welfare protection while reducing over-rejection caused by directional asymmetry in one-way street networks.
 
 Algorithm~\ref{alg:insertion_eval} gives the detailed feasibility evaluator used by repair operators. This evaluator is the main source of computational load during repair, because each candidate may trigger AM/PM cap checks plus downstream consistency checks for already assigned students. The benefit is strict welfare-feasibility control without requiring post-hoc repair of invalid routes.
 
-\begin{algorithm}[H]
+\begin{algorithm}[!t]
 \caption{Feasibility-Aware Insertion Evaluation}
 \label{alg:insertion_eval}
 \KwIn{Route $r$, student $s$, candidate stop $p$, insertion index $i$, cache/matrix, cap parameters}
@@ -294,6 +322,178 @@ Compute walking penalty $\phi_s$ for $s \rightarrow p$\;
 \If{walking is infeasible}{reject}\;
 \Return{valid, $(\text{detour delta} + \phi_s)$}\;
 \end{algorithm}
+
+\FloatBarrier
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{EXPERIMENTS}
+
+\subsection{Experimental Design}
+Mode A is \emph{Strictly-Constrained}, Mode B is \emph{Weakly-Constrained}, and
+Mode C is \emph{Direct (Door-to-Door)}. This section defines hypotheses,
+environment, datasets, and evaluation protocol before presenting results.
+
+\subsubsection{Research Hypotheses}
+\textbf{H1 (Efficiency):} Allowing limited walking (Mode B) improves operational
+efficiency relative to both strict safety (Mode A) and door-to-door (Mode C).
+\textbf{Primary metrics:} active routes (buses used), total route time (min),
+total route distance (km), and average occupancy
+$\left(\text{students served} / \text{routes}\right)$.
+
+\textbf{H2 (Safety):} Strict safety constraints (Mode A) reduce walking exposure
+without permitting unsafe crossings.
+\textbf{Primary metrics:} walking distance statistics (mean, median, max) and
+walk utilization rate. Unsafe crossing counts are expected to be zero by
+design, because synthetic crossings are not generated on dangerous road
+classes; thus safety is interpreted through reduced walking exposure and
+compliance with stage-specific limits.
+
+\textbf{H3 (Comfort):} Door-to-door service (Mode C) minimizes walking but can
+increase ride burden and efficiency cost; comfort gains are not free.
+\textbf{Primary metrics:} walking distance statistics, ride-cap violation counts
+and rates, and per-student travel burden
+$\left(\text{total route time} / \text{students served}\right)$.
+
+\textbf{H4 (Scalability / Search-Space Bottleneck):} At larger scales,
+candidate-space size dominates solver throughput, so smaller candidate sets
+(Mode C) yield higher iterations per second and faster convergence under fixed
+time budgets, even if they are not operationally optimal in smaller instances.
+\textbf{Primary metrics:} executed iterations, iterations per second, candidate
+counts considered, and served counts at large $|S|$. We anchor the scalability
+claim at $|S|=400$ (fully matched cohorts).
+
+\subsubsection{Simulation Environment and Hardware}
+All modes are executed in the same software pipeline and under identical
+algorithmic settings per paired seed. To support reproducibility and IEEE-style
+reporting, this subsection should include the exact execution stack used for
+the final runs:
+\begin{itemize}
+    \item CPU model and core/thread count.
+    \item RAM capacity.
+    \item Operating system and version.
+    \item Python version and key package versions.
+\end{itemize}
+\subsubsection{Dataset Description}
+We evaluated the three modes on synthetic datasets generated around a fixed
+school location, using the annulus distribution described in Section IV-B. We
+used Victory College School (Maadi, Cairo) as the anchor site and a bounded
+study area around Maadi to keep computation tractable. The bounding box corners
+were $(29.991682,31.331909)$ and $(29.92563,31.229084)$, corresponding to
+approximately $72.76\,\text{km}^2$. Students were generated only inside this
+bounding box.
+Each instance size uses multiple random seeds to capture geographic
+variability. For each seed, all three modes are run on the same student set,
+ensuring paired comparison across modes. Unless otherwise stated, algorithm
+parameters (time budget, candidate cap, destroy/repair operators, and
+ride-time constraints) are held constant across modes.
+
+\subsubsection{Evaluation Metrics}
+We report solution quality using four groups of metrics:
+\begin{itemize}
+    \item \textbf{Coverage:} students served, students unserved, and served rate.
+    \item \textbf{Efficiency:} active routes (buses used), total route time,
+    total route distance, and average occupancy
+    $\left(\text{students served} / \text{routes}\right)$.
+    \item \textbf{Comfort:} walking distance statistics (mean/median/max), walk
+    utilization rate, and ride-cap violation counts or rates.
+    \item \textbf{Runtime and Scalability:} executed iterations, iterations per
+    second, and candidate breadth proxies (e.g., candidates considered or
+    critical matrix nodes).
+\end{itemize}
+
+\subsubsection{Paired Comparison Protocol}
+For each instance size, we compute per-seed differences between modes
+(e.g., Mode A minus Mode B) and test whether the median paired difference is
+significantly different from zero using the Wilcoxon signed-rank test. This
+controls for seed-specific geography, so differences are attributed to the mode
+rather than random layout effects. We report mean $\pm$ SD descriptively,
+Wilcoxon $p$-values inferentially, and rank-biserial correlation as effect
+size. Across each hypothesis-family of comparisons, $p$-values are adjusted via
+Holm-Bonferroni ($\alpha=0.05$). Formal inference uses complete matched cohorts
+($|S|\in\{100,200,400\}$).
+
+\input{tables/table1_aggregate_metrics.tex}
+
+\input{tables/table2_wilcoxon_effects.tex}
+
+\section{RESULTS AND DISCUSSION}
+This section reports the empirical outcomes and interprets them with
+respect to H1--H4.
+
+\subsubsection{Comparative Analysis}
+Aggregate results (Table~\ref{tab:aggregate_metrics}) show a stable operational
+trade-off across complete cohorts. Mode B consistently reduced route-time and
+route-distance relative to Mode A (e.g., at $|S|=400$, $711.22\pm62.31$ min vs
+$804.26\pm29.03$ min; $315.81\pm42.57$ km vs $335.07\pm16.90$ km), while also
+using slightly fewer routes on average. Relative to Mode C, Mode B reduced
+route-time and distance at all complete scales, but often with lower coverage
+(e.g., at $|S|=400$, $95.75\%$ served for B vs $99.85\%$ for C). Walking burden
+was lowest in Mode C where available, and higher in walking-enabled modes.
+
+Inferentially (Table~\ref{tab:wilcoxon_effects}), many paired deltas had strong
+directionality in rank-biserial effect size, but none remained significant
+after Holm correction with only five matched seeds per complete cohort. We
+therefore interpret the findings as consistent practical trends rather than
+high-confidence population-level significance claims.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{figures/figure1_mode_comparison.png}
+\caption{Mode-level comparison across core outcomes (coverage, routes, route-time, and walking burden) by cohort.}
+\label{fig:mode_comparison}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{figures/figure4_walking_distribution.png}
+\caption{Walking-distance distributions by mode and cohort.}
+\label{fig:walking_distribution}
+\end{figure}
+
+\subsubsection{Performance and Scalability}
+Runtime and convergence diagnostics indicate scaling pressure as instance size
+increases, especially from $|S|=400$ onward. Convergence trajectories
+(Figure~\ref{fig:convergence}) show slower improvement blocks and earlier
+stagnation under larger candidate spaces, while scalability trends
+(Figure~\ref{fig:scalability}) show widening runtime variance at higher $|S|$.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{figures/figure2_convergence_curves.png}
+\caption{Mean best-objective convergence profile (shown on representative larger-cohort logs).}
+\label{fig:convergence}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{figures/figure3_scalability_trends.png}
+\caption{Scalability trends for runtime and throughput (iterations/second) by mode.}
+\label{fig:scalability}
+\end{figure}
+
+\subsubsection{Sensitivity Analysis (Optional)}
+Assess how key parameter changes (e.g., candidate cap, ride-time multiplier,
+or early-stopping settings) affect solution quality and runtime trade-offs.
+
+\section{CONCLUSION}
+The experiments show a consistent practical trade-off among efficiency, safety,
+and comfort under matched-seed evaluation on complete cohorts
+($|S|\in\{100,200,400\}$). Mode B generally improved operational efficiency
+relative to Mode A and Mode C, with lower route-time and route-distance across
+cohorts (e.g., at $|S|=400$: $711.22\pm62.31$ min and $315.81\pm42.57$ km for
+Mode B versus $804.26\pm29.03$ min and $335.07\pm16.90$ km for Mode A).
+Mode C generally delivered the highest coverage and the lowest walking burden,
+but often at higher route-time than Mode B, confirming a policy trade-off
+between operator efficiency and passenger-side convenience.
+
+Inferentially, Wilcoxon paired tests with Holm correction did not yield
+statistically significant differences at the current seed count, despite
+strongly directional rank-biserial effect sizes in multiple comparisons.
+Accordingly, we treat the evidence as robust directional trends rather than
+population-level definitive effects.
+
+Future work should expand matched large-scale cohorts and report hardware-fixed
+repetitions to tighten uncertainty bands for inferential claims.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \clearpage
