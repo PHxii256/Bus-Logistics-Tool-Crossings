@@ -77,7 +77,9 @@ def save_run(input_data: dict, output_data: dict, report_data: dict,
 # GRAPH SETUP
 # ============================================================================
 
-_DEFAULT_BBOX = [31.229084, 29.925630, 31.331909, 29.991682]
+
+# FORMAT: long1 latl1, long2, lat2
+_DEFAULT_BBOX = [31.229084, 29.925630, 31.33660186220229, 30.048847047121367]
 _ROAD_SPEEDS_CONFIG_PATH = 'road_speeds_config.json'
 
 def _load_road_speeds(override: dict = None) -> dict:

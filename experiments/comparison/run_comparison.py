@@ -524,7 +524,12 @@ def _prebuild_ball_tree(G):
 def _relax_ride_constraints(d):
     """Disable per-route ride-time caps so only the walking variable differs."""
     d["meta"].setdefault("constraints", {}).update(
-        {"ride_time_multiplier": 999, "floor_minutes": 999, "ceiling_minutes": 999}
+        {
+            "ride_time_multiplier": 999,
+            "floor_minutes": 999,
+            "ceiling_minutes": 999,
+            "mrt_enabled": False,
+        }
     )
     return d
 
@@ -938,6 +943,12 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
     ride_k       = float(con.get("ride_time_multiplier", 2.5))
     floor_min    = float(con.get("floor_minutes",        45))
     ceiling_min  = float(con.get("ceiling_minutes",      60))
+    mrt_enabled  = bool(con.get("mrt_enabled", con.get("mrt enabled", False)))
+    mrt_raw      = con.get("mrt", None)
+    try:
+        mrt_minutes = float(mrt_raw) if mrt_raw is not None else None
+    except (TypeError, ValueError):
+        mrt_minutes = None
     caps_enabled = bool(con.get("enabled",              True))
 
     show = mode_key in ("A", "B")   # show constrained + unconstrained by default
@@ -1042,8 +1053,16 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
                 k_eff = getattr(route, 'ride_time_multiplier', ride_k)
                 fl    = getattr(route, 'floor_minutes',        floor_min)
                 ce    = getattr(route, 'ceiling_minutes',      ceiling_min)
+                mrt_on = bool(getattr(route, 'mrt_enabled', mrt_enabled))
+                mrt_val = getattr(route, 'mrt_minutes', mrt_minutes)
+                try:
+                    mrt_val = float(mrt_val) if mrt_val is not None else None
+                except (TypeError, ValueError):
+                    mrt_val = None
 
                 def _cap(d):
+                    if mrt_on and mrt_val is not None and mrt_val > 0:
+                        return mrt_val
                     if d is None or d <= 0:
                         return float('inf')
                     return max(fl, min(k_eff * d, d + ce))
@@ -1103,6 +1122,12 @@ def _count_satisfied_per_route(sol, G, constraints):
     k       = float(con.get('ride_time_multiplier', 2.5))
     fl      = float(con.get('floor_minutes',        45))
     ce      = float(con.get('ceiling_minutes',      60))
+    mrt_enabled = bool(con.get("mrt_enabled", con.get("mrt enabled", False)))
+    mrt_raw = con.get("mrt", None)
+    try:
+        mrt_minutes = float(mrt_raw) if mrt_raw is not None else None
+    except (TypeError, ValueError):
+        mrt_minutes = None
     bidir   = bool(con.get('bidirectional_check',   True))
     caps_on = bool(con.get('enabled',               True))
 
@@ -1140,7 +1165,11 @@ def _count_satisfied_per_route(sol, G, constraints):
                     direct_am = None
                 cap_am = _cap(direct_am)
                 am_ok  = ride_am <= cap_am
-                if not bidir:
+                if mrt_enabled and mrt_minutes is not None and mrt_minutes > 0:
+                    ride_pm = _compute_pm_ride_time(route, stop, G)
+                    if ride_am <= mrt_minutes and ride_pm <= mrt_minutes:
+                        satisfied += 1
+                elif not bidir:
                     if am_ok:
                         satisfied += 1
                 else:
@@ -1186,6 +1215,12 @@ def _count_cap_violations(sol, G, constraints):
     k_mult = float(constraints.get("ride_time_multiplier", 2.5))
     floor_min = float(constraints.get("floor_minutes", 45))
     ceiling_min = float(constraints.get("ceiling_minutes", 60))
+    mrt_enabled = bool(constraints.get("mrt_enabled", constraints.get("mrt enabled", False)))
+    mrt_raw = constraints.get("mrt", None)
+    try:
+        mrt_minutes = float(mrt_raw) if mrt_raw is not None else None
+    except (TypeError, ValueError):
+        mrt_minutes = None
 
     def _edge_time(u, v):
         t = _MATRIX_CACHE.get((u, v), None)
@@ -1241,10 +1276,13 @@ def _count_cap_violations(sol, G, constraints):
             ride_am = am_time_by_stop.get(stop)
             ride_pm = pm_time_by_stop.get(stop)
             for student in stop.students:
-                direct_time = compute_direct_time(student, school_node, G)
-                if direct_time is None or not math.isfinite(direct_time) or direct_time <= 0:
-                    continue
-                cap = max(floor_min, min(k_mult * direct_time, direct_time + ceiling_min))
+                if mrt_enabled and mrt_minutes is not None and mrt_minutes > 0:
+                    cap = mrt_minutes
+                else:
+                    direct_time = compute_direct_time(student, school_node, G)
+                    if direct_time is None or not math.isfinite(direct_time) or direct_time <= 0:
+                        continue
+                    cap = max(floor_min, min(k_mult * direct_time, direct_time + ceiling_min))
 
                 if ride_am is not None:
                     am_checked += 1
@@ -2290,6 +2328,8 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                 "floor_minutes": meta.get("constraints", {}).get("floor_minutes"),
                 "ceiling_minutes": meta.get("constraints", {}).get("ceiling_minutes"),
                 "bidirectional_check": meta.get("constraints", {}).get("bidirectional_check"),
+                "mrt_enabled": meta.get("constraints", {}).get("mrt_enabled", meta.get("constraints", {}).get("mrt enabled", False)),
+                "mrt": meta.get("constraints", {}).get("mrt"),
             },
             "algorithm": {
                 "time_budget_seconds": meta.get("algorithm", {}).get("time_budget_seconds"),

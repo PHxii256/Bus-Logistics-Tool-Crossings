@@ -119,7 +119,7 @@ class Route:
     """
     def __init__(self, bus, route_id=None, route_tmax=60,
                  ride_time_multiplier=2.5, floor_minutes=45, ceiling_minutes=30,
-                 bidirectional_check=True):
+                 bidirectional_check=True, mrt_enabled=False, mrt_minutes=None):
         """Initialize a Route.
         
         Args:
@@ -133,6 +133,9 @@ class Route:
             bidirectional_check: If True, a student is only rejected for ride-time when BOTH
                                  the morning (home→school) AND afternoon (school→home) rides
                                  exceed their cap.  If False, only the morning ride is checked.
+            mrt_enabled: If True, enforce a fixed hard cap (mrt_minutes) on both AM and PM rides,
+                         overriding multiplier/floor/ceiling and bidirectional leniency.
+            mrt_minutes: Fixed maximum ride time (minutes) when mrt_enabled is True.
         """
         self.bus = bus
         self.stops = [] # List of Stop objects in order
@@ -145,6 +148,8 @@ class Route:
         self.floor_minutes        = floor_minutes
         self.ceiling_minutes      = ceiling_minutes
         self.bidirectional_check  = bidirectional_check
+        self.mrt_enabled          = bool(mrt_enabled)
+        self.mrt_minutes          = mrt_minutes
         self.detour_time_used = 0  # Track temporary detour time used today
         
     def get_revenue(self):
