@@ -380,8 +380,35 @@ def _map_to_walk_node(node_id, drive_graph, walk_graph, generate_synthetic=False
         lon = drive_graph.nodes[node_id]['x']
     except Exception:
         return None
-    # Avoid building a second huge BallTree for walk graph (memory-heavy).
-    mapped = ox.nearest_nodes(walk_graph, lon, lat)
+    
+    # Check if walk_graph contains synthetic nodes (string IDs).
+    # ox.nearest_nodes() only works with integer node IDs.
+    has_synthetic = any(isinstance(n, str) and n.startswith('synth_') for n in list(walk_graph.nodes())[:100])
+    
+    if has_synthetic:
+        # Manual nearest neighbor search using haversine distance
+        import math
+        min_dist = float('inf')
+        mapped = None
+        for n in walk_graph.nodes():
+            node_data = walk_graph.nodes[n]
+            node_lat = node_data.get('y')
+            node_lon = node_data.get('x')
+            if node_lat is None or node_lon is None:
+                continue
+            # Haversine distance
+            phi1, phi2 = math.radians(lat), math.radians(node_lat)
+            dphi = phi2 - phi1
+            dlambda = math.radians(node_lon - lon)
+            a = math.sin(dphi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2)**2
+            dist = 2 * math.asin(math.sqrt(a))
+            if dist < min_dist:
+                min_dist = dist
+                mapped = n
+    else:
+        # Use fast ox.nearest_nodes for integer-only graphs
+        mapped = ox.nearest_nodes(walk_graph, lon, lat)
+    
     _WALK_NODE_MAP_CACHE[cache_key] = mapped
     if generate_synthetic:
         _ensure_synthetic_near_drive_node(node_id, drive_graph, walk_graph, mapped)
@@ -1999,12 +2026,14 @@ def calculate_route_time_from_matrix(stops, graph=None):
         if pair in _MATRIX_CACHE:
             t = _MATRIX_CACHE[pair]
             if t == float('inf'):
+                print(f"[DEBUG] Pair {pair} in cache but value is inf")
                 return 9999.0
             total += t
         elif graph is not None:
             # Lazy compute: run A* once, result is cached for future lookups
             path, t = find_shortest_path_with_turns(graph, pair[0], pair[1])
             if t == float('inf'):
+                print(f"[DEBUG] A* for pair {pair} returned inf (no path found)")
                 return 9999.0
             # Also compute length while we have the path
             if path:
@@ -2017,6 +2046,7 @@ def calculate_route_time_from_matrix(stops, graph=None):
                 _MATRIX_CACHE_LENGTH[pair] = dist_m
             total += t
         else:
+            print(f"[DEBUG] calculate_route_time_from_matrix: No graph provided for pair {pair}, returning None")
             return None  # No graph provided, can't compute
     return total
 
@@ -2386,8 +2416,29 @@ def _bfs_walk_graph_to_drive_nodes(coords, drive_graph, walk_graph, walk_distanc
     drive_start = fast_nearest_node(drive_graph, lon, lat)
     walk_start = _map_to_walk_node(drive_start, drive_graph, walk_graph)
     if walk_start is None:
-        # Fallback: direct snap to walk graph
-        walk_start = ox.nearest_nodes(walk_graph, lon, lat)
+        # Fallback: direct snap to walk graph (handles synthetic nodes)
+        has_synthetic = any(isinstance(n, str) and n.startswith('synth_') for n in list(walk_graph.nodes())[:100])
+        if has_synthetic:
+            # Manual search for synthetic-aware graphs
+            import math
+            min_dist = float('inf')
+            walk_start = None
+            for n in walk_graph.nodes():
+                node_data = walk_graph.nodes[n]
+                node_lat = node_data.get('y')
+                node_lon = node_data.get('x')
+                if node_lat is None or node_lon is None:
+                    continue
+                phi1, phi2 = math.radians(lat), math.radians(node_lat)
+                dphi = phi2 - phi1
+                dlambda = math.radians(node_lon - lon)
+                a = math.sin(dphi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2)**2
+                dist = 2 * math.asin(math.sqrt(a))
+                if dist < min_dist:
+                    min_dist = dist
+                    walk_start = n
+        else:
+            walk_start = ox.nearest_nodes(walk_graph, lon, lat)
 
     # BFS on walk graph
     # Track: (walk_node, distance, crossed_synthetic)

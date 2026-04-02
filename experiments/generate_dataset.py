@@ -181,7 +181,7 @@ def generate_dataset(
     peak_km  = annulus.get("peak_km",  2.0)
     sigma_km = annulus.get("sigma_km", 1.0)
     min_km   = annulus.get("min_km",   0.4)
-    max_km   = annulus.get("max_km",   5.0)
+    max_km_config   = annulus.get("max_km",   5.0)
 
     center_lat, center_lon = school["latitude"], school["longitude"]
     print(f"Generating {n_students} students around {school.get('name', 'School')}...")
@@ -201,6 +201,43 @@ def generate_dataset(
             except:
                 G = ox.graph_from_bbox(north, south, east, west,
                                        network_type='drive', simplify=False)
+
+    # ── Dynamic max_km based on graph bbox ──
+    # Calculate distance from school to farthest corner of bbox to prevent
+    # students spawning outside the downloaded graph area
+    from math import radians, cos, sin, asin, sqrt
+    
+    def haversine_km(lat1, lon1, lat2, lon2):
+        """Calculate great-circle distance in km between two lat/lon points."""
+        lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+        c = 2 * asin(sqrt(a))
+        return 6371.0 * c  # Earth radius in km
+    
+    # Get bbox from graph nodes
+    lats = [G.nodes[n]['y'] for n in G.nodes]
+    lons = [G.nodes[n]['x'] for n in G.nodes]
+    bbox_north, bbox_south = max(lats), min(lats)
+    bbox_east, bbox_west = max(lons), min(lons)
+    
+    # Calculate distance to each corner
+    corners = [
+        (bbox_north, bbox_east),
+        (bbox_north, bbox_west),
+        (bbox_south, bbox_east),
+        (bbox_south, bbox_west),
+    ]
+    bbox_max_dist = max(haversine_km(center_lat, center_lon, clat, clon) 
+                        for clat, clon in corners)
+    
+    # Set max_km to 95% of bbox max distance (slight margin for safety)
+    max_km = min(max_km_config, bbox_max_dist * 0.95)
+    
+    print(f"  Graph bbox: N={bbox_north:.4f}, S={bbox_south:.4f}, E={bbox_east:.4f}, W={bbox_west:.4f}")
+    print(f"  Max distance to bbox corner: {bbox_max_dist:.2f} km")
+    print(f"  Annulus max_km: configured={max_km_config:.1f} km, auto-adjusted={max_km:.2f} km (bbox constraint)")
 
     # ── Restricted zones ──
     print("Fetching restricted landuse zones...")

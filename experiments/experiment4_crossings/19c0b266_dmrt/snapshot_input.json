@@ -78,7 +78,7 @@
 "algorithm": {
     "iterations": 10000,
     "time_budget_seconds": 60,
-    "max_candidates_per_student": 6,
+    "max_candidates_per_student": 3,
     "minimize_buses": true,
     "early_stop_patience": 100,
     "early_stop_min_improvement": 10,
@@ -87,8 +87,8 @@
   },
 
   "annulus": {
-    "peak_km": 20.0,
-    "sigma_km": 1.0,
+    "peak_km": 2.0,
+    "sigma_km": 5.0,
     "min_km": 0.4,
     "max_km": 80.0
   },

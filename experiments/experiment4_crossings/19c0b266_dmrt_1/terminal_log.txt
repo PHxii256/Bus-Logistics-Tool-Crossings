@@ -1,0 +1,863 @@
+Experiment 4 – Crossings
+  Config hash  : 19c0b266
+  MRT Status   : dmrt
+  Run folder   : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/19c0b266_dmrt_1
+  Input config : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/input.json
+  Output map   : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/19c0b266_dmrt_1/comparison_map.html
+
+  Matrix cache cfg: enabled=False, force_disable=False, isolate_per_run=False, min_finite_ratio=0.0001
+============================================================
+  THREE-MODE ROUTING COMPARISON  (input.json)
+============================================================
+  Students : 400
+  Seed     : 2000
+  Stages   : {'KG': 0.25, 'ELEMENTARY': 0.25, 'MIDDLE': 0.25, 'HIGH': 0.25}
+  Walk lim : {'KG': 0, 'ELEMENTARY': 0, 'MIDDLE': 250, 'HIGH': 500}
+  Iters    : 10000
+  Dwell    : 30s per pickup stop
+  BuildMap : ON
+  Running  : Door-to-Door
+  Skipping : Strictly Constrained, Weakly Constrained (debug flags)
+
+  Random seed: 2000 (ALNS deterministic)
+[1/7] Generating dataset …
+Generating 400 students around Victory College School...
+Downloading graph around school (5 km radius)...
+Fetching restricted landuse zones...
+  Loaded 18 restricted-zone polygons.
+Found 4244 nodes on restricted highways.
+Placement stats: 4 restricted-zone rejections, 72 no-residential rejections.
+  Stage breakdown: {'KG': 107, 'HIGH': 85, 'MIDDLE': 91, 'ELEMENTARY': 117}
+
+[2/7] Building STRICTLY CONSTRAINED graph …
+Loading cached road network (pickle): cache/graph_734648a4.pkl
+Applying road speed config...
+Adding edge bearings for turn-penalty calculations...
+Graph ready: 604679 nodes, 1605743 edges
+
+  Pre-building BallTree …  [snap] BallTree built for 604,679 nodes
+ 1.0s
+[3/7] Building WEAKLY CONSTRAINED graph …
+Loading cached road network (pickle): cache/graph_734648a4.pkl
+Applying road speed config...
+Adding edge bearings for turn-penalty calculations...
+Graph ready: 604679 nodes, 1605743 edges
+
+[3b/7] Building WALK graph...
+Loading cached walking network (pickle): cache/graph_walk_a220ac69.pkl
+Walk graph ready: 11140 nodes, 31268 edges
+
+
+--------------------------------------------------
+MODE A: SKIPPED (debug.run_mode_a=false)
+--------------------------------------------------
+
+--------------------------------------------------
+MODE B: SKIPPED (debug.run_mode_b=false)
+--------------------------------------------------
+
+--------------------------------------------------
+MODE C: Door-to-Door (walk=0, bus visits every home)
+--------------------------------------------------
+  Pre-building BallTree …  [snap] BallTree built for 604,679 nodes
+ 5.0s
+  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode C
+
+[FleetSearch] 400 students, capacity 22, searching k=19..20
+[Optimization] Preparing distance matrix...
+Asking local OSRM to calculate matrix for 339 nodes...
+OSRM Matrix calculation complete! Cache populated.
+Starting ALNS Optimization (time budget: 300.0s, max 10000 iterations)...
+Initial State: ServiceSolution(served=0/400, objective=0.00)
+Iteration 10: Best Obj = 2904018.70, Temp = 817.1, Last 10 iter: 6.06s
+Iteration 20: Best Obj = 3343973.73, Temp = 667.6, Last 10 iter: 12.56s
+Iteration 30: Best Obj = 3393971.17, Temp = 545.5, Last 10 iter: 8.32s
+Iteration 40: Best Obj = 3403968.37, Temp = 445.7, Last 10 iter: 9.02s
+Iteration 50: Best Obj = 3423966.61, Temp = 364.2, Last 10 iter: 6.31s
+Iteration 60: Best Obj = 3443967.32, Temp = 297.6, Last 10 iter: 8.08s
+Iteration 70: Best Obj = 3463956.58, Temp = 243.1, Last 10 iter: 8.57s
+Iteration 80: Best Obj = 3463956.58, Temp = 198.6, Last 10 iter: 9.20s
+Iteration 90: Best Obj = 3473947.25, Temp = 162.3, Last 10 iter: 5.05s
+Iteration 100: Best Obj = 3483956.74, Temp = 132.6, Last 10 iter: 7.73s
+Iteration 110: Best Obj = 3493958.55, Temp = 108.4, Last 10 iter: 9.65s
+Iteration 120: Best Obj = 3503961.26, Temp = 88.5, Last 10 iter: 8.57s
+Iteration 130: Best Obj = 3513964.59, Temp = 72.3, Last 10 iter: 9.49s
+Iteration 140: Best Obj = 3523960.36, Temp = 59.1, Last 10 iter: 7.92s
+Iteration 150: Best Obj = 3533962.51, Temp = 48.3, Last 10 iter: 9.97s
+Iteration 160: Best Obj = 3533962.51, Temp = 39.5, Last 10 iter: 5.27s
+Iteration 170: Best Obj = 3553950.78, Temp = 32.2, Last 10 iter: 7.55s
+Iteration 180: Best Obj = 3563952.51, Temp = 26.3, Last 10 iter: 5.92s
+Iteration 190: Best Obj = 3563952.51, Temp = 21.5, Last 10 iter: 5.87s
+Iteration 200: Best Obj = 3563952.51, Temp = 17.6, Last 10 iter: 6.10s
+Iteration 210: Best Obj = 3563962.66, Temp = 14.4, Last 10 iter: 8.21s
+Iteration 220: Best Obj = 3573962.18, Temp = 11.7, Last 10 iter: 7.81s
+Iteration 230: Best Obj = 3583958.09, Temp = 9.6, Last 10 iter: 7.54s
+Iteration 240: Best Obj = 3583958.09, Temp = 7.8, Last 10 iter: 6.93s
+Iteration 250: Best Obj = 3583958.09, Temp = 6.4, Last 10 iter: 5.95s
+Iteration 260: Best Obj = 3623944.27, Temp = 5.2, Last 10 iter: 5.48s
+Iteration 270: Best Obj = 3623944.27, Temp = 4.3, Last 10 iter: 5.35s
+Iteration 280: Best Obj = 3643939.32, Temp = 3.5, Last 10 iter: 6.38s
+Iteration 290: Best Obj = 3663934.96, Temp = 2.9, Last 10 iter: 5.30s
+Iteration 300: Best Obj = 3663934.96, Temp = 2.3, Last 10 iter: 4.91s
+Iteration 310: Best Obj = 3663934.96, Temp = 1.9, Last 10 iter: 6.13s
+Iteration 320: Best Obj = 3663934.96, Temp = 1.6, Last 10 iter: 6.35s
+Iteration 330: Best Obj = 3663934.96, Temp = 1.3, Last 10 iter: 7.57s
+Iteration 340: Best Obj = 3663934.96, Temp = 1.0, Last 10 iter: 8.00s
+  Early stop: temperature <= 1 and no improvement for 53 iterations.
+Optimization Complete.
+Total Time: 249.98s
+Final State: ServiceSolution(served=376/400, objective=3663934.96)
+Running final repair pass on 24 unserved students...
+  Repair pass: no additional students could be inserted.
+  Fleet 19: 376/400 served  [zero_walk_radius_no_valid_insertion: 24]
+[Optimization] Preparing distance matrix...
+Asking local OSRM to calculate matrix for 339 nodes...
+OSRM Matrix calculation complete! Cache populated.
+Starting ALNS Optimization (time budget: 300.0s, max 10000 iterations)...
+Initial State: ServiceSolution(served=0/400, objective=0.00)
+Iteration 10: Best Obj = 2838968.80, Temp = 817.1, Last 10 iter: 5.59s
+Iteration 20: Best Obj = 3198944.18, Temp = 667.6, Last 10 iter: 8.74s
+Iteration 30: Best Obj = 3428935.06, Temp = 545.5, Last 10 iter: 9.96s
+Iteration 40: Best Obj = 3488915.02, Temp = 445.7, Last 10 iter: 5.83s
+Iteration 50: Best Obj = 3598903.51, Temp = 364.2, Last 10 iter: 6.32s
+Iteration 60: Best Obj = 3668880.94, Temp = 297.6, Last 10 iter: 5.39s
+Iteration 70: Best Obj = 3668899.29, Temp = 243.1, Last 10 iter: 4.33s
+Iteration 80: Best Obj = 3678892.99, Temp = 198.6, Last 10 iter: 4.99s
+Iteration 90: Best Obj = 3678892.99, Temp = 162.3, Last 10 iter: 3.09s
+Iteration 100: Best Obj = 3688894.03, Temp = 132.6, Last 10 iter: 6.21s
+Iteration 110: Best Obj = 3718911.41, Temp = 108.4, Last 10 iter: 3.49s
+Iteration 120: Best Obj = 3728894.27, Temp = 88.5, Last 10 iter: 3.51s
+Iteration 130: Best Obj = 3728894.27, Temp = 72.3, Last 10 iter: 3.84s
+Iteration 140: Best Obj = 3778890.44, Temp = 59.1, Last 10 iter: 4.69s
+Iteration 150: Best Obj = 3788888.28, Temp = 48.3, Last 10 iter: 3.57s
+Iteration 160: Best Obj = 3798886.55, Temp = 39.5, Last 10 iter: 4.52s
+Iteration 170: Best Obj = 3798886.55, Temp = 32.2, Last 10 iter: 3.73s
+Iteration 180: Best Obj = 3798886.55, Temp = 26.3, Last 10 iter: 3.09s
+Iteration 190: Best Obj = 3798886.55, Temp = 21.5, Last 10 iter: 4.44s
+Iteration 200: Best Obj = 3798886.55, Temp = 17.6, Last 10 iter: 5.66s
+Iteration 210: Best Obj = 3808884.62, Temp = 14.4, Last 10 iter: 5.54s
+Iteration 220: Best Obj = 3808884.62, Temp = 11.7, Last 10 iter: 4.15s
+Iteration 230: Best Obj = 3808884.62, Temp = 9.6, Last 10 iter: 3.36s
+Iteration 240: Best Obj = 3818876.20, Temp = 7.8, Last 10 iter: 3.77s
+Iteration 250: Best Obj = 3828872.66, Temp = 6.4, Last 10 iter: 4.50s
+Iteration 260: Best Obj = 3828872.66, Temp = 5.2, Last 10 iter: 3.06s
+Iteration 270: Best Obj = 3828872.66, Temp = 4.3, Last 10 iter: 2.81s
+Iteration 280: Best Obj = 3828872.66, Temp = 3.5, Last 10 iter: 3.03s
+Iteration 290: Best Obj = 3828872.66, Temp = 2.9, Last 10 iter: 3.48s
+Iteration 300: Best Obj = 3828872.66, Temp = 2.3, Last 10 iter: 2.05s
+Iteration 310: Best Obj = 3838870.89, Temp = 1.9, Last 10 iter: 2.98s
+Iteration 320: Best Obj = 3838870.89, Temp = 1.6, Last 10 iter: 3.33s
+Iteration 330: Best Obj = 3838870.89, Temp = 1.3, Last 10 iter: 2.33s
+Iteration 340: Best Obj = 3838870.89, Temp = 1.0, Last 10 iter: 2.68s
+  Early stop: temperature <= 1 and no improvement for 39 iterations.
+Optimization Complete.
+Total Time: 148.34s
+Final State: ServiceSolution(served=394/400, objective=3838870.89)
+Running final repair pass on 6 unserved students...
+  Repair pass: no additional students could be inserted.
+  Fleet 20: 394/400 served  [zero_walk_radius_no_valid_insertion: 6]
+  [C] 394/400 served | routes=20 | time=918.9 min | 138.6s
+
+--------------------------------------------------
+BUILDING COMPARISON MAP
+--------------------------------------------------
+  Dangerous-road segments: 1486
+  Unclassified-road segments: 252
+  Drawing Mode C …
+  Synthetic crossings (markers): 309
+
+  Map saved: /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/19c0b266_dmrt_1/comparison_map.html  (3988 KB)
+[DEBUG] Building metrics for mode C: sol has 20 routes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=21
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=20
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=19, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=20, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=23
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=22
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=21
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=20
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=19, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=20, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=21, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=22, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=22
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=21
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=20
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=19, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=20, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=21, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=21
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=20
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=19, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=20, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=20
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=19, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=21
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=20
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=19, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=20, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=20
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=19, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=22
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=21
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=20
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=19, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=20, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=21, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=20
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=19, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+  Metrics  : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/19c0b266_dmrt_1/output.json
+  ALNS log : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/19c0b266_dmrt_1/alns_log_mode_c.json
+
+============================================================
+  COMPARISON SUMMARY DMRT
+============================================================
+Mode                           Routes     Time     Dist   Served  Crossings  Wall(s)
+------------------------------------------------------------------------------------
+Door-to-Door (No Walking)          20    918.9    436.2 394/  400          0    371.9
+Strictly Constrained (Safe Walking)                                            — SKIPPED —
+Weakly Constrained (Any Walking)                                            — SKIPPED —
+
+Wall-clock per mode:  C=371.9s
+Total wall-clock:     565.8s
+
+Stage distribution used: {'KG': 0.25, 'ELEMENTARY': 0.25, 'MIDDLE': 0.25, 'HIGH': 0.25}
+Walk limits used: {'KG': 0, 'ELEMENTARY': 0, 'MIDDLE': 250, 'HIGH': 500}
+
+Open '/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/19c0b266_dmrt_1/comparison_map.html' in a browser to explore.

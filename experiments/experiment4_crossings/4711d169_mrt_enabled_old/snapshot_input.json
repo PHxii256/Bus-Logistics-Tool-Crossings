@@ -36,7 +36,7 @@
     "ceiling_minutes": 60,
     "daily_detour_budget_minutes": 10,
     "bidirectional_check": true,
-    "mrt_enabled": false,
+    "mrt_enabled": true,
     "mrt": 120
   },
     
@@ -78,7 +78,7 @@
 "algorithm": {
     "iterations": 10000,
     "time_budget_seconds": 60,
-    "max_candidates_per_student": 3,
+    "max_candidates_per_student": 6,
     "minimize_buses": true,
     "early_stop_patience": 100,
     "early_stop_min_improvement": 10,
@@ -90,7 +90,7 @@
     "peak_km": 2.0,
     "sigma_km": 5.0,
     "min_km": 0.4,
-    "max_km": 120.0
+    "max_km": 80.0
   },
 
   "output": "comparison_map.html",
@@ -99,11 +99,6 @@
     "run_mode_a": false,
     "run_mode_b": false,
     "run_mode_c": true,
-    "run_build_map": true,
-    "visualize_walk_graph": {
-      "enabled": true,
-      "sample_rate": 0.2
-    },
-    "_comment": "visualize_walk_graph: enabled=true/false, sample_rate=1.0 (all edges) or 0.2 (20% sample)"
+    "run_build_map": true
   }
 }

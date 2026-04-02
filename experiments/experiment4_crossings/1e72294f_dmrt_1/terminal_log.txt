@@ -1,0 +1,2529 @@
+Experiment 4 – Crossings
+  Config hash  : 1e72294f
+  MRT Status   : dmrt
+  Run folder   : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/1e72294f_dmrt_1
+  Input config : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/input.json
+  Output map   : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/1e72294f_dmrt_1/comparison_map.html
+
+  Matrix cache cfg: enabled=False, force_disable=False, isolate_per_run=False, min_finite_ratio=0.0001
+============================================================
+  THREE-MODE ROUTING COMPARISON  (input.json)
+============================================================
+  Students : 400
+  Seed     : 2000
+  Stages   : {'KG': 0.25, 'ELEMENTARY': 0.25, 'MIDDLE': 0.25, 'HIGH': 0.25}
+  Walk lim : {'KG': 0, 'ELEMENTARY': 0, 'MIDDLE': 250, 'HIGH': 500}
+  Iters    : 10000
+  Dwell    : 30s per pickup stop
+  BuildMap : ON
+  Running  : Door-to-Door
+  Skipping : Strictly Constrained, Weakly Constrained (debug flags)
+
+  Random seed: 2000 (ALNS deterministic)
+[1/7] Generating dataset …
+Generating 400 students around Victory College School...
+Downloading graph around school (5 km radius)...
+  Graph bbox: N=30.0094, S=29.9196, E=31.3222, W=31.2185
+  Max distance to bbox corner: 7.07 km
+  Annulus max_km: configured=120.0 km, auto-adjusted=6.72 km (bbox constraint)
+Fetching restricted landuse zones...
+  Loaded 18 restricted-zone polygons.
+Found 4244 nodes on restricted highways.
+Placement stats: 1 restricted-zone rejections, 38 no-residential rejections.
+  Stage breakdown: {'KG': 104, 'HIGH': 101, 'ELEMENTARY': 96, 'MIDDLE': 99}
+
+[2/7] Building STRICTLY CONSTRAINED graph …
+Loading cached road network (pickle): cache/graph_734648a4.pkl
+Applying road speed config...
+Adding edge bearings for turn-penalty calculations...
+Graph ready: 604679 nodes, 1605743 edges
+
+  Pre-building BallTree …  [snap] BallTree built for 604,679 nodes
+ 1.1s
+[3/7] Building WEAKLY CONSTRAINED graph …
+Loading cached road network (pickle): cache/graph_734648a4.pkl
+Applying road speed config...
+Adding edge bearings for turn-penalty calculations...
+Graph ready: 604679 nodes, 1605743 edges
+
+[3b/7] Building WALK graph...
+Loading cached walking network (pickle): cache/graph_walk_a220ac69.pkl
+Walk graph ready: 11140 nodes, 31268 edges
+
+
+--------------------------------------------------
+MODE A: SKIPPED (debug.run_mode_a=false)
+--------------------------------------------------
+
+--------------------------------------------------
+MODE B: SKIPPED (debug.run_mode_b=false)
+--------------------------------------------------
+
+--------------------------------------------------
+MODE C: Door-to-Door (walk=0, bus visits every home)
+--------------------------------------------------
+  Pre-building BallTree …  [snap] BallTree built for 604,679 nodes
+ 5.1s
+  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode C
+
+[FleetSearch] 400 students, capacity 22, searching k=19..20
+[Optimization] Preparing distance matrix...
+Asking local OSRM to calculate matrix for 342 nodes...
+OSRM Matrix calculation complete! Cache populated.
+Starting ALNS Optimization (time budget: 300.0s, max 10000 iterations)...
+Initial State: ServiceSolution(served=0/400, objective=0.00)
+Iteration 10: Best Obj = 3094032.16, Temp = 817.1, Last 10 iter: 7.28s
+Iteration 20: Best Obj = 3234019.98, Temp = 667.6, Last 10 iter: 10.79s
+Iteration 30: Best Obj = 3264005.71, Temp = 545.5, Last 10 iter: 10.11s
+Iteration 40: Best Obj = 3284016.80, Temp = 445.7, Last 10 iter: 10.39s
+Iteration 50: Best Obj = 3383980.79, Temp = 364.2, Last 10 iter: 10.10s
+Iteration 60: Best Obj = 3433988.90, Temp = 297.6, Last 10 iter: 5.57s
+Iteration 70: Best Obj = 3443985.85, Temp = 243.1, Last 10 iter: 6.42s
+Iteration 80: Best Obj = 3513980.87, Temp = 198.6, Last 10 iter: 9.87s
+Iteration 90: Best Obj = 3523981.56, Temp = 162.3, Last 10 iter: 5.97s
+Iteration 100: Best Obj = 3573982.06, Temp = 132.6, Last 10 iter: 6.45s
+Iteration 110: Best Obj = 3573982.06, Temp = 108.4, Last 10 iter: 6.38s
+Iteration 120: Best Obj = 3593976.26, Temp = 88.5, Last 10 iter: 5.17s
+Iteration 130: Best Obj = 3593976.26, Temp = 72.3, Last 10 iter: 4.52s
+Iteration 140: Best Obj = 3613968.06, Temp = 59.1, Last 10 iter: 6.64s
+Iteration 150: Best Obj = 3613968.06, Temp = 48.3, Last 10 iter: 7.49s
+Iteration 160: Best Obj = 3623974.39, Temp = 39.5, Last 10 iter: 6.74s
+Iteration 170: Best Obj = 3643975.82, Temp = 32.2, Last 10 iter: 4.93s
+Iteration 180: Best Obj = 3653957.79, Temp = 26.3, Last 10 iter: 4.65s
+Iteration 190: Best Obj = 3653957.79, Temp = 21.5, Last 10 iter: 5.31s
+Iteration 200: Best Obj = 3653957.79, Temp = 17.6, Last 10 iter: 4.66s
+Iteration 210: Best Obj = 3663949.77, Temp = 14.4, Last 10 iter: 5.61s
+Iteration 220: Best Obj = 3673953.76, Temp = 11.7, Last 10 iter: 5.27s
+Iteration 230: Best Obj = 3683956.87, Temp = 9.6, Last 10 iter: 3.49s
+Iteration 240: Best Obj = 3683956.87, Temp = 7.8, Last 10 iter: 4.10s
+Iteration 250: Best Obj = 3693950.69, Temp = 6.4, Last 10 iter: 6.16s
+Iteration 260: Best Obj = 3693950.69, Temp = 5.2, Last 10 iter: 4.49s
+Iteration 270: Best Obj = 3693950.69, Temp = 4.3, Last 10 iter: 4.80s
+Iteration 280: Best Obj = 3693950.69, Temp = 3.5, Last 10 iter: 4.46s
+Iteration 290: Best Obj = 3693950.69, Temp = 2.9, Last 10 iter: 3.93s
+Iteration 300: Best Obj = 3693950.69, Temp = 2.3, Last 10 iter: 3.93s
+Iteration 310: Best Obj = 3693950.69, Temp = 1.9, Last 10 iter: 4.00s
+Iteration 320: Best Obj = 3693950.69, Temp = 1.6, Last 10 iter: 4.57s
+Iteration 330: Best Obj = 3693950.69, Temp = 1.3, Last 10 iter: 4.93s
+Iteration 340: Best Obj = 3693950.69, Temp = 1.0, Last 10 iter: 3.56s
+  Early stop: no best-objective improvement for 100 iterations.
+Optimization Complete.
+Total Time: 203.11s
+Final State: ServiceSolution(served=379/400, objective=3693950.69)
+Running final repair pass on 21 unserved students...
+  Repair pass: no additional students could be inserted.
+  Fleet 19: 379/400 served  [zero_walk_radius_no_valid_insertion: 21]
+[Optimization] Preparing distance matrix...
+Asking local OSRM to calculate matrix for 342 nodes...
+OSRM Matrix calculation complete! Cache populated.
+Starting ALNS Optimization (time budget: 300.0s, max 10000 iterations)...
+Initial State: ServiceSolution(served=0/400, objective=0.00)
+Iteration 10: Best Obj = 2289053.91, Temp = 817.1, Last 10 iter: 4.44s
+Iteration 20: Best Obj = 2609010.93, Temp = 667.6, Last 10 iter: 4.61s
+Iteration 30: Best Obj = 2669009.23, Temp = 545.5, Last 10 iter: 4.16s
+Iteration 40: Best Obj = 3328977.75, Temp = 445.7, Last 10 iter: 4.66s
+Iteration 50: Best Obj = 3428946.59, Temp = 364.2, Last 10 iter: 5.55s
+Iteration 60: Best Obj = 3528922.22, Temp = 297.6, Last 10 iter: 7.13s
+Iteration 70: Best Obj = 3568953.45, Temp = 243.1, Last 10 iter: 5.60s
+Iteration 80: Best Obj = 3588949.85, Temp = 198.6, Last 10 iter: 6.94s
+Iteration 90: Best Obj = 3588949.85, Temp = 162.3, Last 10 iter: 4.20s
+Iteration 100: Best Obj = 3598942.81, Temp = 132.6, Last 10 iter: 8.07s
+Iteration 110: Best Obj = 3598942.81, Temp = 108.4, Last 10 iter: 6.12s
+Iteration 120: Best Obj = 3598958.45, Temp = 88.5, Last 10 iter: 7.74s
+Iteration 130: Best Obj = 3618941.91, Temp = 72.3, Last 10 iter: 6.80s
+Iteration 140: Best Obj = 3618941.91, Temp = 59.1, Last 10 iter: 5.23s
+Iteration 150: Best Obj = 3628942.98, Temp = 48.3, Last 10 iter: 7.70s
+Iteration 160: Best Obj = 3628942.98, Temp = 39.5, Last 10 iter: 7.21s
+Iteration 170: Best Obj = 3628942.98, Temp = 32.2, Last 10 iter: 5.77s
+Iteration 180: Best Obj = 3628942.98, Temp = 26.3, Last 10 iter: 5.54s
+Iteration 190: Best Obj = 3628942.98, Temp = 21.5, Last 10 iter: 4.77s
+Iteration 200: Best Obj = 3628942.98, Temp = 17.6, Last 10 iter: 5.01s
+Iteration 210: Best Obj = 3628942.98, Temp = 14.4, Last 10 iter: 6.99s
+Iteration 220: Best Obj = 3628942.98, Temp = 11.7, Last 10 iter: 4.80s
+Iteration 230: Best Obj = 3628942.98, Temp = 9.6, Last 10 iter: 4.82s
+Iteration 240: Best Obj = 3648940.48, Temp = 7.8, Last 10 iter: 3.90s
+Iteration 250: Best Obj = 3658938.29, Temp = 6.4, Last 10 iter: 4.00s
+Iteration 260: Best Obj = 3658952.19, Temp = 5.2, Last 10 iter: 5.28s
+Iteration 270: Best Obj = 3658952.19, Temp = 4.3, Last 10 iter: 4.30s
+Iteration 280: Best Obj = 3658952.19, Temp = 3.5, Last 10 iter: 6.54s
+Iteration 290: Best Obj = 3658952.19, Temp = 2.9, Last 10 iter: 7.05s
+Iteration 300: Best Obj = 3668952.73, Temp = 2.3, Last 10 iter: 7.62s
+Iteration 310: Best Obj = 3668952.73, Temp = 1.9, Last 10 iter: 7.20s
+Iteration 320: Best Obj = 3678950.73, Temp = 1.6, Last 10 iter: 7.08s
+Iteration 330: Best Obj = 3678950.73, Temp = 1.3, Last 10 iter: 6.36s
+Iteration 340: Best Obj = 3678950.73, Temp = 1.0, Last 10 iter: 7.24s
+  Early stop: temperature <= 1 and no improvement for 28 iterations.
+Optimization Complete.
+Total Time: 201.22s
+Final State: ServiceSolution(served=378/400, objective=3678950.73)
+Running final repair pass on 22 unserved students...
+  Repair pass: no additional students could be inserted.
+  Fleet 20: 378/400 served  [zero_walk_radius_no_valid_insertion: 22]
+  [C] 379/400 served | routes=19 | time=872.9 min | 190.6s
+
+--------------------------------------------------
+BUILDING COMPARISON MAP
+--------------------------------------------------
+  Dangerous-road segments: 1486
+  Unclassified-road segments: 252
+  Bounding box: N=31.2291, S=29.9256, E=31.3366, W=30.0489
+  Walk graph edges: 6474/31577 drawn (20% sample rate)
+  Drawing Mode C …
+[DEBUG] A* for pair (6583491486, 6583639575) returned inf (no path found)
+[DEBUG] A* for pair (6583639575, 8308941937) returned inf (no path found)
+[DEBUG] A* for pair (8308941937, 8308941938) returned inf (no path found)
+[DEBUG] A* for pair (8308941938, 619740813) returned inf (no path found)
+[DEBUG] A* for pair (8308941938, 619740813) returned inf (no path found)
+[DEBUG] A* for pair (619740813, 638201491) returned inf (no path found)
+[DEBUG] A* for pair (638201491, 6454529968) returned inf (no path found)
+[DEBUG] A* for pair (638201491, 6454529968) returned inf (no path found)
+[DEBUG] A* for pair (638201491, 6454529968) returned inf (no path found)
+[DEBUG] A* for pair (6454529968, 4325597329) returned inf (no path found)
+[DEBUG] A* for pair (4325597329, 3792831827) returned inf (no path found)
+[DEBUG] A* for pair (3792831827, 6654608547) returned inf (no path found)
+[DEBUG] A* for pair (6654608547, 6455976105) returned inf (no path found)
+[DEBUG] A* for pair (6455976105, 6107520758) returned inf (no path found)
+[DEBUG] A* for pair (6455976105, 6107520758) returned inf (no path found)
+[DEBUG] A* for pair (6455976105, 6107520758) returned inf (no path found)
+[DEBUG] A* for pair (6107520758, 6456018819) returned inf (no path found)
+[DEBUG] A* for pair (6456018819, 8364818229) returned inf (no path found)
+[DEBUG] A* for pair (8364818229, 6690827086) returned inf (no path found)
+[DEBUG] A* for pair (6690827086, 6691699515) returned inf (no path found)
+[DEBUG] A* for pair (6691699515, 6660493260) returned inf (no path found)
+[DEBUG] A* for pair (6660493260, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (6669643990, 6445449698) returned inf (no path found)
+[DEBUG] A* for pair (6445449698, 6461978009) returned inf (no path found)
+[DEBUG] A* for pair (6461978009, 416834447) returned inf (no path found)
+[DEBUG] A* for pair (416834447, 7201082992) returned inf (no path found)
+[DEBUG] A* for pair (7201082992, 6691363945) returned inf (no path found)
+[DEBUG] A* for pair (6691363945, 6635517685) returned inf (no path found)
+[DEBUG] A* for pair (6635517685, 6691364299) returned inf (no path found)
+[DEBUG] A* for pair (6691364299, 9375158152) returned inf (no path found)
+[DEBUG] A* for pair (6691364299, 9375158152) returned inf (no path found)
+[DEBUG] A* for pair (9375158152, 6457568679) returned inf (no path found)
+[DEBUG] A* for pair (6457568679, 6457568641) returned inf (no path found)
+[DEBUG] A* for pair (6457568641, 6584403795) returned inf (no path found)
+[DEBUG] A* for pair (6584403795, 6597000879) returned inf (no path found)
+[DEBUG] A* for pair (6584403795, 6597000879) returned inf (no path found)
+[DEBUG] A* for pair (6597000879, 426456227) returned inf (no path found)
+[DEBUG] A* for pair (426456227, 6436168253) returned inf (no path found)
+[DEBUG] A* for pair (6436168253, 426585539) returned inf (no path found)
+[DEBUG] A* for pair (426585539, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (426496982, 6725883778) returned inf (no path found)
+[DEBUG] A* for pair (6725883778, 4325401512) returned inf (no path found)
+[DEBUG] A* for pair (4325401512, 10106523994) returned inf (no path found)
+[DEBUG] A* for pair (10106523994, 10237893643) returned inf (no path found)
+[DEBUG] A* for pair (10237893643, 1788243870) returned inf (no path found)
+[DEBUG] A* for pair (10237893643, 1788243870) returned inf (no path found)
+[DEBUG] A* for pair (1788243870, 6266058427) returned inf (no path found)
+[DEBUG] A* for pair (6266058427, 655129891) returned inf (no path found)
+[DEBUG] A* for pair (655129891, 3209175194) returned inf (no path found)
+[DEBUG] A* for pair (655129891, 3209175194) returned inf (no path found)
+[DEBUG] A* for pair (3209175194, 6690692301) returned inf (no path found)
+[DEBUG] A* for pair (6690692301, 6442594439) returned inf (no path found)
+[DEBUG] A* for pair (6442594439, 6695107006) returned inf (no path found)
+[DEBUG] A* for pair (6695107006, 6695104772) returned inf (no path found)
+[DEBUG] A* for pair (6695104772, 6695106998) returned inf (no path found)
+[DEBUG] A* for pair (6695106998, 6726832544) returned inf (no path found)
+[DEBUG] A* for pair (6726832544, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (6604739345, 1754277397) returned inf (no path found)
+[DEBUG] A* for pair (1754277397, 1754277403) returned inf (no path found)
+[DEBUG] A* for pair (1754277403, 1754277335) returned inf (no path found)
+[DEBUG] A* for pair (1754277403, 1754277335) returned inf (no path found)
+[DEBUG] A* for pair (1754277403, 1754277335) returned inf (no path found)
+[DEBUG] A* for pair (1754277335, 10882862597) returned inf (no path found)
+[DEBUG] A* for pair (10882862597, 10023940231) returned inf (no path found)
+[DEBUG] A* for pair (10023940231, 11050405186) returned inf (no path found)
+[DEBUG] A* for pair (11050405186, 660075734) returned inf (no path found)
+[DEBUG] A* for pair (660075734, 310160121) returned inf (no path found)
+[DEBUG] A* for pair (310160121, 6438572282) returned inf (no path found)
+[DEBUG] A* for pair (310160121, 6438572282) returned inf (no path found)
+[DEBUG] A* for pair (6438572282, 6438573186) returned inf (no path found)
+[DEBUG] A* for pair (6438573186, 2195455542) returned inf (no path found)
+[DEBUG] A* for pair (2195455542, 6464291719) returned inf (no path found)
+[DEBUG] A* for pair (6464291719, 6594278111) returned inf (no path found)
+[DEBUG] A* for pair (6594278111, 6594278122) returned inf (no path found)
+[DEBUG] A* for pair (6594278122, 6594701700) returned inf (no path found)
+[DEBUG] A* for pair (6594701700, 6588291346) returned inf (no path found)
+[DEBUG] A* for pair (6594701700, 6588291346) returned inf (no path found)
+[DEBUG] A* for pair (6588291346, 675786761) returned inf (no path found)
+[DEBUG] A* for pair (675786761, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (6588589203, 9657861130) returned inf (no path found)
+[DEBUG] A* for pair (9657861130, 11416693280) returned inf (no path found)
+[DEBUG] A* for pair (11416693280, 10076396954) returned inf (no path found)
+[DEBUG] A* for pair (10076396954, 10076377812) returned inf (no path found)
+[DEBUG] A* for pair (10076377812, 12858126102) returned inf (no path found)
+[DEBUG] A* for pair (12858126102, 11414992577) returned inf (no path found)
+[DEBUG] A* for pair (11414992577, 2195455521) returned inf (no path found)
+[DEBUG] A* for pair (2195455521, 2292319276) returned inf (no path found)
+[DEBUG] A* for pair (2195455521, 2292319276) returned inf (no path found)
+[DEBUG] A* for pair (2195455521, 2292319276) returned inf (no path found)
+[DEBUG] A* for pair (2292319276, 3787742542) returned inf (no path found)
+[DEBUG] A* for pair (3787742542, 331870225) returned inf (no path found)
+[DEBUG] A* for pair (331870225, 6602678621) returned inf (no path found)
+[DEBUG] A* for pair (331870225, 6602678621) returned inf (no path found)
+[DEBUG] A* for pair (6602678621, 6600561053) returned inf (no path found)
+[DEBUG] A* for pair (6602678621, 6600561053) returned inf (no path found)
+[DEBUG] A* for pair (6600561053, 6459353459) returned inf (no path found)
+[DEBUG] A* for pair (6459353459, 6654722825) returned inf (no path found)
+[DEBUG] A* for pair (6654722825, 6461400930) returned inf (no path found)
+[DEBUG] A* for pair (6461400930, 6586943924) returned inf (no path found)
+[DEBUG] A* for pair (6586943924, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (3787637928, 6588307088) returned inf (no path found)
+[DEBUG] A* for pair (6588307088, 6588307089) returned inf (no path found)
+[DEBUG] A* for pair (6588307089, 3787637931) returned inf (no path found)
+[DEBUG] A* for pair (6588307089, 3787637931) returned inf (no path found)
+[DEBUG] A* for pair (3787637931, 6274085707) returned inf (no path found)
+[DEBUG] A* for pair (6274085707, 653803473) returned inf (no path found)
+[DEBUG] A* for pair (653803473, 10883367701) returned inf (no path found)
+[DEBUG] A* for pair (10883367701, 10883587718) returned inf (no path found)
+[DEBUG] A* for pair (10883587718, 13483376921) returned inf (no path found)
+[DEBUG] A* for pair (13483376921, 4325400472) returned inf (no path found)
+[DEBUG] A* for pair (13483376921, 4325400472) returned inf (no path found)
+[DEBUG] A* for pair (4325400472, 6317598386) returned inf (no path found)
+[DEBUG] A* for pair (6317598386, 6604659887) returned inf (no path found)
+[DEBUG] A* for pair (6317598386, 6604659887) returned inf (no path found)
+[DEBUG] A* for pair (6604659887, 6288265114) returned inf (no path found)
+[DEBUG] A* for pair (6604659887, 6288265114) returned inf (no path found)
+[DEBUG] A* for pair (6288265114, 6584403808) returned inf (no path found)
+[DEBUG] A* for pair (6584403808, 6439164544) returned inf (no path found)
+[DEBUG] A* for pair (6439164544, 6691410301) returned inf (no path found)
+[DEBUG] A* for pair (6691410301, 317881455) returned inf (no path found)
+[DEBUG] A* for pair (317881455, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (6641195191, 6690704558) returned inf (no path found)
+[DEBUG] A* for pair (6690704558, 6644297974) returned inf (no path found)
+[DEBUG] A* for pair (6644297974, 6452359482) returned inf (no path found)
+[DEBUG] A* for pair (6452359482, 6445419592) returned inf (no path found)
+[DEBUG] A* for pair (6445419592, 7201312103) returned inf (no path found)
+[DEBUG] A* for pair (7201312103, 6442967259) returned inf (no path found)
+[DEBUG] A* for pair (6442967259, 6646337308) returned inf (no path found)
+[DEBUG] A* for pair (6646337308, 8339175437) returned inf (no path found)
+[DEBUG] A* for pair (8339175437, 6628537908) returned inf (no path found)
+[DEBUG] A* for pair (6628537908, 6442578116) returned inf (no path found)
+[DEBUG] A* for pair (6442578116, 6306296336) returned inf (no path found)
+[DEBUG] A* for pair (6306296336, 660179588) returned inf (no path found)
+[DEBUG] A* for pair (660179588, 6103730625) returned inf (no path found)
+[DEBUG] A* for pair (6103730625, 6459188269) returned inf (no path found)
+[DEBUG] A* for pair (6459188269, 638201491) returned inf (no path found)
+[DEBUG] A* for pair (6459188269, 638201491) returned inf (no path found)
+[DEBUG] A* for pair (6459188269, 638201491) returned inf (no path found)
+[DEBUG] A* for pair (638201491, 6655317767) returned inf (no path found)
+[DEBUG] A* for pair (6655317767, 1496694702) returned inf (no path found)
+[DEBUG] A* for pair (6655317767, 1496694702) returned inf (no path found)
+[DEBUG] A* for pair (6655317767, 1496694702) returned inf (no path found)
+[DEBUG] A* for pair (1496694702, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (447749889, 6436300295) returned inf (no path found)
+[DEBUG] A* for pair (6436300295, 317853862) returned inf (no path found)
+[DEBUG] A* for pair (317853862, 4325598990) returned inf (no path found)
+[DEBUG] A* for pair (4325598990, 282454589) returned inf (no path found)
+[DEBUG] A* for pair (282454589, 283636763) returned inf (no path found)
+[DEBUG] A* for pair (283636763, 6588588745) returned inf (no path found)
+[DEBUG] A* for pair (6588588745, 6588588767) returned inf (no path found)
+[DEBUG] A* for pair (6588588767, 6588588783) returned inf (no path found)
+[DEBUG] A* for pair (6588588783, 6588589193) returned inf (no path found)
+[DEBUG] A* for pair (6588589193, 6594277898) returned inf (no path found)
+[DEBUG] A* for pair (6594277898, 10883587705) returned inf (no path found)
+[DEBUG] A* for pair (10883587705, 11414746274) returned inf (no path found)
+[DEBUG] A* for pair (10883587705, 11414746274) returned inf (no path found)
+[DEBUG] A* for pair (11414746274, 6602899124) returned inf (no path found)
+[DEBUG] A* for pair (6602899124, 6602899336) returned inf (no path found)
+[DEBUG] A* for pair (6602899336, 1788314295) returned inf (no path found)
+[DEBUG] A* for pair (1788314295, 10024221444) returned inf (no path found)
+[DEBUG] A* for pair (10024221444, 3717981041) returned inf (no path found)
+[DEBUG] A* for pair (3717981041, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (11042352765, 6635498671) returned inf (no path found)
+[DEBUG] A* for pair (11042352765, 6635498671) returned inf (no path found)
+[DEBUG] A* for pair (6635498671, 6465138779) returned inf (no path found)
+[DEBUG] A* for pair (6465138779, 6617040100) returned inf (no path found)
+[DEBUG] A* for pair (6617040100, 6603146991) returned inf (no path found)
+[DEBUG] A* for pair (6603146991, 6658036030) returned inf (no path found)
+[DEBUG] A* for pair (6658036030, 6661448319) returned inf (no path found)
+[DEBUG] A* for pair (6661448319, 6658036442) returned inf (no path found)
+[DEBUG] A* for pair (6658036442, 6445872025) returned inf (no path found)
+[DEBUG] A* for pair (6445872025, 6665553965) returned inf (no path found)
+[DEBUG] A* for pair (6665553965, 6665553964) returned inf (no path found)
+[DEBUG] A* for pair (6665553964, 6661448199) returned inf (no path found)
+[DEBUG] A* for pair (6661448199, 6670489825) returned inf (no path found)
+[DEBUG] A* for pair (6670489825, 6658069870) returned inf (no path found)
+[DEBUG] A* for pair (6658069870, 317853106) returned inf (no path found)
+[DEBUG] A* for pair (317853106, 6589371936) returned inf (no path found)
+[DEBUG] A* for pair (6589371936, 6589371921) returned inf (no path found)
+[DEBUG] A* for pair (6589371921, 317856109) returned inf (no path found)
+[DEBUG] A* for pair (317856109, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (6446132598, 6446132603) returned inf (no path found)
+[DEBUG] A* for pair (6446132603, 6442551134) returned inf (no path found)
+[DEBUG] A* for pair (6442551134, 6446100222) returned inf (no path found)
+[DEBUG] A* for pair (6446100222, 10568208653) returned inf (no path found)
+[DEBUG] A* for pair (10568208653, 6634899770) returned inf (no path found)
+[DEBUG] A* for pair (6634899770, 6638456261) returned inf (no path found)
+[DEBUG] A* for pair (6638456261, 6647150327) returned inf (no path found)
+[DEBUG] A* for pair (6647150327, 6442966261) returned inf (no path found)
+[DEBUG] A* for pair (6442966261, 6661235475) returned inf (no path found)
+[DEBUG] A* for pair (6661235475, 6661235447) returned inf (no path found)
+[DEBUG] A* for pair (6661235447, 6665286071) returned inf (no path found)
+[DEBUG] A* for pair (6665286071, 8334226263) returned inf (no path found)
+[DEBUG] A* for pair (8334226263, 3209176725) returned inf (no path found)
+[DEBUG] A* for pair (3209176725, 3209176720) returned inf (no path found)
+[DEBUG] A* for pair (3209176720, 6584409302) returned inf (no path found)
+[DEBUG] A* for pair (6584409302, 6584409308) returned inf (no path found)
+[DEBUG] A* for pair (6584409308, 6587005493) returned inf (no path found)
+[DEBUG] A* for pair (6587005493, 6587005497) returned inf (no path found)
+[DEBUG] A* for pair (6587005497, 6587005581) returned inf (no path found)
+[DEBUG] A* for pair (6587005581, 2293609467) returned inf (no path found)
+[DEBUG] A* for pair (2293609467, 3830674400) returned inf (no path found)
+[DEBUG] A* for pair (3830674400, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (6600597562, 1754277338) returned inf (no path found)
+[DEBUG] A* for pair (1754277338, 6600552445) returned inf (no path found)
+[DEBUG] A* for pair (1754277338, 6600552445) returned inf (no path found)
+[DEBUG] A* for pair (6600552445, 622415036) returned inf (no path found)
+[DEBUG] A* for pair (6600552445, 622415036) returned inf (no path found)
+[DEBUG] A* for pair (622415036, 622470335) returned inf (no path found)
+[DEBUG] A* for pair (622470335, 6736160952) returned inf (no path found)
+[DEBUG] A* for pair (6736160952, 655126357) returned inf (no path found)
+[DEBUG] A* for pair (655126357, 655126327) returned inf (no path found)
+[DEBUG] A* for pair (655126327, 655129863) returned inf (no path found)
+[DEBUG] A* for pair (655129863, 657743370) returned inf (no path found)
+[DEBUG] A* for pair (657743370, 6287630737) returned inf (no path found)
+[DEBUG] A* for pair (6287630737, 6586943944) returned inf (no path found)
+[DEBUG] A* for pair (6586943944, 6586943983) returned inf (no path found)
+[DEBUG] A* for pair (6586943944, 6586943983) returned inf (no path found)
+[DEBUG] A* for pair (6586943983, 6589371909) returned inf (no path found)
+[DEBUG] A* for pair (6589371909, 426537692) returned inf (no path found)
+[DEBUG] A* for pair (6589371909, 426537692) returned inf (no path found)
+[DEBUG] A* for pair (426537692, 426537676) returned inf (no path found)
+[DEBUG] A* for pair (426537676, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (6614733061, 6655317716) returned inf (no path found)
+[DEBUG] A* for pair (6614733061, 6655317716) returned inf (no path found)
+[DEBUG] A* for pair (6655317716, 447749887) returned inf (no path found)
+[DEBUG] A* for pair (447749887, 3787616589) returned inf (no path found)
+[DEBUG] A* for pair (447749887, 3787616589) returned inf (no path found)
+[DEBUG] A* for pair (3787616589, 6657982392) returned inf (no path found)
+[DEBUG] A* for pair (6657982392, 8357324935) returned inf (no path found)
+[DEBUG] A* for pair (8357324935, 6443653489) returned inf (no path found)
+[DEBUG] A* for pair (6443653489, 6669794984) returned inf (no path found)
+[DEBUG] A* for pair (6669794984, 6443528465) returned inf (no path found)
+[DEBUG] A* for pair (6443528465, 6661448190) returned inf (no path found)
+[DEBUG] A* for pair (6661448190, 6661231077) returned inf (no path found)
+[DEBUG] A* for pair (6661231077, 6688079904) returned inf (no path found)
+[DEBUG] A* for pair (6688079904, 6688079928) returned inf (no path found)
+[DEBUG] A* for pair (6688079928, 6438955436) returned inf (no path found)
+[DEBUG] A* for pair (6438955436, 6445089232) returned inf (no path found)
+[DEBUG] A* for pair (6445089232, 6584403819) returned inf (no path found)
+[DEBUG] A* for pair (6584403819, 6584410196) returned inf (no path found)
+[DEBUG] A* for pair (6584410196, 6584403815) returned inf (no path found)
+[DEBUG] A* for pair (6584403815, 6588326965) returned inf (no path found)
+[DEBUG] A* for pair (6588326965, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (6588326965, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (10703778593, 6285607016) returned inf (no path found)
+[DEBUG] A* for pair (6285607016, 665115631) returned inf (no path found)
+[DEBUG] A* for pair (665115631, 5056234399) returned inf (no path found)
+[DEBUG] A* for pair (5056234399, 426469939) returned inf (no path found)
+[DEBUG] A* for pair (426469939, 6288220110) returned inf (no path found)
+[DEBUG] A* for pair (6288220110, 6594277960) returned inf (no path found)
+[DEBUG] A* for pair (6288220110, 6594277960) returned inf (no path found)
+[DEBUG] A* for pair (6594277960, 10918265060) returned inf (no path found)
+[DEBUG] A* for pair (10918265060, 9663139623) returned inf (no path found)
+[DEBUG] A* for pair (9663139623, 12757611233) returned inf (no path found)
+[DEBUG] A* for pair (12757611233, 317861427) returned inf (no path found)
+[DEBUG] A* for pair (317861427, 2207853991) returned inf (no path found)
+[DEBUG] A* for pair (2207853991, 6589371908) returned inf (no path found)
+[DEBUG] A* for pair (6589371908, 6589380818) returned inf (no path found)
+[DEBUG] A* for pair (6589380818, 447749867) returned inf (no path found)
+[DEBUG] A* for pair (447749867, 447749869) returned inf (no path found)
+[DEBUG] A* for pair (447749869, 6665875975) returned inf (no path found)
+[DEBUG] A* for pair (6665875975, 317850186) returned inf (no path found)
+[DEBUG] A* for pair (317850186, 6589371959) returned inf (no path found)
+[DEBUG] A* for pair (6589371959, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (3400119450, 6596997480) returned inf (no path found)
+[DEBUG] A* for pair (6596997480, 6597000999) returned inf (no path found)
+[DEBUG] A* for pair (6597000999, 3207792060) returned inf (no path found)
+[DEBUG] A* for pair (6597000999, 3207792060) returned inf (no path found)
+[DEBUG] A* for pair (3207792060, 426458464) returned inf (no path found)
+[DEBUG] A* for pair (426458464, 6597000478) returned inf (no path found)
+[DEBUG] A* for pair (6597000478, 6597000623) returned inf (no path found)
+[DEBUG] A* for pair (6597000623, 6597000625) returned inf (no path found)
+[DEBUG] A* for pair (6597000625, 426521278) returned inf (no path found)
+[DEBUG] A* for pair (426521278, 6588588770) returned inf (no path found)
+[DEBUG] A* for pair (426521278, 6588588770) returned inf (no path found)
+[DEBUG] A* for pair (6588588770, 6720823736) returned inf (no path found)
+[DEBUG] A* for pair (6720823736, 6462497753) returned inf (no path found)
+[DEBUG] A* for pair (6462497753, 2659930826) returned inf (no path found)
+[DEBUG] A* for pair (2659930826, 6614733029) returned inf (no path found)
+[DEBUG] A* for pair (6614733029, 317855498) returned inf (no path found)
+[DEBUG] A* for pair (317855498, 317855427) returned inf (no path found)
+[DEBUG] A* for pair (317855427, 638201544) returned inf (no path found)
+[DEBUG] A* for pair (638201544, 9657880774) returned inf (no path found)
+[DEBUG] A* for pair (638201544, 9657880774) returned inf (no path found)
+[DEBUG] A* for pair (638201544, 9657880774) returned inf (no path found)
+[DEBUG] A* for pair (9657880774, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (6746695413, 6276305921) returned inf (no path found)
+[DEBUG] A* for pair (6276305921, 6276594865) returned inf (no path found)
+[DEBUG] A* for pair (6276594865, 10703733179) returned inf (no path found)
+[DEBUG] A* for pair (10703733179, 10703779362) returned inf (no path found)
+[DEBUG] A* for pair (10703779362, 4325401690) returned inf (no path found)
+[DEBUG] A* for pair (4325401690, 424962988) returned inf (no path found)
+[DEBUG] A* for pair (424962988, 6438308430) returned inf (no path found)
+[DEBUG] A* for pair (6438308430, 2865836553) returned inf (no path found)
+[DEBUG] A* for pair (2865836553, 6594261079) returned inf (no path found)
+[DEBUG] A* for pair (6594261079, 6594277938) returned inf (no path found)
+[DEBUG] A* for pair (6594277938, 426594522) returned inf (no path found)
+[DEBUG] A* for pair (426594522, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (1927126693, 6655349139) returned inf (no path found)
+[DEBUG] A* for pair (6655349139, 6669822661) returned inf (no path found)
+[DEBUG] A* for pair (6669822661, 6669822734) returned inf (no path found)
+[DEBUG] A* for pair (6669822734, 6721195751) returned inf (no path found)
+[DEBUG] A* for pair (6721195751, 6655349173) returned inf (no path found)
+[DEBUG] A* for pair (6655349173, 6655349761) returned inf (no path found)
+[DEBUG] A* for pair (6655349761, 4325595677) returned inf (no path found)
+[DEBUG] A* for pair (4325595677, 6606015988) returned inf (no path found)
+[DEBUG] A* for pair (6606015988, 6317572313) returned inf (no path found)
+[DEBUG] A* for pair (6317572313, 6606015936) returned inf (no path found)
+[DEBUG] A* for pair (6606015936, 2437411946) returned inf (no path found)
+[DEBUG] A* for pair (2437411946, 6290189275) returned inf (no path found)
+[DEBUG] A* for pair (6290189275, 6586948085) returned inf (no path found)
+[DEBUG] A* for pair (6586948085, 6586433940) returned inf (no path found)
+[DEBUG] A* for pair (6586433940, 6585990912) returned inf (no path found)
+[DEBUG] A* for pair (6585990912, 6461890214) returned inf (no path found)
+[DEBUG] A* for pair (6585990912, 6461890214) returned inf (no path found)
+[DEBUG] A* for pair (6461890214, 6585990938) returned inf (no path found)
+[DEBUG] A* for pair (6461890214, 6585990938) returned inf (no path found)
+[DEBUG] A* for pair (6461890214, 6585990938) returned inf (no path found)
+[DEBUG] A* for pair (6585990938, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (6585990938, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (6107189425, 6107189424) returned inf (no path found)
+[DEBUG] A* for pair (6107189424, 10883587619) returned inf (no path found)
+[DEBUG] A* for pair (10883587619, 11414746274) returned inf (no path found)
+[DEBUG] A* for pair (11414746274, 6585990899) returned inf (no path found)
+[DEBUG] A* for pair (6585990899, 6585990894) returned inf (no path found)
+[DEBUG] A* for pair (6585990894, 6585990912) returned inf (no path found)
+[DEBUG] A* for pair (6585990912, 317860414) returned inf (no path found)
+[DEBUG] A* for pair (317860414, 447749872) returned inf (no path found)
+[DEBUG] A* for pair (447749872, 317856921) returned inf (no path found)
+[DEBUG] A* for pair (317856921, 447749838) returned inf (no path found)
+[DEBUG] A* for pair (447749838, 6589371913) returned inf (no path found)
+[DEBUG] A* for pair (6589371913, 6670245189) returned inf (no path found)
+[DEBUG] A* for pair (6670245189, 6670245196) returned inf (no path found)
+[DEBUG] A* for pair (6670245196, 6670245162) returned inf (no path found)
+[DEBUG] A* for pair (6670245162, 6684389473) returned inf (no path found)
+[DEBUG] A* for pair (6684389473, 6665236402) returned inf (no path found)
+[DEBUG] A* for pair (6665236402, 6729209882) returned inf (no path found)
+[DEBUG] A* for pair (6729209882, 6660401070) returned inf (no path found)
+[DEBUG] A* for pair (6660401070, 6723234627) returned inf (no path found)
+[DEBUG] A* for pair (6723234627, 6690721584) returned inf (no path found)
+[DEBUG] A* for pair (6690721584, 6691410383) returned inf (no path found)
+[DEBUG] A* for pair (6691410383, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (10716492043, 10716492044) returned inf (no path found)
+[DEBUG] A* for pair (10716492044, 655125632) returned inf (no path found)
+[DEBUG] A* for pair (655125632, 9549493548) returned inf (no path found)
+[DEBUG] A* for pair (9549493548, 6456022225) returned inf (no path found)
+[DEBUG] A* for pair (6456022225, 6627920671) returned inf (no path found)
+[DEBUG] A* for pair (6627920671, 6622455988) returned inf (no path found)
+[DEBUG] A* for pair (6622455988, 6622456045) returned inf (no path found)
+[DEBUG] A* for pair (6622456045, 6605460514) returned inf (no path found)
+[DEBUG] A* for pair (6605460514, 6603147267) returned inf (no path found)
+[DEBUG] A* for pair (6603147267, 6600078028) returned inf (no path found)
+[DEBUG] A* for pair (6600078028, 6594609171) returned inf (no path found)
+[DEBUG] A* for pair (6594609171, 6660362073) returned inf (no path found)
+[DEBUG] A* for pair (6660362073, 6452441786) returned inf (no path found)
+[DEBUG] A* for pair (6452441786, 6657957563) returned inf (no path found)
+[DEBUG] A* for pair (6657957563, 6661534765) returned inf (no path found)
+[DEBUG] A* for pair (6661534765, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (8387926066, 8387926073) returned inf (no path found)
+[DEBUG] A* for pair (8387926066, 8387926073) returned inf (no path found)
+[DEBUG] A* for pair (8387926066, 8387926073) returned inf (no path found)
+[DEBUG] A* for pair (8387926073, 6616629316) returned inf (no path found)
+[DEBUG] A* for pair (6616629316, 6681669797) returned inf (no path found)
+[DEBUG] A* for pair (6681669797, 6455984498) returned inf (no path found)
+[DEBUG] A* for pair (6681669797, 6455984498) returned inf (no path found)
+[DEBUG] A* for pair (6681669797, 6455984498) returned inf (no path found)
+[DEBUG] A* for pair (6681669797, 6455984498) returned inf (no path found)
+[DEBUG] A* for pair (6455984498, 6589714442) returned inf (no path found)
+[DEBUG] A* for pair (6589714442, 13344724354) returned inf (no path found)
+[DEBUG] A* for pair (13344724354, 6290197082) returned inf (no path found)
+[DEBUG] A* for pair (13344724354, 6290197082) returned inf (no path found)
+[DEBUG] A* for pair (13344724354, 6290197082) returned inf (no path found)
+[DEBUG] A* for pair (13344724354, 6290197082) returned inf (no path found)
+[DEBUG] A* for pair (6290197082, 2208238360) returned inf (no path found)
+[DEBUG] A* for pair (6290197082, 2208238360) returned inf (no path found)
+[DEBUG] A* for pair (2208238360, 6589380817) returned inf (no path found)
+[DEBUG] A* for pair (6589380817, 2208869932) returned inf (no path found)
+[DEBUG] A* for pair (6589380817, 2208869932) returned inf (no path found)
+  Synthetic crossings (markers): 309
+
+  Map saved: /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/1e72294f_dmrt_1/comparison_map.html  (7325 KB)
+[DEBUG] Building metrics for mode C: sol has 19 routes
+[DEBUG] A* for pair (6583491486, 6583639575) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 6583491486 (type:int), 6583639575 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6583639575, 8308941937) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 6583639575 (type:int), 8308941937 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (8308941937, 8308941938) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 8308941937 (type:int), 8308941938 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (8308941938, 619740813) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 8308941938 (type:int), 619740813 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (619740813, 638201491) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 619740813 (type:int), 638201491 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (638201491, 6454529968) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 638201491 (type:int), 6454529968 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6454529968, 4325597329) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 6454529968 (type:int), 4325597329 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (4325597329, 3792831827) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 4325597329 (type:int), 3792831827 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (3792831827, 6654608547) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 3792831827 (type:int), 6654608547 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6654608547, 6455976105) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 6654608547 (type:int), 6455976105 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6455976105, 6107520758) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 6455976105 (type:int), 6107520758 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6107520758, 6456018819) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 6107520758 (type:int), 6456018819 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6456018819, 8364818229) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 6456018819 (type:int), 8364818229 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (8364818229, 6690827086) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 8364818229 (type:int), 6690827086 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6690827086, 6691699515) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 6690827086 (type:int), 6691699515 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6691699515, 6660493260) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 6691699515 (type:int), 6660493260 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6660493260, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=17. Node IDs: 6660493260 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6669643990, 6445449698) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 6669643990 (type:int), 6445449698 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6445449698, 6461978009) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 6445449698 (type:int), 6461978009 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6461978009, 416834447) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 6461978009 (type:int), 416834447 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (416834447, 7201082992) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 416834447 (type:int), 7201082992 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (7201082992, 6691363945) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 7201082992 (type:int), 6691363945 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6691363945, 6635517685) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 6691363945 (type:int), 6635517685 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6635517685, 6691364299) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 6635517685 (type:int), 6691364299 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6691364299, 9375158152) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 6691364299 (type:int), 9375158152 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (9375158152, 6457568679) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 9375158152 (type:int), 6457568679 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6457568679, 6457568641) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 6457568679 (type:int), 6457568641 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6457568641, 6584403795) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 6457568641 (type:int), 6584403795 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6584403795, 6597000879) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 6584403795 (type:int), 6597000879 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6597000879, 426456227) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 6597000879 (type:int), 426456227 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (426456227, 6436168253) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 426456227 (type:int), 6436168253 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6436168253, 426585539) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 6436168253 (type:int), 426585539 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (426585539, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 426585539 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (426496982, 6725883778) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 426496982 (type:int), 6725883778 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6725883778, 4325401512) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 6725883778 (type:int), 4325401512 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (4325401512, 10106523994) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 4325401512 (type:int), 10106523994 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10106523994, 10237893643) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 10106523994 (type:int), 10237893643 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10237893643, 1788243870) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 10237893643 (type:int), 1788243870 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (1788243870, 6266058427) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 1788243870 (type:int), 6266058427 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6266058427, 655129891) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 6266058427 (type:int), 655129891 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (655129891, 3209175194) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 655129891 (type:int), 3209175194 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (3209175194, 6690692301) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 3209175194 (type:int), 6690692301 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6690692301, 6442594439) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 6690692301 (type:int), 6442594439 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6442594439, 6695107006) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 6442594439 (type:int), 6695107006 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6695107006, 6695104772) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 6695107006 (type:int), 6695104772 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6695104772, 6695106998) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 6695104772 (type:int), 6695106998 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6695106998, 6726832544) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 6695106998 (type:int), 6726832544 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6726832544, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 6726832544 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6604739345, 1754277397) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 6604739345 (type:int), 1754277397 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (1754277397, 1754277403) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 1754277397 (type:int), 1754277403 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (1754277403, 1754277335) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 1754277403 (type:int), 1754277335 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (1754277335, 10882862597) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 1754277335 (type:int), 10882862597 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10882862597, 10023940231) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 10882862597 (type:int), 10023940231 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10023940231, 11050405186) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 10023940231 (type:int), 11050405186 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (11050405186, 660075734) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 11050405186 (type:int), 660075734 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (660075734, 310160121) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 660075734 (type:int), 310160121 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (310160121, 6438572282) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 310160121 (type:int), 6438572282 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6438572282, 6438573186) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 6438572282 (type:int), 6438573186 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6438573186, 2195455542) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 6438573186 (type:int), 2195455542 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (2195455542, 6464291719) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 2195455542 (type:int), 6464291719 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6464291719, 6594278111) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 6464291719 (type:int), 6594278111 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6594278111, 6594278122) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 6594278111 (type:int), 6594278122 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6594278122, 6594701700) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 6594278122 (type:int), 6594701700 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6594701700, 6588291346) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 6594701700 (type:int), 6588291346 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6588291346, 675786761) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=17. Node IDs: 6588291346 (type:int), 675786761 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (675786761, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=18. Node IDs: 675786761 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6588589203, 9657861130) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 6588589203 (type:int), 9657861130 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (9657861130, 11416693280) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 9657861130 (type:int), 11416693280 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (11416693280, 10076396954) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 11416693280 (type:int), 10076396954 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10076396954, 10076377812) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 10076396954 (type:int), 10076377812 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10076377812, 12858126102) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 10076377812 (type:int), 12858126102 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (12858126102, 11414992577) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 12858126102 (type:int), 11414992577 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (11414992577, 2195455521) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 11414992577 (type:int), 2195455521 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (2195455521, 2292319276) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 2195455521 (type:int), 2292319276 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (2292319276, 3787742542) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 2292319276 (type:int), 3787742542 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (3787742542, 331870225) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 3787742542 (type:int), 331870225 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (331870225, 6602678621) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 331870225 (type:int), 6602678621 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6602678621, 6600561053) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 6602678621 (type:int), 6600561053 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6600561053, 6459353459) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 6600561053 (type:int), 6459353459 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6459353459, 6654722825) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 6459353459 (type:int), 6654722825 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6654722825, 6461400930) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 6654722825 (type:int), 6461400930 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6461400930, 6586943924) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 6461400930 (type:int), 6586943924 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6586943924, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=17. Node IDs: 6586943924 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (3787637928, 6588307088) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 3787637928 (type:int), 6588307088 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6588307088, 6588307089) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 6588307088 (type:int), 6588307089 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6588307089, 3787637931) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 6588307089 (type:int), 3787637931 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (3787637931, 6274085707) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 3787637931 (type:int), 6274085707 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6274085707, 653803473) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 6274085707 (type:int), 653803473 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (653803473, 10883367701) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 653803473 (type:int), 10883367701 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10883367701, 10883587718) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 10883367701 (type:int), 10883587718 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10883587718, 13483376921) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 10883587718 (type:int), 13483376921 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (13483376921, 4325400472) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 13483376921 (type:int), 4325400472 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (4325400472, 6317598386) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 4325400472 (type:int), 6317598386 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6317598386, 6604659887) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 6317598386 (type:int), 6604659887 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6604659887, 6288265114) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 6604659887 (type:int), 6288265114 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6288265114, 6584403808) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 6288265114 (type:int), 6584403808 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6584403808, 6439164544) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 6584403808 (type:int), 6439164544 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6439164544, 6691410301) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 6439164544 (type:int), 6691410301 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6691410301, 317881455) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 6691410301 (type:int), 317881455 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (317881455, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=17. Node IDs: 317881455 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6641195191, 6690704558) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 6641195191 (type:int), 6690704558 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6690704558, 6644297974) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 6690704558 (type:int), 6644297974 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6644297974, 6452359482) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 6644297974 (type:int), 6452359482 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6452359482, 6445419592) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 6452359482 (type:int), 6445419592 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6445419592, 7201312103) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 6445419592 (type:int), 7201312103 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (7201312103, 6442967259) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 7201312103 (type:int), 6442967259 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6442967259, 6646337308) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 6442967259 (type:int), 6646337308 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6646337308, 8339175437) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 6646337308 (type:int), 8339175437 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (8339175437, 6628537908) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 8339175437 (type:int), 6628537908 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6628537908, 6442578116) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 6628537908 (type:int), 6442578116 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6442578116, 6306296336) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 6442578116 (type:int), 6306296336 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6306296336, 660179588) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 6306296336 (type:int), 660179588 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (660179588, 6103730625) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 660179588 (type:int), 6103730625 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6103730625, 6459188269) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 6103730625 (type:int), 6459188269 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6459188269, 638201491) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 6459188269 (type:int), 638201491 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (638201491, 6655317767) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 638201491 (type:int), 6655317767 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6655317767, 1496694702) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=17. Node IDs: 6655317767 (type:int), 1496694702 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (1496694702, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=18. Node IDs: 1496694702 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (447749889, 6436300295) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 447749889 (type:int), 6436300295 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6436300295, 317853862) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 6436300295 (type:int), 317853862 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (317853862, 4325598990) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 317853862 (type:int), 4325598990 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (4325598990, 282454589) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 4325598990 (type:int), 282454589 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (282454589, 283636763) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 282454589 (type:int), 283636763 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (283636763, 6588588745) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 283636763 (type:int), 6588588745 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6588588745, 6588588767) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 6588588745 (type:int), 6588588767 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6588588767, 6588588783) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 6588588767 (type:int), 6588588783 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6588588783, 6588589193) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 6588588783 (type:int), 6588589193 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6588589193, 6594277898) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 6588589193 (type:int), 6594277898 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6594277898, 10883587705) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 6594277898 (type:int), 10883587705 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10883587705, 11414746274) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 10883587705 (type:int), 11414746274 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (11414746274, 6602899124) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 11414746274 (type:int), 6602899124 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6602899124, 6602899336) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 6602899124 (type:int), 6602899336 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6602899336, 1788314295) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 6602899336 (type:int), 1788314295 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (1788314295, 10024221444) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 1788314295 (type:int), 10024221444 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10024221444, 3717981041) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=17. Node IDs: 10024221444 (type:int), 3717981041 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (3717981041, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=18. Node IDs: 3717981041 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (11042352765, 6635498671) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 11042352765 (type:int), 6635498671 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6635498671, 6465138779) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 6635498671 (type:int), 6465138779 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6465138779, 6617040100) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 6465138779 (type:int), 6617040100 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6617040100, 6603146991) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 6617040100 (type:int), 6603146991 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6603146991, 6658036030) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 6603146991 (type:int), 6658036030 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6658036030, 6661448319) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 6658036030 (type:int), 6661448319 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6661448319, 6658036442) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 6661448319 (type:int), 6658036442 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6658036442, 6445872025) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 6658036442 (type:int), 6445872025 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6445872025, 6665553965) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 6445872025 (type:int), 6665553965 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6665553965, 6665553964) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 6665553965 (type:int), 6665553964 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6665553964, 6661448199) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 6665553964 (type:int), 6661448199 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6661448199, 6670489825) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 6661448199 (type:int), 6670489825 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6670489825, 6658069870) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 6670489825 (type:int), 6658069870 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6658069870, 317853106) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 6658069870 (type:int), 317853106 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (317853106, 6589371936) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 317853106 (type:int), 6589371936 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6589371936, 6589371921) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 6589371936 (type:int), 6589371921 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6589371921, 317856109) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=17. Node IDs: 6589371921 (type:int), 317856109 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (317856109, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=18. Node IDs: 317856109 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6446132598, 6446132603) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 6446132598 (type:int), 6446132603 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=23
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6446132603, 6442551134) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 6446132603 (type:int), 6442551134 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=22
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6442551134, 6446100222) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 6442551134 (type:int), 6446100222 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=21
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6446100222, 10568208653) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 6446100222 (type:int), 10568208653 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=20
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10568208653, 6634899770) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 10568208653 (type:int), 6634899770 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6634899770, 6638456261) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 6634899770 (type:int), 6638456261 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6638456261, 6647150327) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 6638456261 (type:int), 6647150327 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6647150327, 6442966261) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 6647150327 (type:int), 6442966261 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6442966261, 6661235475) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 6442966261 (type:int), 6661235475 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6661235475, 6661235447) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 6661235475 (type:int), 6661235447 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6661235447, 6665286071) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 6661235447 (type:int), 6665286071 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6665286071, 8334226263) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 6665286071 (type:int), 8334226263 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (8334226263, 3209176725) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 8334226263 (type:int), 3209176725 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (3209176725, 3209176720) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 3209176725 (type:int), 3209176720 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (3209176720, 6584409302) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 3209176720 (type:int), 6584409302 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6584409302, 6584409308) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 6584409302 (type:int), 6584409308 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6584409308, 6587005493) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=17. Node IDs: 6584409308 (type:int), 6587005493 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6587005493, 6587005497) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=18. Node IDs: 6587005493 (type:int), 6587005497 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6587005497, 6587005581) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=19. Node IDs: 6587005497 (type:int), 6587005581 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=19, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6587005581, 2293609467) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=20. Node IDs: 6587005581 (type:int), 2293609467 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=20, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (2293609467, 3830674400) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=21. Node IDs: 2293609467 (type:int), 3830674400 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=21, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (3830674400, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=22. Node IDs: 3830674400 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=22, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6600597562, 1754277338) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 6600597562 (type:int), 1754277338 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (1754277338, 6600552445) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 1754277338 (type:int), 6600552445 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6600552445, 622415036) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 6600552445 (type:int), 622415036 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (622415036, 622470335) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 622415036 (type:int), 622470335 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (622470335, 6736160952) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 622470335 (type:int), 6736160952 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6736160952, 655126357) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 6736160952 (type:int), 655126357 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (655126357, 655126327) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 655126357 (type:int), 655126327 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (655126327, 655129863) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 655126327 (type:int), 655129863 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (655129863, 657743370) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 655129863 (type:int), 657743370 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (657743370, 6287630737) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 657743370 (type:int), 6287630737 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6287630737, 6586943944) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 6287630737 (type:int), 6586943944 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6586943944, 6586943983) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 6586943944 (type:int), 6586943983 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6586943983, 6589371909) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 6586943983 (type:int), 6589371909 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6589371909, 426537692) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 6589371909 (type:int), 426537692 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (426537692, 426537676) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 426537692 (type:int), 426537676 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (426537676, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 426537676 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6614733061, 6655317716) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 6614733061 (type:int), 6655317716 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=20
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6655317716, 447749887) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 6655317716 (type:int), 447749887 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (447749887, 3787616589) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 447749887 (type:int), 3787616589 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (3787616589, 6657982392) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 3787616589 (type:int), 6657982392 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6657982392, 8357324935) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 6657982392 (type:int), 8357324935 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (8357324935, 6443653489) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 8357324935 (type:int), 6443653489 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6443653489, 6669794984) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 6443653489 (type:int), 6669794984 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6669794984, 6443528465) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 6669794984 (type:int), 6443528465 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6443528465, 6661448190) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 6443528465 (type:int), 6661448190 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6661448190, 6661231077) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 6661448190 (type:int), 6661231077 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6661231077, 6688079904) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 6661231077 (type:int), 6688079904 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6688079904, 6688079928) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 6688079904 (type:int), 6688079928 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6688079928, 6438955436) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 6688079928 (type:int), 6438955436 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6438955436, 6445089232) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 6438955436 (type:int), 6445089232 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6445089232, 6584403819) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 6445089232 (type:int), 6584403819 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6584403819, 6584410196) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 6584403819 (type:int), 6584410196 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6584410196, 6584403815) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=17. Node IDs: 6584410196 (type:int), 6584403815 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6584403815, 6588326965) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=18. Node IDs: 6584403815 (type:int), 6588326965 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6588326965, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=19. Node IDs: 6588326965 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=19, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10703778593, 6285607016) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 10703778593 (type:int), 6285607016 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=20
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6285607016, 665115631) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 6285607016 (type:int), 665115631 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (665115631, 5056234399) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 665115631 (type:int), 5056234399 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (5056234399, 426469939) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 5056234399 (type:int), 426469939 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (426469939, 6288220110) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 426469939 (type:int), 6288220110 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6288220110, 6594277960) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 6288220110 (type:int), 6594277960 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6594277960, 10918265060) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 6594277960 (type:int), 10918265060 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10918265060, 9663139623) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 10918265060 (type:int), 9663139623 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (9663139623, 12757611233) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 9663139623 (type:int), 12757611233 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (12757611233, 317861427) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 12757611233 (type:int), 317861427 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (317861427, 2207853991) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 317861427 (type:int), 2207853991 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (2207853991, 6589371908) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 2207853991 (type:int), 6589371908 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6589371908, 6589380818) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 6589371908 (type:int), 6589380818 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6589380818, 447749867) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 6589380818 (type:int), 447749867 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (447749867, 447749869) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 447749867 (type:int), 447749869 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (447749869, 6665875975) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 447749869 (type:int), 6665875975 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6665875975, 317850186) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=17. Node IDs: 6665875975 (type:int), 317850186 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (317850186, 6589371959) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=18. Node IDs: 317850186 (type:int), 6589371959 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6589371959, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=19. Node IDs: 6589371959 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=19, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (3400119450, 6596997480) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 3400119450 (type:int), 6596997480 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6596997480, 6597000999) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 6596997480 (type:int), 6597000999 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6597000999, 3207792060) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 6597000999 (type:int), 3207792060 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (3207792060, 426458464) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 3207792060 (type:int), 426458464 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (426458464, 6597000478) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 426458464 (type:int), 6597000478 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6597000478, 6597000623) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 6597000478 (type:int), 6597000623 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6597000623, 6597000625) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 6597000623 (type:int), 6597000625 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6597000625, 426521278) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 6597000625 (type:int), 426521278 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (426521278, 6588588770) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 426521278 (type:int), 6588588770 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6588588770, 6720823736) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 6588588770 (type:int), 6720823736 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6720823736, 6462497753) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 6720823736 (type:int), 6462497753 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6462497753, 2659930826) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 6462497753 (type:int), 2659930826 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (2659930826, 6614733029) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 2659930826 (type:int), 6614733029 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6614733029, 317855498) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 6614733029 (type:int), 317855498 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (317855498, 317855427) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 317855498 (type:int), 317855427 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (317855427, 638201544) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 317855427 (type:int), 638201544 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (638201544, 9657880774) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=17. Node IDs: 638201544 (type:int), 9657880774 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (9657880774, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=18. Node IDs: 9657880774 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6746695413, 6276305921) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 6746695413 (type:int), 6276305921 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6276305921, 6276594865) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 6276305921 (type:int), 6276594865 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6276594865, 10703733179) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 6276594865 (type:int), 10703733179 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10703733179, 10703779362) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 10703733179 (type:int), 10703779362 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10703779362, 4325401690) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 10703779362 (type:int), 4325401690 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (4325401690, 424962988) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 4325401690 (type:int), 424962988 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (424962988, 6438308430) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 424962988 (type:int), 6438308430 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6438308430, 2865836553) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 6438308430 (type:int), 2865836553 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (2865836553, 6594261079) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 2865836553 (type:int), 6594261079 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6594261079, 6594277938) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 6594261079 (type:int), 6594277938 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6594277938, 426594522) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 6594277938 (type:int), 426594522 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (426594522, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 426594522 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (1927126693, 6655349139) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 1927126693 (type:int), 6655349139 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6655349139, 6669822661) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 6655349139 (type:int), 6669822661 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6669822661, 6669822734) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 6669822661 (type:int), 6669822734 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6669822734, 6721195751) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 6669822734 (type:int), 6721195751 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6721195751, 6655349173) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 6721195751 (type:int), 6655349173 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6655349173, 6655349761) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 6655349173 (type:int), 6655349761 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6655349761, 4325595677) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 6655349761 (type:int), 4325595677 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (4325595677, 6606015988) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 4325595677 (type:int), 6606015988 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6606015988, 6317572313) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 6606015988 (type:int), 6317572313 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6317572313, 6606015936) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 6317572313 (type:int), 6606015936 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6606015936, 2437411946) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 6606015936 (type:int), 2437411946 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (2437411946, 6290189275) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 2437411946 (type:int), 6290189275 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6290189275, 6586948085) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 6290189275 (type:int), 6586948085 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6586948085, 6586433940) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 6586948085 (type:int), 6586433940 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6586433940, 6585990912) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 6586433940 (type:int), 6585990912 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6585990912, 6461890214) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 6585990912 (type:int), 6461890214 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6461890214, 6585990938) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=17. Node IDs: 6461890214 (type:int), 6585990938 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6585990938, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=18. Node IDs: 6585990938 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6107189425, 6107189424) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 6107189425 (type:int), 6107189424 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=23
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6107189424, 10883587619) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 6107189424 (type:int), 10883587619 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=22
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10883587619, 11414746274) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 10883587619 (type:int), 11414746274 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=21
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (11414746274, 6585990899) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 11414746274 (type:int), 6585990899 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=20
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6585990899, 6585990894) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 6585990899 (type:int), 6585990894 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6585990894, 6585990912) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 6585990894 (type:int), 6585990912 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6585990912, 317860414) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 6585990912 (type:int), 317860414 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (317860414, 447749872) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 317860414 (type:int), 447749872 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (447749872, 317856921) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 447749872 (type:int), 317856921 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (317856921, 447749838) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 317856921 (type:int), 447749838 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (447749838, 6589371913) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 447749838 (type:int), 6589371913 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6589371913, 6670245189) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 6589371913 (type:int), 6670245189 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6670245189, 6670245196) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 6670245189 (type:int), 6670245196 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6670245196, 6670245162) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 6670245196 (type:int), 6670245162 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6670245162, 6684389473) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 6670245162 (type:int), 6684389473 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6684389473, 6665236402) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 6684389473 (type:int), 6665236402 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6665236402, 6729209882) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=17. Node IDs: 6665236402 (type:int), 6729209882 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6729209882, 6660401070) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=18. Node IDs: 6729209882 (type:int), 6660401070 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=18, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6660401070, 6723234627) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=19. Node IDs: 6660401070 (type:int), 6723234627 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=19, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6723234627, 6690721584) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=20. Node IDs: 6723234627 (type:int), 6690721584 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=20, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6690721584, 6691410383) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=21. Node IDs: 6690721584 (type:int), 6691410383 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=21, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6691410383, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=22. Node IDs: 6691410383 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=22, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10716492043, 10716492044) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 10716492043 (type:int), 10716492044 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (10716492044, 655125632) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 10716492044 (type:int), 655125632 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (655125632, 9549493548) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 655125632 (type:int), 9549493548 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (9549493548, 6456022225) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 9549493548 (type:int), 6456022225 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6456022225, 6627920671) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 6456022225 (type:int), 6627920671 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6627920671, 6622455988) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 6627920671 (type:int), 6622455988 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6622455988, 6622456045) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 6622455988 (type:int), 6622456045 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6622456045, 6605460514) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 6622456045 (type:int), 6605460514 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6605460514, 6603147267) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 6605460514 (type:int), 6603147267 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6603147267, 6600078028) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 6603147267 (type:int), 6600078028 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6600078028, 6594609171) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 6600078028 (type:int), 6594609171 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6594609171, 6660362073) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 6594609171 (type:int), 6660362073 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6660362073, 6452441786) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 6660362073 (type:int), 6452441786 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6452441786, 6657957563) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 6452441786 (type:int), 6657957563 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6657957563, 6661534765) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 6657957563 (type:int), 6661534765 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6661534765, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 6661534765 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (8387926066, 8387926073) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 8387926066 (type:int), 8387926073 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (8387926073, 6616629316) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 8387926073 (type:int), 6616629316 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6616629316, 6681669797) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 6616629316 (type:int), 6681669797 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6681669797, 6455984498) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 6681669797 (type:int), 6455984498 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6455984498, 6589714442) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 6455984498 (type:int), 6589714442 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6589714442, 13344724354) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 6589714442 (type:int), 13344724354 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (13344724354, 6290197082) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 13344724354 (type:int), 6290197082 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6290197082, 2208238360) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 6290197082 (type:int), 2208238360 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (2208238360, 6589380817) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 2208238360 (type:int), 6589380817 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] A* for pair (6589380817, 2208869932) returned inf (no path found)
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 6589380817 (type:int), 2208869932 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 604679 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=2
+[DEBUG] ride_time >= 9999, setting to None
+  Metrics  : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/1e72294f_dmrt_1/output.json
+  ALNS log : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/1e72294f_dmrt_1/alns_log_mode_c.json
+
+============================================================
+  COMPARISON SUMMARY DMRT
+============================================================
+Mode                           Routes     Time     Dist   Served  Crossings  Wall(s)
+------------------------------------------------------------------------------------
+Door-to-Door (No Walking)          19    872.9    399.2 379/  400          0    383.9
+Strictly Constrained (Safe Walking)                                            — SKIPPED —
+Weakly Constrained (Any Walking)                                            — SKIPPED —
+
+Wall-clock per mode:  C=383.9s
+Total wall-clock:     543.8s
+
+Stage distribution used: {'KG': 0.25, 'ELEMENTARY': 0.25, 'MIDDLE': 0.25, 'HIGH': 0.25}
+Walk limits used: {'KG': 0, 'ELEMENTARY': 0, 'MIDDLE': 250, 'HIGH': 500}
+
+Open '/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/1e72294f_dmrt_1/comparison_map.html' in a browser to explore.

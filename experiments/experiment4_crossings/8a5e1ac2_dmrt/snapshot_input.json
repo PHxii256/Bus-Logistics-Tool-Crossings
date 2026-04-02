@@ -99,11 +99,6 @@
     "run_mode_a": false,
     "run_mode_b": false,
     "run_mode_c": true,
-    "run_build_map": true,
-    "visualize_walk_graph": {
-      "enabled": true,
-      "sample_rate": 0.2
-    },
-    "_comment": "visualize_walk_graph: enabled=true/false, sample_rate=1.0 (all edges) or 0.2 (20% sample)"
+    "run_build_map": true
   }
 }

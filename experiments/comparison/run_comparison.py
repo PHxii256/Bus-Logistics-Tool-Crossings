@@ -1746,6 +1746,8 @@ def _build_custom_layer_control_js(
     fg_unserved_a=None, fg_unserved_b=None, fg_unserved_c=None,
     fg_cands_a=None,   fg_cands_b=None,   fg_cands_c=None,
     fg_usage_a=None,   fg_usage_b=None,   fg_usage_c=None,
+    fg_bbox=None,
+    fg_walk=None,
 ):
     """Return JS that adds a titled, grouped layer-control widget to the map.
 
@@ -1892,6 +1894,10 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
     buses_cfg = (meta or {}).get("buses", {}) if meta else {}
     buses_count = buses_cfg.get("count", None)
     bus_capacity = buses_cfg.get("capacity", None)
+    
+    # Get MRT status for title
+    mrt_enabled = (meta or {}).get("constraints", {}).get("mrt_enabled", False) if meta else False
+    mrt_status_text = f" {'MRT' if mrt_enabled else 'DMRT'})"
 
     blocks = ""
     _build_stats_html._mode_tables = ""   # accumulator for side-by-side mode tables
@@ -2027,7 +2033,7 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
                 font-family:Arial,sans-serif; box-shadow:2px 2px 8px rgba(0,0,0,.25);">
             <div style="font-weight:bold; font-size:13px; margin-bottom:10px;
                   padding-bottom:6px; border-bottom:2px solid #ccc;">
-        Three-Mode Routing Comparison
+        Three-Mode Routing Comparison{mrt_status_text}
       </div>
       {blocks}
       {route_table}
@@ -2121,6 +2127,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         if sol is None or mk not in all_stats:
             modes_out[mode_key] = {"skipped": True}
             continue
+        print(f"[DEBUG] Building metrics for mode {mk}: sol has {len(sol.routes) if sol and hasattr(sol, 'routes') else 'NO'} routes")
         s   = all_stats[mk]
         cx  = len(crossings_dict.get(mk, []))
         n_routes = s["routes"]
@@ -2144,7 +2151,19 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
 
                 # Ride time = sum of legs from this stop to school (matrix-safe)
                 ride_time = calculate_route_time_from_matrix(route.stops[stop_idx:], G_unc)
-                if ride_time >= 9999:
+                if ride_time == 9999.0:
+                    # Check if nodes exist in graph
+                    first_node = route.stops[stop_idx].node_id
+                    second_node = route.stops[stop_idx+1].node_id if stop_idx+1 < len(route.stops) else None
+                    print(f"[DEBUG] ride_time=9999 for stop_idx={stop_idx}. Node IDs: {first_node} (type:{type(first_node).__name__}), {second_node} (type:{type(second_node).__name__ if second_node else 'N/A'})")
+                    print(f"[DEBUG]   First node in G_unc: {first_node in G_unc.nodes if G_unc else 'NO_GRAPH'}, Second node in G_unc: {second_node in G_unc.nodes if G_unc and second_node else 'NO_GRAPH'}")
+                    print(f"[DEBUG]   G_unc has {len(G_unc.nodes) if G_unc else 0} nodes")
+                print(f"[DEBUG] Calculated ride_time={ride_time} for stop_idx={stop_idx}, stops_count={len(route.stops[stop_idx:])}")
+                if ride_time is None:
+                    print(f"[DEBUG] ride_time is None after calculation. G_unc={'PROVIDED' if G_unc is not None else 'MISSING'}")
+                    ride_time = None  # truly unreachable; treat as unknown
+                elif ride_time >= 9999:
+                    print(f"[DEBUG] ride_time >= 9999, setting to None")
                     ride_time = None  # truly unreachable; treat as unknown
 
                 for student in stop.students:
@@ -2619,171 +2638,192 @@ def run(input_path=None, output_path=None, iterations=None):
     # Crossings let pedestrians cross secondary/trunk roads which defeats the
     # safety constraint.
     _saved_walk_graph = _eng._WALK_GRAPH
-    if _clean_walk_graph is not None and use_walk_graph:
-        _eng._WALK_GRAPH = _clean_walk_graph
-        print("  [Mode A] Using walk graph WITHOUT synthetic crossings")
     _ride_caps_on = meta.get("constraints", {}).get("enabled", True)
-    _t_a = _wtime.time()
-    print("\n" + "-" * 50)
-    print("MODE A: Strictly Constrained (safety ON, stage walk radii)")
-    print("-" * 50)
-    data_a = _make_constrained(base_data)
-    if not _ride_caps_on:
-        _relax_ride_constraints(data_a)
-    _reset_caches()
-    _prebuild_ball_tree(G_con)
-    if force_k:
-        data_a["data"]["buses"] = data_a["data"]["buses"][:int(force_k)]
-        print(f"  [FleetSearch] force_fleet_size={force_k} — using fixed fleet for Mode A")
-        minimize_a = False
-    else:
-        minimize_a = minimize_buses
+    sol_a, stats_a, school_a, cands_a, cand_dist_a = None, None, None, {}, {}
+    
+    if run_mode_a:
+        if _clean_walk_graph is not None and use_walk_graph:
+            _eng._WALK_GRAPH = _clean_walk_graph
+            print("  [Mode A] Using walk graph WITHOUT synthetic crossings")
+        _t_a = _wtime.time()
+        print("\n" + "-" * 50)
+        print("MODE A: Strictly Constrained (safety ON, stage walk radii)")
+        print("-" * 50)
+        data_a = _make_constrained(base_data)
+        if not _ride_caps_on:
+            _relax_ride_constraints(data_a)
+        _reset_caches()
+        _prebuild_ball_tree(G_con)
+        if force_k:
+            data_a["data"]["buses"] = data_a["data"]["buses"][:int(force_k)]
+            print(f"  [FleetSearch] force_fleet_size={force_k} — using fixed fleet for Mode A")
+            minimize_a = False
+        else:
+            minimize_a = minimize_buses
 
-    if minimize_a:
-        print("  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode A")
-        _, sol_a, stats_a, school_a = find_minimum_fleet(
-            data_a, G_con, iterations=iters, stage_walk_limits=stage_walk, G_drive=G_unc,
-            matrix_cache_pkl_path=matrix_cache_pkl_path,
-            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
+        if minimize_a:
+            print("  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode A")
+            _, sol_a, stats_a, school_a = find_minimum_fleet(
+                data_a, G_con, iterations=iters, stage_walk_limits=stage_walk, G_drive=G_unc,
+                matrix_cache_pkl_path=matrix_cache_pkl_path,
+                matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
+        else:
+            sol_a, stats_a, school_a = run_algorithm(
+                data_a, G_con, iterations=iters, stage_walk_limits=stage_walk, G_drive=G_unc,
+                matrix_cache_pkl_path=matrix_cache_pkl_path,
+                matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
+        stats_a["label"] = "Mode-A"
+        if "cap_violations_am" not in stats_a:
+            cv = _count_cap_violations(sol_a, G_unc, meta.get("constraints", {}))
+            stats_a["cap_violations_am"] = cv["am"]
+            stats_a["cap_checked_am"] = cv["am_checked"]
+            stats_a["cap_violation_pct_am"] = cv["am_pct"]
+            stats_a["cap_violations_pm"] = cv["pm"]
+            stats_a["cap_checked_pm"] = cv["pm_checked"]
+            stats_a["cap_violation_pct_pm"] = cv["pm_pct"]
+        if force_k:
+            stats_a["buses_used"] = int(force_k)
+        if "buses_used" not in stats_a:
+            stats_a["buses_used"] = meta.get("buses", {}).get("count")
+        sol_a, stats_a = _run_final_unserved_micro_pass(sol_a, stats_a, G_unc, algo_cfg=algo_cfg, mode_key="A")
+        _apply_dwell_time_to_stats(sol_a, stats_a, dwell_time_seconds_per_stop)
+        stats_a["synthetic_edges_timing"] = dict(synthetic_edges_timing)
+        # Snapshot candidate data before caches are cleared for next mode
+        cands_a    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
+        cand_dist_a = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
+        _mode_wall_times["A"] = round(_wtime.time() - _t_a, 2)
+        print(f"  [A] {stats_a['served']}/{stats_a['total']} served | "
+              f"routes={stats_a['routes']} | time={stats_a['total_time']:.1f} min | "
+              f"{stats_a['runtime']:.1f}s")
     else:
-        sol_a, stats_a, school_a = run_algorithm(
-            data_a, G_con, iterations=iters, stage_walk_limits=stage_walk, G_drive=G_unc,
-            matrix_cache_pkl_path=matrix_cache_pkl_path,
-            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
-    stats_a["label"] = "Mode-A"
-    if "cap_violations_am" not in stats_a:
-        cv = _count_cap_violations(sol_a, G_unc, meta.get("constraints", {}))
-        stats_a["cap_violations_am"] = cv["am"]
-        stats_a["cap_checked_am"] = cv["am_checked"]
-        stats_a["cap_violation_pct_am"] = cv["am_pct"]
-        stats_a["cap_violations_pm"] = cv["pm"]
-        stats_a["cap_checked_pm"] = cv["pm_checked"]
-        stats_a["cap_violation_pct_pm"] = cv["pm_pct"]
-    if force_k:
-        stats_a["buses_used"] = int(force_k)
-    if "buses_used" not in stats_a:
-        stats_a["buses_used"] = meta.get("buses", {}).get("count")
-    sol_a, stats_a = _run_final_unserved_micro_pass(sol_a, stats_a, G_unc, algo_cfg=algo_cfg, mode_key="A")
-    _apply_dwell_time_to_stats(sol_a, stats_a, dwell_time_seconds_per_stop)
-    stats_a["synthetic_edges_timing"] = dict(synthetic_edges_timing)
-    # Snapshot candidate data before caches are cleared for next mode
-    cands_a    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
-    cand_dist_a = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
-    _mode_wall_times["A"] = round(_wtime.time() - _t_a, 2)
-    print(f"  [A] {stats_a['served']}/{stats_a['total']} served | "
-          f"routes={stats_a['routes']} | time={stats_a['total_time']:.1f} min | "
-          f"{stats_a['runtime']:.1f}s")
+        print("\n" + "-" * 50)
+        print("MODE A: SKIPPED (debug.run_mode_a=false)")
+        print("-" * 50)
 
     # ── 5. Mode B: Weakly Constrained ──
     # Restore walk graph with crossings for Mode B - crossings help in unconstrained mode
-    if _saved_walk_graph is not None:
-        _eng._WALK_GRAPH = _saved_walk_graph
-        print("  [Mode B] Restored walk graph WITH synthetic crossings")
-    _t_b = _wtime.time()
-    print("\n" + "-" * 50)
-    print("MODE B: Weakly Constrained (all safe, same walk radius)")
-    print("-" * 50)
-    data_b = _make_unconstrained(base_data)
-    if not _ride_caps_on:
-        _relax_ride_constraints(data_b)
-    # Keep G_unc matrix — all modes share the same driving graph.
-    # Clear walk caches since walking graph changes from G_con (A) to G_unc (B).
-    _reset_caches(keep_matrix=True)
-    import gc as _gc; _gc.collect()   # reclaim freed walk-graph + candidate memory
-    _prebuild_ball_tree(G_unc)
-    if force_k:
-        data_b["data"]["buses"] = data_b["data"]["buses"][:int(force_k)]
-        print(f"  [FleetSearch] force_fleet_size={force_k} — using fixed fleet for Mode B")
-        minimize_b = False
-    else:
-        minimize_b = minimize_buses
+    sol_b, stats_b, school_b, cands_b, cand_dist_b = None, None, None, {}, {}
+    
+    if run_mode_b:
+        if _saved_walk_graph is not None:
+            _eng._WALK_GRAPH = _saved_walk_graph
+            print("  [Mode B] Restored walk graph WITH synthetic crossings")
+        _t_b = _wtime.time()
+        print("\n" + "-" * 50)
+        print("MODE B: Weakly Constrained (all safe, same walk radius)")
+        print("-" * 50)
+        data_b = _make_unconstrained(base_data)
+        if not _ride_caps_on:
+            _relax_ride_constraints(data_b)
+        # Keep G_unc matrix — all modes share the same driving graph.
+        # Clear walk caches since walking graph changes from G_con (A) to G_unc (B).
+        _reset_caches(keep_matrix=True)
+        import gc as _gc; _gc.collect()   # reclaim freed walk-graph + candidate memory
+        _prebuild_ball_tree(G_unc)
+        if force_k:
+            data_b["data"]["buses"] = data_b["data"]["buses"][:int(force_k)]
+            print(f"  [FleetSearch] force_fleet_size={force_k} — using fixed fleet for Mode B")
+            minimize_b = False
+        else:
+            minimize_b = minimize_buses
 
-    if minimize_b:
-        print("  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode B")
-        _, sol_b, stats_b, school_b = find_minimum_fleet(
-            data_b, G_unc, iterations=iters, G_drive=G_unc,
-            matrix_cache_pkl_path=matrix_cache_pkl_path,
-            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
+        if minimize_b:
+            print("  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode B")
+            _, sol_b, stats_b, school_b = find_minimum_fleet(
+                data_b, G_unc, iterations=iters, G_drive=G_unc,
+                matrix_cache_pkl_path=matrix_cache_pkl_path,
+                matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
+        else:
+            sol_b, stats_b, school_b = run_algorithm(
+                data_b, G_unc, iterations=iters, G_drive=G_unc,
+                matrix_cache_pkl_path=matrix_cache_pkl_path,
+                matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
+        stats_b["label"] = "Mode-B"
+        if "cap_violations_am" not in stats_b:
+            cv = _count_cap_violations(sol_b, G_unc, meta.get("constraints", {}))
+            stats_b["cap_violations_am"] = cv["am"]
+            stats_b["cap_checked_am"] = cv["am_checked"]
+            stats_b["cap_violation_pct_am"] = cv["am_pct"]
+            stats_b["cap_violations_pm"] = cv["pm"]
+            stats_b["cap_checked_pm"] = cv["pm_checked"]
+            stats_b["cap_violation_pct_pm"] = cv["pm_pct"]
+        if force_k:
+            stats_b["buses_used"] = int(force_k)
+        if "buses_used" not in stats_b:
+            stats_b["buses_used"] = meta.get("buses", {}).get("count")
+        sol_b, stats_b = _run_final_unserved_micro_pass(sol_b, stats_b, G_unc, algo_cfg=algo_cfg, mode_key="B")
+        _apply_dwell_time_to_stats(sol_b, stats_b, dwell_time_seconds_per_stop)
+        stats_b["synthetic_edges_timing"] = dict(synthetic_edges_timing)
+        cands_b    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
+        cand_dist_b = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
+        _mode_wall_times["B"] = round(_wtime.time() - _t_b, 2)
+        print(f"  [B] {stats_b['served']}/{stats_b['total']} served | "
+              f"routes={stats_b['routes']} | time={stats_b['total_time']:.1f} min | "
+              f"{stats_b['runtime']:.1f}s")
     else:
-        sol_b, stats_b, school_b = run_algorithm(
-            data_b, G_unc, iterations=iters, G_drive=G_unc,
-            matrix_cache_pkl_path=matrix_cache_pkl_path,
-            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
-    stats_b["label"] = "Mode-B"
-    if "cap_violations_am" not in stats_b:
-        cv = _count_cap_violations(sol_b, G_unc, meta.get("constraints", {}))
-        stats_b["cap_violations_am"] = cv["am"]
-        stats_b["cap_checked_am"] = cv["am_checked"]
-        stats_b["cap_violation_pct_am"] = cv["am_pct"]
-        stats_b["cap_violations_pm"] = cv["pm"]
-        stats_b["cap_checked_pm"] = cv["pm_checked"]
-        stats_b["cap_violation_pct_pm"] = cv["pm_pct"]
-    if force_k:
-        stats_b["buses_used"] = int(force_k)
-    if "buses_used" not in stats_b:
-        stats_b["buses_used"] = meta.get("buses", {}).get("count")
-    sol_b, stats_b = _run_final_unserved_micro_pass(sol_b, stats_b, G_unc, algo_cfg=algo_cfg, mode_key="B")
-    _apply_dwell_time_to_stats(sol_b, stats_b, dwell_time_seconds_per_stop)
-    stats_b["synthetic_edges_timing"] = dict(synthetic_edges_timing)
-    cands_b    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
-    cand_dist_b = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
-    _mode_wall_times["B"] = round(_wtime.time() - _t_b, 2)
-    print(f"  [B] {stats_b['served']}/{stats_b['total']} served | "
-          f"routes={stats_b['routes']} | time={stats_b['total_time']:.1f} min | "
-          f"{stats_b['runtime']:.1f}s")
+        print("\n" + "-" * 50)
+        print("MODE B: SKIPPED (debug.run_mode_b=false)")
+        print("-" * 50)
 
     # ── 6. Mode C: Door-to-Door ──
-    _t_c = _wtime.time()
-    print("\n" + "-" * 50)
-    print("MODE C: Door-to-Door (walk=0, bus visits every home)")
-    print("-" * 50)
-    data_c = _make_door_to_door(base_data)
-    if not _ride_caps_on:
-        _relax_ride_constraints(data_c)
-    # Keep G_unc matrix AND walk caches — Mode C uses the same G_unc as Mode B.
-    # Only ALNS candidate caches are cleared (different walk_radius=0 config).
-    _reset_caches(keep_matrix=True, keep_walk=True)
-    _prebuild_ball_tree(G_unc)
-    if force_k:
-        data_c["data"]["buses"] = data_c["data"]["buses"][:int(force_k)]
-        print(f"  [FleetSearch] force_fleet_size={force_k} — using fixed fleet for Mode C")
-        minimize_c = False
-    else:
-        minimize_c = minimize_buses
+    sol_c, stats_c, school_c, cands_c, cand_dist_c = None, None, None, {}, {}
+    
+    if run_mode_c:
+        _t_c = _wtime.time()
+        print("\n" + "-" * 50)
+        print("MODE C: Door-to-Door (walk=0, bus visits every home)")
+        print("-" * 50)
+        data_c = _make_door_to_door(base_data)
+        if not _ride_caps_on:
+            _relax_ride_constraints(data_c)
+        # Keep G_unc matrix AND walk caches — Mode C uses the same G_unc as Mode B.
+        # Only ALNS candidate caches are cleared (different walk_radius=0 config).
+        _reset_caches(keep_matrix=True, keep_walk=True)
+        _prebuild_ball_tree(G_unc)
+        if force_k:
+            data_c["data"]["buses"] = data_c["data"]["buses"][:int(force_k)]
+            print(f"  [FleetSearch] force_fleet_size={force_k} — using fixed fleet for Mode C")
+            minimize_c = False
+        else:
+            minimize_c = minimize_buses
 
-    if minimize_c:
-        print("  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode C")
-        _, sol_c, stats_c, school_c = find_minimum_fleet(
-            data_c, G_unc, iterations=iters, G_drive=G_unc,
-            matrix_cache_pkl_path=matrix_cache_pkl_path,
-            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
+        if minimize_c:
+            print("  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode C")
+            _, sol_c, stats_c, school_c = find_minimum_fleet(
+                data_c, G_unc, iterations=iters, G_drive=G_unc,
+                matrix_cache_pkl_path=matrix_cache_pkl_path,
+                matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
+        else:
+            sol_c, stats_c, school_c = run_algorithm(
+                data_c, G_unc, iterations=iters, G_drive=G_unc,
+                matrix_cache_pkl_path=matrix_cache_pkl_path,
+                matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
+        stats_c["label"] = "Mode-C"
+        if "cap_violations_am" not in stats_c:
+            cv = _count_cap_violations(sol_c, G_unc, meta.get("constraints", {}))
+            stats_c["cap_violations_am"] = cv["am"]
+            stats_c["cap_checked_am"] = cv["am_checked"]
+            stats_c["cap_violation_pct_am"] = cv["am_pct"]
+            stats_c["cap_violations_pm"] = cv["pm"]
+            stats_c["cap_checked_pm"] = cv["pm_checked"]
+            stats_c["cap_violation_pct_pm"] = cv["pm_pct"]
+        if force_k:
+            stats_c["buses_used"] = int(force_k)
+        if "buses_used" not in stats_c:
+            stats_c["buses_used"] = meta.get("buses", {}).get("count")
+        sol_c, stats_c = _run_final_unserved_micro_pass(sol_c, stats_c, G_unc, algo_cfg=algo_cfg, mode_key="C")
+        _apply_dwell_time_to_stats(sol_c, stats_c, dwell_time_seconds_per_stop)
+        stats_c["synthetic_edges_timing"] = dict(synthetic_edges_timing)
+        cands_c    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
+        cand_dist_c = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
+        _mode_wall_times["C"] = round(_wtime.time() - _t_c, 2)
+        print(f"  [C] {stats_c['served']}/{stats_c['total']} served | "
+              f"routes={stats_c['routes']} | time={stats_c['total_time']:.1f} min | "
+              f"{stats_c['runtime']:.1f}s")
     else:
-        sol_c, stats_c, school_c = run_algorithm(
-            data_c, G_unc, iterations=iters, G_drive=G_unc,
-            matrix_cache_pkl_path=matrix_cache_pkl_path,
-            matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio)
-    stats_c["label"] = "Mode-C"
-    if "cap_violations_am" not in stats_c:
-        cv = _count_cap_violations(sol_c, G_unc, meta.get("constraints", {}))
-        stats_c["cap_violations_am"] = cv["am"]
-        stats_c["cap_checked_am"] = cv["am_checked"]
-        stats_c["cap_violation_pct_am"] = cv["am_pct"]
-        stats_c["cap_violations_pm"] = cv["pm"]
-        stats_c["cap_checked_pm"] = cv["pm_checked"]
-        stats_c["cap_violation_pct_pm"] = cv["pm_pct"]
-    if force_k:
-        stats_c["buses_used"] = int(force_k)
-    if "buses_used" not in stats_c:
-        stats_c["buses_used"] = meta.get("buses", {}).get("count")
-    sol_c, stats_c = _run_final_unserved_micro_pass(sol_c, stats_c, G_unc, algo_cfg=algo_cfg, mode_key="C")
-    _apply_dwell_time_to_stats(sol_c, stats_c, dwell_time_seconds_per_stop)
-    stats_c["synthetic_edges_timing"] = dict(synthetic_edges_timing)
-    cands_c    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
-    cand_dist_c = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
-    _mode_wall_times["C"] = round(_wtime.time() - _t_c, 2)
-    print(f"  [C] {stats_c['served']}/{stats_c['total']} served | "
-          f"routes={stats_c['routes']} | time={stats_c['total_time']:.1f} min | "
-          f"{stats_c['runtime']:.1f}s")
+        print("\n" + "-" * 50)
+        print("MODE C: SKIPPED (debug.run_mode_c=false)")
+        print("-" * 50)
 
     # Build mode aggregates once (used by map and output metrics).
     crossings_dict, occupancies_dict, all_stats = {}, {}, {}
@@ -2854,85 +2894,152 @@ def run(input_path=None, output_path=None, iterations=None):
         fg_unclass.add_to(m)
         print(f"  Unclassified-road segments: {len(unclass_segs)}")
 
-    # Clear path cache so rendering computes fresh turn-aware paths on G_unc
-    _eng._path_cache.clear()
-    _eng._MATRIX_CACHE.clear()
-    _eng._MATRIX_CACHE_LENGTH.clear()
+        # Bounding Box layer (blue rectangle showing graph extent)
+        fg_bbox = FeatureGroup(name="Graph Bounding Box", show=False)
+        try:
+            # Get bbox from G_unc nodes
+            lats = [G_unc.nodes[n]['y'] for n in G_unc.nodes]
+            lons = [G_unc.nodes[n]['x'] for n in G_unc.nodes]
+            bbox_north, bbox_south = max(lats), min(lats)
+            bbox_east, bbox_west = max(lons), min(lons)
+            
+            # Draw rectangle
+            bbox_coords = [
+                [bbox_north, bbox_west],
+                [bbox_north, bbox_east],
+                [bbox_south, bbox_east],
+                [bbox_south, bbox_west],
+                [bbox_north, bbox_west],  # close the loop
+            ]
+            folium.PolyLine(bbox_coords, color="#3498db", weight=3, opacity=0.7,
+                           dash_array="10,5", tooltip="Graph boundary").add_to(fg_bbox)
+            fg_bbox.add_to(m)
+            print(f"  Bounding box: N={bbox_north:.4f}, S={bbox_south:.4f}, E={bbox_east:.4f}, W={bbox_west:.4f}")
+        except Exception as e:
+            print(f"  Warning: Could not draw bounding box: {e}")
 
-    fgs = {}          # mk -> (fg_routes, fg_walks)
-    fgs_unserved = {}  # mk -> fg_unserved
+        # Walk Graph layer (green network showing pedestrian paths)
+        fg_walk = FeatureGroup(name="Walk Graph Network", show=False)
+        walk_graph_debug = meta.get("debug", {}).get("visualize_walk_graph", {})
+        walk_graph_cfg = walk_graph_debug if isinstance(walk_graph_debug, dict) else {}
+        walk_graph_enabled = bool(walk_graph_cfg.get("enabled", False) if isinstance(walk_graph_cfg, dict) else walk_graph_debug)
+        walk_graph_sample_rate = float(walk_graph_cfg.get("sample_rate", 1.0)) if isinstance(walk_graph_cfg, dict) else 1.0
+        
+        if walk_graph_enabled and G_walk:
+            try:
+                import random as _rand_walk
+                _rand_walk.seed(meta.get("seed", 42))
+                
+                edges_drawn = 0
+                edges_total = G_walk.number_of_edges()
+                for u, v, data in G_walk.edges(data=True):
+                    # Sample edges based on sample_rate
+                    if walk_graph_sample_rate < 1.0 and _rand_walk.random() > walk_graph_sample_rate:
+                        continue
+                    
+                    try:
+                        u_lat, u_lon = G_walk.nodes[u]['y'], G_walk.nodes[u]['x']
+                        v_lat, v_lon = G_walk.nodes[v]['y'], G_walk.nodes[v]['x']
+                        folium.PolyLine(
+                            [[u_lat, u_lon], [v_lat, v_lon]],
+                            color="#27ae60", weight=1, opacity=0.3
+                        ).add_to(fg_walk)
+                        edges_drawn += 1
+                    except (KeyError, TypeError):
+                        continue
+                
+                fg_walk.add_to(m)
+                sample_pct = int(walk_graph_sample_rate * 100)
+                print(f"  Walk graph edges: {edges_drawn}/{edges_total} drawn ({sample_pct}% sample rate)")
+            except Exception as e:
+                print(f"  Warning: Could not draw walk graph: {e}")
+        elif walk_graph_enabled:
+            print(f"  Walk graph visualization enabled but G_walk not available")
+        
+        fg_walk.add_to(m)  # Add even if empty so layer control doesn't break
 
-    solutions = [
-        ("A", sol_a),
-        ("B", sol_b),
-        ("C", sol_c),
-    ]
+        # Clear path cache so rendering computes fresh turn-aware paths on G_unc
+        _eng._path_cache.clear()
+        _eng._MATRIX_CACHE.clear()
+        _eng._MATRIX_CACHE_LENGTH.clear()
 
-    for mk, sol in solutions:
-        if sol is None:
-            continue
-        print(f"  Drawing Mode {mk} …")
-        fg_r, fg_w, _ = _add_route_layer(m, G_unc, sol, mk, G_con,
-                            constraints=meta.get("constraints"))
-        fgs[mk] = (fg_r, fg_w)
-        fgs_unserved[mk] = _add_unserved_layer(m, sol, mk)
+        fgs = {}          # mk -> (fg_routes, fg_walks)
+        fgs_unserved = {}  # mk -> fg_unserved
 
-    # Candidate stop inspector layers (one per mode, hidden by default)
-    cand_data = {mk: cd for mk, cd in {
-        "A": (sol_a, cands_a,  cand_dist_a, G_con) if sol_a else None,
-        "B": (sol_b, cands_b,  cand_dist_b, G_unc) if sol_b else None,
-        "C": (sol_c, cands_c,  cand_dist_c, G_unc) if sol_c else None,
-    }.items() if cd is not None}
-    fgs_cands = {}
-    for mk, (sol, cds, cdst, G_mk) in cand_data.items():
-        fgs_cands[mk] = _add_candidate_layer(m, G_mk, mk, sol, cds, cdst)
+        solutions = [
+            ("A", sol_a),
+            ("B", sol_b),
+            ("C", sol_c),
+        ]
 
-    _syn_markers = _eng.get_synthetic_crossings()
-    _show_only_used_syn = bool(synth_cfg.get("show_only_used", True))
-    _used_syn_edges = _collect_used_synthetic_edge_keys([sol_a, sol_b, sol_c], G_unc) if _show_only_used_syn else set()
-    fg_syn = _add_synthetic_crossing_markers(
-        m,
-        _syn_markers,
-        show_only_used=_show_only_used_syn,
-        used_edge_keys=_used_syn_edges,
-    )
-    fg_injected = _add_injected_crossings_layer(m, injected_payload)
-    _syn_label = getattr(fg_syn, "layer_name", "Synthetic Crossings")
-    _injected_label = getattr(fg_injected, "layer_name", "Injected Crossings") if fg_injected else "Injected Crossings"
-    print(f"  Synthetic crossings (markers): {len(_syn_markers)}")
-    if _show_only_used_syn:
-        print(f"  Synthetic crossings (used edges): {len(_used_syn_edges)}")
-    if injected_result is not None:
-        print(f"  Injected crossings (edges): {len(injected_result.get('edge_pairs', []))}")
-    if len(_syn_markers) == 0:
-        print("  WARNING: zero synthetic crossings were generated with current thresholds.")
+        for mk, sol in solutions:
+            if sol is None:
+                continue
+            print(f"  Drawing Mode {mk} …")
+            fg_r, fg_w, _ = _add_route_layer(m, G_unc, sol, mk, G_con,
+                                constraints=meta.get("constraints"))
+            fgs[mk] = (fg_r, fg_w)
+            fgs_unserved[mk] = _add_unserved_layer(m, sol, mk)
 
-    # Add crossing usage visualization for each mode (which crossings were actually used)
-    try:
-        G_walk = _eng._WALK_GRAPH or _eng._get_walk_graph(G_unc)
-        fgs_crossing_usage = _add_crossing_usage_layers(
+        # Candidate stop inspector layers (one per mode, hidden by default)
+        cand_data = {mk: cd for mk, cd in {
+            "A": (sol_a, cands_a,  cand_dist_a, G_con) if sol_a else None,
+            "B": (sol_b, cands_b,  cand_dist_b, G_unc) if sol_b else None,
+            "C": (sol_c, cands_c,  cand_dist_c, G_unc) if sol_c else None,
+        }.items() if cd is not None}
+        fgs_cands = {}
+        for mk, (sol, cds, cdst, G_mk) in cand_data.items():
+            fgs_cands[mk] = _add_candidate_layer(m, G_mk, mk, sol, cds, cdst)
+
+        _syn_markers = _eng.get_synthetic_crossings()
+        _show_only_used_syn = bool(synth_cfg.get("show_only_used", True))
+        _used_syn_edges = _collect_used_synthetic_edge_keys([sol_a, sol_b, sol_c], G_unc) if _show_only_used_syn else set()
+        fg_syn = _add_synthetic_crossing_markers(
             m,
-            {"A": sol_a, "B": sol_b, "C": sol_c},
-            G_walk,
-            G_unc
+            _syn_markers,
+            show_only_used=_show_only_used_syn,
+            used_edge_keys=_used_syn_edges,
         )
-    except Exception as e:
-        print(f"  Warning: Could not add crossing usage visualization: {e}")
-        fgs_crossing_usage = {}
+        fg_injected = _add_injected_crossings_layer(m, injected_payload)
+        _syn_label = getattr(fg_syn, "layer_name", "Synthetic Crossings")
+        _injected_label = getattr(fg_injected, "layer_name", "Injected Crossings") if fg_injected else "Injected Crossings"
+        print(f"  Synthetic crossings (markers): {len(_syn_markers)}")
+        if _show_only_used_syn:
+            print(f"  Synthetic crossings (used edges): {len(_used_syn_edges)}")
+        if injected_result is not None:
+            print(f"  Injected crossings (edges): {len(injected_result.get('edge_pairs', []))}")
+        if len(_syn_markers) == 0:
+            print("  WARNING: zero synthetic crossings were generated with current thresholds.")
 
-    # Print crossing BFS statistics
-    crossing_stats = get_crossing_bfs_stats()
-    if crossing_stats["students_checked"] > 0:
-        print(f"  Crossing BFS stats:")
-        print(f"    Students checked: {crossing_stats['students_checked']}")
-        print(f"    Candidates enabled by crossings: {crossing_stats['candidates_via_crossing']}")
-        print(f"    Students benefiting from crossings: {crossing_stats['students_with_crossing_benefit']}")
+        # Add crossing usage visualization for each mode (which crossings were actually used)
+        try:
+            G_walk = _eng._WALK_GRAPH or _eng._get_walk_graph(G_unc)
+            fgs_crossing_usage = _add_crossing_usage_layers(
+                m,
+                {"A": sol_a, "B": sol_b, "C": sol_c},
+                G_walk,
+                G_unc
+            )
+        except Exception as e:
+            print(f"  Warning: Could not add crossing usage visualization: {e}")
+            fgs_crossing_usage = {}
+
+        # Print crossing BFS statistics
+        crossing_stats = get_crossing_bfs_stats()
+        if crossing_stats["students_checked"] > 0:
+            print(f"  Crossing BFS stats:")
+            print(f"    Students checked: {crossing_stats['students_checked']}")
+            print(f"    Candidates enabled by crossings: {crossing_stats['candidates_via_crossing']}")
+            print(f"    Students benefiting from crossings: {crossing_stats['students_with_crossing_benefit']}")
 
         # Fill in empty FeatureGroups for any skipped modes so the layer control doesn't crash
         for _mk in ("A", "B", "C"):
             if _mk not in fgs:
-                _emp = FeatureGroup(name=f"Mode {_mk} (skipped)", show=False)
-                fgs[_mk] = (_emp, _emp)
+                _emp_routes = FeatureGroup(name=f"Mode {_mk} Routes (skipped)", show=False)
+                _emp_walks = FeatureGroup(name=f"Mode {_mk} Walks (skipped)", show=False)
+                _emp_routes.add_to(m)  # CRITICAL: Add to map so JavaScript can reference it
+                _emp_walks.add_to(m)   # CRITICAL: Add to map so JavaScript can reference it
+                fgs[_mk] = (_emp_routes, _emp_walks)
 
         # Custom grouped layer control (title + 3 mode checkboxes, no radio buttons)
         map_var = f"map_{m._id}"
@@ -3005,8 +3112,10 @@ def run(input_path=None, output_path=None, iterations=None):
         print(f"  ALNS log : {log_path}")
 
     # ── Summary ──
+    mrt_enabled = meta.get("constraints", {}).get("mrt_enabled", False)
+    mrt_status_terminal = f" {'MRT' if mrt_enabled else 'DMRT'}"
     print("\n" + "=" * 60)
-    print("  COMPARISON SUMMARY")
+    print(f"  COMPARISON SUMMARY{mrt_status_terminal}")
     print("=" * 60)
     hdr = f"{'Mode':<30} {'Routes':>6} {'Time':>8} {'Dist':>8} {'Served':>8} {'Crossings':>10} {'Wall(s)':>8}"
     print(hdr)
