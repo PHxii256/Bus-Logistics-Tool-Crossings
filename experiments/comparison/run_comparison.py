@@ -50,6 +50,7 @@ from detour_engine  import (
     compute_direct_time,
     calculate_walk_penalty,
     _MATRIX_CACHE,
+    _MATRIX_CACHE_LENGTH,
 )
 
 # Patch: fast snap for large graphs
@@ -1029,6 +1030,23 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
                     if ride_time_am >= 9999:
                         ride_time_am = float('inf')
 
+                # ── Ride distance: this stop → school (sum from cache) ──
+                ride_distance_m = 0.0
+                if stop_idx != -1:
+                    for seg_idx in range(stop_idx, len(route.stops) - 1):
+                        src = route.stops[seg_idx].node_id
+                        dst = route.stops[seg_idx + 1].node_id
+                        dist = _MATRIX_CACHE_LENGTH.get((src, dst), None)
+                        if dist is not None and math.isfinite(dist):
+                            ride_distance_m += dist
+                        else:
+                            ride_distance_m = None
+                            break
+                ride_distance_km = ride_distance_m / 1000.0 if ride_distance_m is not None else None
+
+                # ── Pickup order: position among pickup stops ──
+                pickup_order = sum(1 for i in range(stop_idx + 1) if route.stops[i].stop_type != "school") if stop_idx != -1 else None
+
                 # ── PM ride time: school → this stop (reversed route) ──
                 ride_time_pm = _compute_pm_ride_time(route, stop, G)
 
@@ -1048,6 +1066,10 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
                         direct_pm = None
                 except Exception:
                     pass
+
+                # ── Direct distance: home → school (from cache) ──
+                direct_distance_m = _MATRIX_CACHE_LENGTH.get((s_node, school_node), None)
+                direct_distance_km = direct_distance_m / 1000.0 if direct_distance_m is not None and math.isfinite(direct_distance_m) else None
 
                 # ── Per-direction caps ──
                 k_eff = getattr(route, 'ride_time_multiplier', ride_k)
@@ -1082,14 +1104,26 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
                 walk_info  = (f"{walk_m:.0f}m / {walk_limit:.0f}m" if walk_limit > 0
                               else f"{walk_m:.0f}m (Door-to-Door)")
 
+                # ── Build metrics display ──
+                metrics_html = []
+                if pickup_order is not None:
+                    metrics_html.append(f'<b>Pickup Order:</b> #{pickup_order}')
+                if ride_distance_km is not None:
+                    metrics_html.append(f'<b>Ride Distance:</b> {ride_distance_km:.2f} km')
+                if direct_distance_km is not None:
+                    metrics_html.append(f'<b>Direct Distance:</b> {direct_distance_km:.2f} km')
+                metrics_str = '<br>'.join(metrics_html) if metrics_html else ''
+
                 popup_html = (
-                    f'<div style="width:260px;font-size:12px;">'
+                    f'<div style="width:280px;font-size:12px;">'
                     f'<b>Student: {student.id}</b><br>'
                     f'Stage: {stage_name}<br>'
                     f'Home: {student.coords[0]:.5f}, {student.coords[1]:.5f}<br>'
                     f'Mode: {_MODE_NAMES[mode_key]}<br>'
                     f'<div style="margin-top:5px;border-top:1px solid #ccc;padding-top:5px;">'
                     f'<b>Route:</b> {route.route_id}<br>'
+                    f'{metrics_str}'
+                    f'{"<br>" if metrics_str else ""}'
                     f'{cap_html}'
                     f'<div style="margin-top:3px;font-size:11px;">Walk to Stop: {walk_info}</div>'
                     f'</div></div>'
@@ -1908,7 +1942,7 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
     
     # Get MRT status for title
     mrt_enabled = (meta or {}).get("constraints", {}).get("mrt_enabled", False) if meta else False
-    mrt_status_text = f" {'MRT' if mrt_enabled else 'DMRT'}"
+    mrt_status_text = f" {'(MRT)' if mrt_enabled else '(DMRT)'}"
 
     blocks = ""
     _build_stats_html._mode_tables = ""   # accumulator for side-by-side mode tables
@@ -2044,7 +2078,7 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
                 font-family:Arial,sans-serif; box-shadow:2px 2px 8px rgba(0,0,0,.25);">
             <div style="font-weight:bold; font-size:13px; margin-bottom:10px;
                   padding-bottom:6px; border-bottom:2px solid #ccc;">
-        Three-Mode Routing Comparison({mrt_status_text})
+        Three-Mode Routing Comparison{mrt_status_text}
       </div>
       {blocks}
       {route_table}
@@ -2177,6 +2211,22 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                     print(f"[DEBUG] ride_time >= 9999, setting to None")
                     ride_time = None  # truly unreachable; treat as unknown
 
+                # Calculate ride distance from this stop to school (sum of segment distances)
+                ride_distance_m = 0.0
+                for seg_idx in range(stop_idx, len(route.stops) - 1):
+                    src_node = route.stops[seg_idx].node_id
+                    dst_node = route.stops[seg_idx + 1].node_id
+                    dist = _MATRIX_CACHE_LENGTH.get((src_node, dst_node), None)
+                    if dist is not None and math.isfinite(dist):
+                        ride_distance_m += dist
+                    else:
+                        ride_distance_m = None  # Missing data
+                        break
+                ride_distance_km = round(ride_distance_m / 1000.0, 2) if ride_distance_m is not None else None
+
+                # Calculate pickup order (position among pickup stops only, not school)
+                pickup_order = sum(1 for i in range(stop_idx + 1) if route.stops[i].stop_type != "school")
+
                 for student in stop.students:
                     stage_name = (
                         student.school_stage.name
@@ -2189,8 +2239,12 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                     if not math.isfinite(direct_time):
                         direct_time = None
 
-                    # Walk distance home -> assigned stop
+                    # Direct distance home -> school (from OSRM cache, in meters)
                     s_node = _eng.fast_nearest_node(G_unc, student.coords[1], student.coords[0])
+                    direct_distance_m = _MATRIX_CACHE_LENGTH.get((s_node, school_node), None)
+                    direct_distance_km = round(direct_distance_m / 1000.0, 2) if direct_distance_m is not None and math.isfinite(direct_distance_m) else None
+
+                    # Walk distance home -> assigned stop
                     walk_dist = walk_distance_on_roads(G_unc, s_node, stop.node_id)
                     if walk_dist <= 0 or not math.isfinite(walk_dist):
                         walk_dist = 0.0
@@ -2198,8 +2252,12 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                     students_list.append({
                         "id": student.id,
                         "stage": stage_name,
+                        "route_id": route.route_id,
+                        "pickup_order": pickup_order,
                         "ride_time_min": round(ride_time, 2) if ride_time is not None else None,
+                        "ride_distance_km": ride_distance_km,
                         "direct_potential_min": round(direct_time, 2) if direct_time is not None else None,
+                        "direct_distance_km": direct_distance_km,
                         "walk_distance_m": round(walk_dist, 1),
                     })
         
