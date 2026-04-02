@@ -1908,7 +1908,7 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
     
     # Get MRT status for title
     mrt_enabled = (meta or {}).get("constraints", {}).get("mrt_enabled", False) if meta else False
-    mrt_status_text = f" {'MRT' if mrt_enabled else 'DMRT'})"
+    mrt_status_text = f" {'MRT' if mrt_enabled else 'DMRT'}"
 
     blocks = ""
     _build_stats_html._mode_tables = ""   # accumulator for side-by-side mode tables
@@ -2044,7 +2044,7 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
                 font-family:Arial,sans-serif; box-shadow:2px 2px 8px rgba(0,0,0,.25);">
             <div style="font-weight:bold; font-size:13px; margin-bottom:10px;
                   padding-bottom:6px; border-bottom:2px solid #ccc;">
-        Three-Mode Routing Comparison{mrt_status_text}
+        Three-Mode Routing Comparison({mrt_status_text})
       </div>
       {blocks}
       {route_table}
@@ -3003,8 +3003,7 @@ def run(input_path=None, output_path=None, iterations=None):
 
         # Clear path cache so rendering computes fresh turn-aware paths on G_unc
         _eng._path_cache.clear()
-        _eng._MATRIX_CACHE.clear()
-        _eng._MATRIX_CACHE_LENGTH.clear()
+        # NOTE: Keep _MATRIX_CACHE intact! Metrics calculation (line 3126) needs it.
 
         fgs = {}          # mk -> (fg_routes, fg_walks)
         fgs_unserved = {}  # mk -> fg_unserved
@@ -3158,7 +3157,7 @@ def run(input_path=None, output_path=None, iterations=None):
 
     # ── Summary ──
     mrt_enabled = meta.get("constraints", {}).get("mrt_enabled", False)
-    mrt_status_terminal = f" {'MRT' if mrt_enabled else 'DMRT'}"
+    mrt_status_terminal = f" {'(MRT)' if mrt_enabled else '(DMRT)'}"
     print("\n" + "=" * 60)
     print(f"  COMPARISON SUMMARY{mrt_status_terminal}")
     print("=" * 60)
@@ -3182,6 +3181,16 @@ def run(input_path=None, output_path=None, iterations=None):
         print(f"\nOpen '{output}' in a browser to explore.")
     else:
         print("\nHTML map was not generated (debug.run_build_map=false).")
+    
+    # Clean up caches after all processing is complete (isolates runs from each other)
+    _eng._MATRIX_CACHE.clear()
+    _eng._MATRIX_CACHE_LENGTH.clear()
+    _eng._path_cache.clear()
+    _eng._WALK_DIST_CACHE.clear()
+    _eng._safe_nodes_cache.clear()
+    _eng._STUDENT_NODE_CACHE.clear()
+    _alns._student_candidate_cache.clear()
+    _alns._student_candidate_dist.clear()
 
 
 # ────────────────────────────────────────────────────────────────────

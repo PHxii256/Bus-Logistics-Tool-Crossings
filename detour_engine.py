@@ -1807,8 +1807,6 @@ def find_shortest_path_with_turns(graph, source, target, weight='travel_time', i
     This prevents 180-degree turns and applies minor penalties for 90-degree turns.
     Uses a predecessor map instead of storing full paths on the heap for speed.
     """
-    return None, float('inf')
-
     if source == target:
         return [source], 0.0
 

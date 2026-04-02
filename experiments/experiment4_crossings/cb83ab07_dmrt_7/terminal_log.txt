@@ -1,0 +1,812 @@
+Experiment 4 – Crossings
+  Config hash  : cb83ab07
+  MRT Status   : dmrt
+  Run folder   : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/cb83ab07_dmrt_7
+  Input config : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/input.json
+  Output map   : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/cb83ab07_dmrt_7/comparison_map.html
+
+  Matrix cache cfg: enabled=False, force_disable=False, isolate_per_run=False, min_finite_ratio=0.0001
+============================================================
+  THREE-MODE ROUTING COMPARISON  (input.json)
+============================================================
+  Students : 400
+  Seed     : 2000
+  Stages   : {'KG': 0.25, 'ELEMENTARY': 0.25, 'MIDDLE': 0.25, 'HIGH': 0.25}
+  Walk lim : {'KG': 0, 'ELEMENTARY': 0, 'MIDDLE': 250, 'HIGH': 500}
+  Iters    : 10000
+  Dwell    : 30s per pickup stop
+  BuildMap : ON
+  Running  : Door-to-Door
+  Skipping : Strictly Constrained, Weakly Constrained (debug flags)
+
+  Random seed: 2000 (ALNS deterministic)
+[1/7] Generating dataset …
+Generating 400 students around Victory College School...
+Downloading graph around school (5 km radius)...
+  Graph bbox: N=30.0094, S=29.9196, E=31.3222, W=31.2185
+  Max distance to bbox corner: 7.07 km
+  Annulus max_km: static=7.50 km (dynamic_max_km=false)
+Fetching restricted landuse zones...
+  Loaded 18 restricted-zone polygons.
+Found 4244 nodes on restricted highways.
+Placement stats: 1 restricted-zone rejections, 44 no-residential rejections.
+  Stage breakdown: {'KG': 115, 'ELEMENTARY': 101, 'MIDDLE': 94, 'HIGH': 90}
+
+[2/7] Building STRICTLY CONSTRAINED graph …
+Loading cached road network (pickle): cache/graph_bd9bc7bb.pkl
+Applying road speed config...
+Adding edge bearings for turn-penalty calculations...
+Graph ready: 606515 nodes, 1610516 edges
+
+  Pre-building BallTree …  [snap] BallTree built for 606,515 nodes
+ 1.0s
+[3/7] Building WEAKLY CONSTRAINED graph …
+Loading cached road network (pickle): cache/graph_bd9bc7bb.pkl
+Applying road speed config...
+Adding edge bearings for turn-penalty calculations...
+Graph ready: 606515 nodes, 1610516 edges
+
+[3b/7] Building WALK graph...
+Loading cached walking network (pickle): cache/graph_walk_a220ac69.pkl
+Walk graph ready: 11140 nodes, 31268 edges
+
+
+--------------------------------------------------
+MODE A: SKIPPED (debug.run_mode_a=false)
+--------------------------------------------------
+
+--------------------------------------------------
+MODE B: SKIPPED (debug.run_mode_b=false)
+--------------------------------------------------
+
+--------------------------------------------------
+MODE C: Door-to-Door (walk=0, bus visits every home)
+--------------------------------------------------
+  Pre-building BallTree …  [snap] BallTree built for 606,515 nodes
+ 4.8s
+  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode C
+
+[FleetSearch] 400 students, capacity 22, searching k=19..20
+[Optimization] Preparing distance matrix...
+Asking local OSRM to calculate matrix for 356 nodes...
+OSRM Matrix calculation complete! Cache populated.
+Starting ALNS Optimization (time budget: 300.0s, max 10000 iterations)...
+Initial State: ServiceSolution(served=0/400, objective=0.00)
+Iteration 10: Best Obj = 2704029.02, Temp = 817.1, Last 10 iter: 5.90s
+Iteration 20: Best Obj = 3093967.83, Temp = 667.6, Last 10 iter: 12.98s
+Iteration 30: Best Obj = 3313989.64, Temp = 545.5, Last 10 iter: 12.15s
+Iteration 40: Best Obj = 3333986.89, Temp = 445.7, Last 10 iter: 9.85s
+Iteration 50: Best Obj = 3343981.01, Temp = 364.2, Last 10 iter: 10.29s
+Iteration 60: Best Obj = 3343981.01, Temp = 297.6, Last 10 iter: 8.55s
+Iteration 70: Best Obj = 3354002.03, Temp = 243.1, Last 10 iter: 7.62s
+Iteration 80: Best Obj = 3413987.82, Temp = 198.6, Last 10 iter: 5.59s
+Iteration 90: Best Obj = 3423986.62, Temp = 162.3, Last 10 iter: 5.61s
+Iteration 100: Best Obj = 3433982.21, Temp = 132.6, Last 10 iter: 6.35s
+Iteration 110: Best Obj = 3453965.57, Temp = 108.4, Last 10 iter: 6.74s
+Iteration 120: Best Obj = 3473960.39, Temp = 88.5, Last 10 iter: 6.46s
+Iteration 130: Best Obj = 3493957.91, Temp = 72.3, Last 10 iter: 5.53s
+Iteration 140: Best Obj = 3513953.42, Temp = 59.1, Last 10 iter: 6.77s
+Iteration 150: Best Obj = 3513953.42, Temp = 48.3, Last 10 iter: 6.69s
+Iteration 160: Best Obj = 3523951.35, Temp = 39.5, Last 10 iter: 8.19s
+Iteration 170: Best Obj = 3533951.40, Temp = 32.2, Last 10 iter: 9.15s
+Iteration 180: Best Obj = 3553949.71, Temp = 26.3, Last 10 iter: 7.92s
+Iteration 190: Best Obj = 3553949.71, Temp = 21.5, Last 10 iter: 6.46s
+Iteration 200: Best Obj = 3553949.71, Temp = 17.6, Last 10 iter: 5.37s
+Iteration 210: Best Obj = 3553949.71, Temp = 14.4, Last 10 iter: 6.69s
+Iteration 220: Best Obj = 3553949.71, Temp = 11.7, Last 10 iter: 4.07s
+Iteration 230: Best Obj = 3553949.71, Temp = 9.6, Last 10 iter: 4.52s
+Iteration 240: Best Obj = 3553949.71, Temp = 7.8, Last 10 iter: 5.87s
+Iteration 250: Best Obj = 3553949.71, Temp = 6.4, Last 10 iter: 6.94s
+Iteration 260: Best Obj = 3563953.06, Temp = 5.2, Last 10 iter: 5.66s
+Iteration 270: Best Obj = 3573954.36, Temp = 4.3, Last 10 iter: 5.48s
+Iteration 280: Best Obj = 3573954.36, Temp = 3.5, Last 10 iter: 6.57s
+Iteration 290: Best Obj = 3573954.36, Temp = 2.9, Last 10 iter: 6.60s
+Iteration 300: Best Obj = 3573954.36, Temp = 2.3, Last 10 iter: 6.17s
+Iteration 310: Best Obj = 3573954.36, Temp = 1.9, Last 10 iter: 5.92s
+Iteration 320: Best Obj = 3583954.68, Temp = 1.6, Last 10 iter: 8.39s
+Iteration 330: Best Obj = 3583954.68, Temp = 1.3, Last 10 iter: 6.77s
+Iteration 340: Best Obj = 3583954.68, Temp = 1.0, Last 10 iter: 5.72s
+  Early stop: temperature <= 1 and no improvement for 26 iterations.
+Optimization Complete.
+Total Time: 240.70s
+Final State: ServiceSolution(served=368/400, objective=3583954.68)
+Running final repair pass on 32 unserved students...
+  Repair pass: no additional students could be inserted.
+  Fleet 19: 368/400 served  [zero_walk_radius_no_valid_insertion: 32]
+[Optimization] Preparing distance matrix...
+Asking local OSRM to calculate matrix for 356 nodes...
+OSRM Matrix calculation complete! Cache populated.
+Starting ALNS Optimization (time budget: 300.0s, max 10000 iterations)...
+Initial State: ServiceSolution(served=0/400, objective=0.00)
+Iteration 10: Best Obj = 2758962.55, Temp = 817.1, Last 10 iter: 5.21s
+Iteration 20: Best Obj = 3038964.36, Temp = 667.6, Last 10 iter: 8.53s
+Iteration 30: Best Obj = 3368936.48, Temp = 545.5, Last 10 iter: 10.17s
+Iteration 40: Best Obj = 3488902.03, Temp = 445.7, Last 10 iter: 4.79s
+Iteration 50: Best Obj = 3538897.81, Temp = 364.2, Last 10 iter: 6.09s
+Iteration 60: Best Obj = 3548902.41, Temp = 297.6, Last 10 iter: 6.30s
+Iteration 70: Best Obj = 3578888.29, Temp = 243.1, Last 10 iter: 7.12s
+Iteration 80: Best Obj = 3578888.29, Temp = 198.6, Last 10 iter: 7.73s
+Iteration 90: Best Obj = 3578888.29, Temp = 162.3, Last 10 iter: 4.57s
+Iteration 100: Best Obj = 3598899.81, Temp = 132.6, Last 10 iter: 7.99s
+Iteration 110: Best Obj = 3598899.81, Temp = 108.4, Last 10 iter: 7.94s
+Iteration 120: Best Obj = 3618881.86, Temp = 88.5, Last 10 iter: 5.66s
+Iteration 130: Best Obj = 3628880.18, Temp = 72.3, Last 10 iter: 6.41s
+Iteration 140: Best Obj = 3648862.22, Temp = 59.1, Last 10 iter: 4.82s
+Iteration 150: Best Obj = 3658873.15, Temp = 48.3, Last 10 iter: 6.64s
+Iteration 160: Best Obj = 3658873.15, Temp = 39.5, Last 10 iter: 5.57s
+Iteration 170: Best Obj = 3668875.82, Temp = 32.2, Last 10 iter: 5.44s
+Iteration 180: Best Obj = 3668875.82, Temp = 26.3, Last 10 iter: 5.62s
+Iteration 190: Best Obj = 3668875.82, Temp = 21.5, Last 10 iter: 5.88s
+Iteration 200: Best Obj = 3698863.88, Temp = 17.6, Last 10 iter: 3.60s
+Iteration 210: Best Obj = 3698863.88, Temp = 14.4, Last 10 iter: 4.83s
+Iteration 220: Best Obj = 3698863.88, Temp = 11.7, Last 10 iter: 3.75s
+Iteration 230: Best Obj = 3698863.88, Temp = 9.6, Last 10 iter: 6.15s
+Iteration 240: Best Obj = 3698863.88, Temp = 7.8, Last 10 iter: 5.33s
+Iteration 250: Best Obj = 3698863.88, Temp = 6.4, Last 10 iter: 5.50s
+Iteration 260: Best Obj = 3698863.88, Temp = 5.2, Last 10 iter: 5.94s
+Iteration 270: Best Obj = 3708863.40, Temp = 4.3, Last 10 iter: 4.67s
+Iteration 280: Best Obj = 3708863.40, Temp = 3.5, Last 10 iter: 5.58s
+Iteration 290: Best Obj = 3708863.40, Temp = 2.9, Last 10 iter: 5.87s
+Iteration 300: Best Obj = 3708863.40, Temp = 2.3, Last 10 iter: 3.64s
+Iteration 310: Best Obj = 3708863.40, Temp = 1.9, Last 10 iter: 5.28s
+Iteration 320: Best Obj = 3708863.40, Temp = 1.6, Last 10 iter: 5.12s
+Iteration 330: Best Obj = 3728864.18, Temp = 1.3, Last 10 iter: 5.14s
+Iteration 340: Best Obj = 3728864.18, Temp = 1.0, Last 10 iter: 4.82s
+  Early stop: temperature <= 1 and no improvement for 20 iterations.
+Optimization Complete.
+Total Time: 202.18s
+Final State: ServiceSolution(served=383/400, objective=3728864.18)
+Running final repair pass on 17 unserved students...
+  Repair pass: no additional students could be inserted.
+  Fleet 20: 383/400 served  [zero_walk_radius_no_valid_insertion: 17]
+  [C] 383/400 served | routes=20 | time=940.5 min | 189.0s
+
+--------------------------------------------------
+BUILDING COMPARISON MAP
+--------------------------------------------------
+  Dangerous-road segments: 1492
+  Unclassified-road segments: 239
+  Intended bbox: N=30.0520, S=29.9256, E=31.3386, W=31.2291
+  Actual extent: N=31.2291, S=29.9256, E=31.3386, W=30.0520
+  Walk graph edges: 31576/31576 drawn (100% sample rate)
+  Drawing Mode C …
+[DEBUG] A* for pair (11414746274, 9663139623) returned inf (no path found)
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] A* for pair (8308941937, 8308941938) returned inf (no path found)
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] A* for pair (6594277898, 6594701700) returned inf (no path found)
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+  Synthetic crossings (markers): 308
+
+  Map saved: /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/cb83ab07_dmrt_7/comparison_map.html  (20784 KB)
+[DEBUG] Building metrics for mode C: sol has 20 routes
+[DEBUG] Calculated ride_time=82.70312566767691 for stop_idx=1, stops_count=12
+[DEBUG] Calculated ride_time=82.27816184824937 for stop_idx=2, stops_count=11
+[DEBUG] Calculated ride_time=80.58513641724377 for stop_idx=3, stops_count=10
+[DEBUG] Calculated ride_time=73.85565190829067 for stop_idx=4, stops_count=9
+[DEBUG] Calculated ride_time=68.3303330685091 for stop_idx=5, stops_count=8
+[DEBUG] Calculated ride_time=61.4317552624438 for stop_idx=6, stops_count=7
+[DEBUG] Calculated ride_time=57.86721024237896 for stop_idx=7, stops_count=6
+[DEBUG] Calculated ride_time=48.043101570600584 for stop_idx=8, stops_count=5
+[DEBUG] Calculated ride_time=47.92468474884946 for stop_idx=9, stops_count=4
+[DEBUG] Calculated ride_time=30.495967616432665 for stop_idx=10, stops_count=3
+[DEBUG] Calculated ride_time=28.304577589129977 for stop_idx=11, stops_count=2
+[DEBUG] Calculated ride_time=97.96768552466922 for stop_idx=1, stops_count=14
+[DEBUG] Calculated ride_time=95.88999546932702 for stop_idx=2, stops_count=13
+[DEBUG] Calculated ride_time=71.73090929237999 for stop_idx=3, stops_count=12
+[DEBUG] Calculated ride_time=55.447121124590126 for stop_idx=4, stops_count=11
+[DEBUG] Calculated ride_time=43.125397810162156 for stop_idx=5, stops_count=10
+[DEBUG] Calculated ride_time=42.036376547765485 for stop_idx=6, stops_count=9
+[DEBUG] Calculated ride_time=37.55890585918044 for stop_idx=7, stops_count=8
+[DEBUG] Calculated ride_time=34.29440281679147 for stop_idx=8, stops_count=7
+[DEBUG] Calculated ride_time=33.43530923270968 for stop_idx=9, stops_count=6
+[DEBUG] Calculated ride_time=31.612364038542573 for stop_idx=10, stops_count=5
+[DEBUG] Calculated ride_time=28.32034653240077 for stop_idx=11, stops_count=4
+[DEBUG] Calculated ride_time=14.72141308513854 for stop_idx=12, stops_count=3
+[DEBUG] Calculated ride_time=8.134018972598899 for stop_idx=13, stops_count=2
+[DEBUG] Calculated ride_time=93.3711888749645 for stop_idx=1, stops_count=16
+[DEBUG] Calculated ride_time=91.13361887341202 for stop_idx=2, stops_count=15
+[DEBUG] Calculated ride_time=89.48626007914538 for stop_idx=3, stops_count=14
+[DEBUG] Calculated ride_time=84.18500210989845 for stop_idx=4, stops_count=13
+[DEBUG] Calculated ride_time=77.53228066941968 for stop_idx=5, stops_count=12
+[DEBUG] Calculated ride_time=76.04401690371874 for stop_idx=6, stops_count=11
+[DEBUG] Calculated ride_time=73.6562575563345 for stop_idx=7, stops_count=10
+[DEBUG] Calculated ride_time=66.75259709945335 for stop_idx=8, stops_count=9
+[DEBUG] Calculated ride_time=64.7265816549875 for stop_idx=9, stops_count=8
+[DEBUG] Calculated ride_time=56.14614713397667 for stop_idx=10, stops_count=7
+[DEBUG] Calculated ride_time=54.76403850090145 for stop_idx=11, stops_count=6
+[DEBUG] Calculated ride_time=28.99589417638782 for stop_idx=12, stops_count=5
+[DEBUG] Calculated ride_time=21.336108283582682 for stop_idx=13, stops_count=4
+[DEBUG] Calculated ride_time=18.107544647675585 for stop_idx=14, stops_count=3
+[DEBUG] Calculated ride_time=8.358760275919659 for stop_idx=15, stops_count=2
+[DEBUG] Calculated ride_time=71.98505055679013 for stop_idx=1, stops_count=21
+[DEBUG] Calculated ride_time=70.87983645379748 for stop_idx=2, stops_count=20
+[DEBUG] Calculated ride_time=67.77544454243474 for stop_idx=3, stops_count=19
+[DEBUG] Calculated ride_time=66.6052385793401 for stop_idx=4, stops_count=18
+[DEBUG] Calculated ride_time=63.49676347485389 for stop_idx=5, stops_count=17
+[DEBUG] Calculated ride_time=58.43888583092352 for stop_idx=6, stops_count=16
+[DEBUG] Calculated ride_time=47.846371981428014 for stop_idx=7, stops_count=15
+[DEBUG] Calculated ride_time=45.44318715749976 for stop_idx=8, stops_count=14
+[DEBUG] Calculated ride_time=44.82971111115052 for stop_idx=9, stops_count=13
+[DEBUG] Calculated ride_time=38.248323110018895 for stop_idx=10, stops_count=12
+[DEBUG] Calculated ride_time=36.009018797858694 for stop_idx=11, stops_count=11
+[DEBUG] Calculated ride_time=31.7008354255816 for stop_idx=12, stops_count=10
+[DEBUG] Calculated ride_time=29.77011613609556 for stop_idx=13, stops_count=9
+[DEBUG] Calculated ride_time=22.94921557575065 for stop_idx=14, stops_count=8
+[DEBUG] Calculated ride_time=12.3249472039404 for stop_idx=15, stops_count=7
+[DEBUG] Calculated ride_time=12.147550806484064 for stop_idx=16, stops_count=6
+[DEBUG] Calculated ride_time=11.377096060549844 for stop_idx=17, stops_count=5
+[DEBUG] Calculated ride_time=11.301277874837146 for stop_idx=18, stops_count=4
+[DEBUG] Calculated ride_time=5.674361598261239 for stop_idx=19, stops_count=3
+[DEBUG] Calculated ride_time=3.522804424569065 for stop_idx=20, stops_count=2
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 6655339874 (type:int), 638201491 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 638201491 (type:int), 6454529968 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 6454529968 (type:int), 6103730625 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 6103730625 (type:int), 6458967134 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 6458967134 (type:int), 8292938376 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 8292938376 (type:int), 6107520758 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 6107520758 (type:int), 317855427 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 317855427 (type:int), 638201544 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 638201544 (type:int), 6589371921 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 6589371921 (type:int), 317856921 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 317856921 (type:int), 6586943924 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 6586943924 (type:int), 12757611233 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 12757611233 (type:int), 6583639575 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 6583639575 (type:int), 6464291719 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 6464291719 (type:int), 10883587705 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 10883587705 (type:int), 11414746274 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (11414746274, 9663139623) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=17. Node IDs: 11414746274 (type:int), 9663139623 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=17, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=7.451857096871845 for stop_idx=18, stops_count=2
+[DEBUG] Calculated ride_time=70.93492507759568 for stop_idx=1, stops_count=19
+[DEBUG] Calculated ride_time=68.86180257659598 for stop_idx=2, stops_count=18
+[DEBUG] Calculated ride_time=65.75603296912918 for stop_idx=3, stops_count=17
+[DEBUG] Calculated ride_time=64.00857958221191 for stop_idx=4, stops_count=16
+[DEBUG] Calculated ride_time=61.01274113550386 for stop_idx=5, stops_count=15
+[DEBUG] Calculated ride_time=43.05293686837127 for stop_idx=6, stops_count=14
+[DEBUG] Calculated ride_time=38.59492522048207 for stop_idx=7, stops_count=13
+[DEBUG] Calculated ride_time=37.93793759524242 for stop_idx=8, stops_count=12
+[DEBUG] Calculated ride_time=35.29924494759521 for stop_idx=9, stops_count=11
+[DEBUG] Calculated ride_time=34.0957151480903 for stop_idx=10, stops_count=10
+[DEBUG] Calculated ride_time=28.108823471984607 for stop_idx=11, stops_count=9
+[DEBUG] Calculated ride_time=26.1954485275062 for stop_idx=12, stops_count=8
+[DEBUG] Calculated ride_time=23.523165540159205 for stop_idx=13, stops_count=7
+[DEBUG] Calculated ride_time=19.050614984702722 for stop_idx=14, stops_count=6
+[DEBUG] Calculated ride_time=16.709086501499126 for stop_idx=15, stops_count=5
+[DEBUG] Calculated ride_time=10.343089330698133 for stop_idx=16, stops_count=4
+[DEBUG] Calculated ride_time=8.80505002811959 for stop_idx=17, stops_count=3
+[DEBUG] Calculated ride_time=3.6378940099516375 for stop_idx=18, stops_count=2
+[DEBUG] Calculated ride_time=92.58990201877313 for stop_idx=1, stops_count=23
+[DEBUG] Calculated ride_time=88.82034688083473 for stop_idx=2, stops_count=22
+[DEBUG] Calculated ride_time=83.86570143856832 for stop_idx=3, stops_count=21
+[DEBUG] Calculated ride_time=80.78440987696015 for stop_idx=4, stops_count=20
+[DEBUG] Calculated ride_time=77.99371046638926 for stop_idx=5, stops_count=19
+[DEBUG] Calculated ride_time=74.05944534957713 for stop_idx=6, stops_count=18
+[DEBUG] Calculated ride_time=69.04809156647119 for stop_idx=7, stops_count=17
+[DEBUG] Calculated ride_time=65.09363062103728 for stop_idx=8, stops_count=16
+[DEBUG] Calculated ride_time=60.2826215128767 for stop_idx=9, stops_count=15
+[DEBUG] Calculated ride_time=48.64084486418459 for stop_idx=10, stops_count=14
+[DEBUG] Calculated ride_time=29.965451737222 for stop_idx=11, stops_count=13
+[DEBUG] Calculated ride_time=27.617998175614037 for stop_idx=12, stops_count=12
+[DEBUG] Calculated ride_time=24.80064457996293 for stop_idx=13, stops_count=11
+[DEBUG] Calculated ride_time=23.63397237855497 for stop_idx=14, stops_count=10
+[DEBUG] Calculated ride_time=22.64409460101453 for stop_idx=15, stops_count=9
+[DEBUG] Calculated ride_time=21.405391262905546 for stop_idx=16, stops_count=8
+[DEBUG] Calculated ride_time=14.233193464444277 for stop_idx=17, stops_count=7
+[DEBUG] Calculated ride_time=9.917079983316148 for stop_idx=18, stops_count=6
+[DEBUG] Calculated ride_time=5.894755843865987 for stop_idx=19, stops_count=5
+[DEBUG] Calculated ride_time=4.849082085791524 for stop_idx=20, stops_count=4
+[DEBUG] Calculated ride_time=4.354494916115707 for stop_idx=21, stops_count=3
+[DEBUG] Calculated ride_time=3.129950459993314 for stop_idx=22, stops_count=2
+[DEBUG] Calculated ride_time=72.68514420444775 for stop_idx=1, stops_count=17
+[DEBUG] Calculated ride_time=67.98612996443222 for stop_idx=2, stops_count=16
+[DEBUG] Calculated ride_time=65.28913509848165 for stop_idx=3, stops_count=15
+[DEBUG] Calculated ride_time=62.87822069159941 for stop_idx=4, stops_count=14
+[DEBUG] Calculated ride_time=50.31540635019172 for stop_idx=5, stops_count=13
+[DEBUG] Calculated ride_time=46.54301502875201 for stop_idx=6, stops_count=12
+[DEBUG] Calculated ride_time=43.871013728458266 for stop_idx=7, stops_count=11
+[DEBUG] Calculated ride_time=42.63663711565067 for stop_idx=8, stops_count=10
+[DEBUG] Calculated ride_time=39.68973597318249 for stop_idx=9, stops_count=9
+[DEBUG] Calculated ride_time=38.74446261018031 for stop_idx=10, stops_count=8
+[DEBUG] Calculated ride_time=37.61847793820648 for stop_idx=11, stops_count=7
+[DEBUG] Calculated ride_time=34.57766161620711 for stop_idx=12, stops_count=6
+[DEBUG] Calculated ride_time=32.029843048124825 for stop_idx=13, stops_count=5
+[DEBUG] Calculated ride_time=14.738058302007918 for stop_idx=14, stops_count=4
+[DEBUG] Calculated ride_time=14.134191326516053 for stop_idx=15, stops_count=3
+[DEBUG] Calculated ride_time=11.57007061665313 for stop_idx=16, stops_count=2
+[DEBUG] Calculated ride_time=67.42695195472176 for stop_idx=1, stops_count=21
+[DEBUG] Calculated ride_time=66.43763365734027 for stop_idx=2, stops_count=20
+[DEBUG] Calculated ride_time=52.67502930278509 for stop_idx=3, stops_count=19
+[DEBUG] Calculated ride_time=52.13365918681677 for stop_idx=4, stops_count=18
+[DEBUG] Calculated ride_time=49.30362466449887 for stop_idx=5, stops_count=17
+[DEBUG] Calculated ride_time=48.99249309486245 for stop_idx=6, stops_count=16
+[DEBUG] Calculated ride_time=44.45731573343102 for stop_idx=7, stops_count=15
+[DEBUG] Calculated ride_time=36.34436436016725 for stop_idx=8, stops_count=14
+[DEBUG] Calculated ride_time=30.925881824448503 for stop_idx=9, stops_count=13
+[DEBUG] Calculated ride_time=29.15491923960017 for stop_idx=10, stops_count=12
+[DEBUG] Calculated ride_time=26.615574464808418 for stop_idx=11, stops_count=11
+[DEBUG] Calculated ride_time=22.428083652758996 for stop_idx=12, stops_count=10
+[DEBUG] Calculated ride_time=20.481680829310104 for stop_idx=13, stops_count=9
+[DEBUG] Calculated ride_time=15.325679752303703 for stop_idx=14, stops_count=8
+[DEBUG] Calculated ride_time=14.588370131204211 for stop_idx=15, stops_count=7
+[DEBUG] Calculated ride_time=11.585280305679829 for stop_idx=16, stops_count=6
+[DEBUG] Calculated ride_time=10.481372357089239 for stop_idx=17, stops_count=5
+[DEBUG] Calculated ride_time=8.969185751584124 for stop_idx=18, stops_count=4
+[DEBUG] Calculated ride_time=7.971778350242544 for stop_idx=19, stops_count=3
+[DEBUG] Calculated ride_time=5.731327792115469 for stop_idx=20, stops_count=2
+[DEBUG] Calculated ride_time=72.61258079765749 for stop_idx=1, stops_count=22
+[DEBUG] Calculated ride_time=69.40571913815673 for stop_idx=2, stops_count=21
+[DEBUG] Calculated ride_time=65.38853003663944 for stop_idx=3, stops_count=20
+[DEBUG] Calculated ride_time=39.34666669227281 for stop_idx=4, stops_count=19
+[DEBUG] Calculated ride_time=34.54032116987014 for stop_idx=5, stops_count=18
+[DEBUG] Calculated ride_time=32.71012623509432 for stop_idx=6, stops_count=17
+[DEBUG] Calculated ride_time=31.586038560676247 for stop_idx=7, stops_count=16
+[DEBUG] Calculated ride_time=30.762235166492896 for stop_idx=8, stops_count=15
+[DEBUG] Calculated ride_time=29.358892904104223 for stop_idx=9, stops_count=14
+[DEBUG] Calculated ride_time=27.346672541476526 for stop_idx=10, stops_count=13
+[DEBUG] Calculated ride_time=23.83825128581013 for stop_idx=11, stops_count=12
+[DEBUG] Calculated ride_time=21.839728002350316 for stop_idx=12, stops_count=11
+[DEBUG] Calculated ride_time=19.07288964180105 for stop_idx=13, stops_count=10
+[DEBUG] Calculated ride_time=16.546514387316805 for stop_idx=14, stops_count=9
+[DEBUG] Calculated ride_time=13.470028871868701 for stop_idx=15, stops_count=8
+[DEBUG] Calculated ride_time=12.965671791497703 for stop_idx=16, stops_count=7
+[DEBUG] Calculated ride_time=10.942826840889907 for stop_idx=17, stops_count=6
+[DEBUG] Calculated ride_time=10.092083472844003 for stop_idx=18, stops_count=5
+[DEBUG] Calculated ride_time=9.799188150691332 for stop_idx=19, stops_count=4
+[DEBUG] Calculated ride_time=3.218791442620807 for stop_idx=20, stops_count=3
+[DEBUG] Calculated ride_time=2.6570877033270874 for stop_idx=21, stops_count=2
+[DEBUG] Calculated ride_time=82.05365707807059 for stop_idx=1, stops_count=16
+[DEBUG] Calculated ride_time=74.23231995204395 for stop_idx=2, stops_count=15
+[DEBUG] Calculated ride_time=72.67651038580249 for stop_idx=3, stops_count=14
+[DEBUG] Calculated ride_time=69.32795479500976 for stop_idx=4, stops_count=13
+[DEBUG] Calculated ride_time=66.75840259010354 for stop_idx=5, stops_count=12
+[DEBUG] Calculated ride_time=60.48536123264853 for stop_idx=6, stops_count=11
+[DEBUG] Calculated ride_time=59.52571668833233 for stop_idx=7, stops_count=10
+[DEBUG] Calculated ride_time=59.25943023047226 for stop_idx=8, stops_count=9
+[DEBUG] Calculated ride_time=57.49943697669448 for stop_idx=9, stops_count=8
+[DEBUG] Calculated ride_time=45.886029815677865 for stop_idx=10, stops_count=7
+[DEBUG] Calculated ride_time=36.859524791959146 for stop_idx=11, stops_count=6
+[DEBUG] Calculated ride_time=35.95538300088546 for stop_idx=12, stops_count=5
+[DEBUG] Calculated ride_time=24.41531813120714 for stop_idx=13, stops_count=4
+[DEBUG] Calculated ride_time=23.31116673668172 for stop_idx=14, stops_count=3
+[DEBUG] Calculated ride_time=10.499248581709914 for stop_idx=15, stops_count=2
+[DEBUG] Calculated ride_time=80.91688758994053 for stop_idx=1, stops_count=18
+[DEBUG] Calculated ride_time=78.89946133814679 for stop_idx=2, stops_count=17
+[DEBUG] Calculated ride_time=77.68978615256762 for stop_idx=3, stops_count=16
+[DEBUG] Calculated ride_time=76.48407477186261 for stop_idx=4, stops_count=15
+[DEBUG] Calculated ride_time=68.15493606802454 for stop_idx=5, stops_count=14
+[DEBUG] Calculated ride_time=60.14862546617912 for stop_idx=6, stops_count=13
+[DEBUG] Calculated ride_time=56.11951065247259 for stop_idx=7, stops_count=12
+[DEBUG] Calculated ride_time=53.20199465188856 for stop_idx=8, stops_count=11
+[DEBUG] Calculated ride_time=37.41535747375628 for stop_idx=9, stops_count=10
+[DEBUG] Calculated ride_time=29.187332777222352 for stop_idx=10, stops_count=9
+[DEBUG] Calculated ride_time=27.658398392052177 for stop_idx=11, stops_count=8
+[DEBUG] Calculated ride_time=19.42339990903359 for stop_idx=12, stops_count=7
+[DEBUG] Calculated ride_time=15.559843466776972 for stop_idx=13, stops_count=6
+[DEBUG] Calculated ride_time=13.714123748689332 for stop_idx=14, stops_count=5
+[DEBUG] Calculated ride_time=10.877089305991943 for stop_idx=15, stops_count=4
+[DEBUG] Calculated ride_time=9.116320476010431 for stop_idx=16, stops_count=3
+[DEBUG] Calculated ride_time=7.7426440616381615 for stop_idx=17, stops_count=2
+[DEBUG] Calculated ride_time=76.49912257902172 for stop_idx=1, stops_count=20
+[DEBUG] Calculated ride_time=73.61002854722265 for stop_idx=2, stops_count=19
+[DEBUG] Calculated ride_time=64.66123060884922 for stop_idx=3, stops_count=18
+[DEBUG] Calculated ride_time=61.607208463916336 for stop_idx=4, stops_count=17
+[DEBUG] Calculated ride_time=59.29373226453281 for stop_idx=5, stops_count=16
+[DEBUG] Calculated ride_time=56.84052785880955 for stop_idx=6, stops_count=15
+[DEBUG] Calculated ride_time=51.30299970072383 for stop_idx=7, stops_count=14
+[DEBUG] Calculated ride_time=47.27434839624897 for stop_idx=8, stops_count=13
+[DEBUG] Calculated ride_time=44.2273034729957 for stop_idx=9, stops_count=12
+[DEBUG] Calculated ride_time=38.268722115870055 for stop_idx=10, stops_count=11
+[DEBUG] Calculated ride_time=33.68723997048784 for stop_idx=11, stops_count=10
+[DEBUG] Calculated ride_time=30.30176644334139 for stop_idx=12, stops_count=9
+[DEBUG] Calculated ride_time=25.36123634639799 for stop_idx=13, stops_count=8
+[DEBUG] Calculated ride_time=21.401815981139833 for stop_idx=14, stops_count=7
+[DEBUG] Calculated ride_time=21.097801138138934 for stop_idx=15, stops_count=6
+[DEBUG] Calculated ride_time=16.220580902803313 for stop_idx=16, stops_count=5
+[DEBUG] Calculated ride_time=15.65335913321038 for stop_idx=17, stops_count=4
+[DEBUG] Calculated ride_time=13.687147665105115 for stop_idx=18, stops_count=3
+[DEBUG] Calculated ride_time=9.317472777384136 for stop_idx=19, stops_count=2
+[DEBUG] Calculated ride_time=91.64699090183086 for stop_idx=1, stops_count=14
+[DEBUG] Calculated ride_time=90.89675988989816 for stop_idx=2, stops_count=13
+[DEBUG] Calculated ride_time=87.8272735661864 for stop_idx=3, stops_count=12
+[DEBUG] Calculated ride_time=72.45121648402049 for stop_idx=4, stops_count=11
+[DEBUG] Calculated ride_time=70.64166829352038 for stop_idx=5, stops_count=10
+[DEBUG] Calculated ride_time=50.24712685652881 for stop_idx=6, stops_count=9
+[DEBUG] Calculated ride_time=42.59815582196778 for stop_idx=7, stops_count=8
+[DEBUG] Calculated ride_time=42.020480831072476 for stop_idx=8, stops_count=7
+[DEBUG] Calculated ride_time=38.87497260600058 for stop_idx=9, stops_count=6
+[DEBUG] Calculated ride_time=35.852257897579264 for stop_idx=10, stops_count=5
+[DEBUG] Calculated ride_time=26.146437468698593 for stop_idx=11, stops_count=4
+[DEBUG] Calculated ride_time=24.82132352371469 for stop_idx=12, stops_count=3
+[DEBUG] Calculated ride_time=21.91112018930298 for stop_idx=13, stops_count=2
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 4325401512 (type:int), 426490423 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=21
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 426490423 (type:int), 426498068 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=20
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 426498068 (type:int), 6276305921 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=19
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 6276305921 (type:int), 6276594865 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 6276594865 (type:int), 4325401690 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 4325401690 (type:int), 655126327 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 655126327 (type:int), 6322272468 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 6322272468 (type:int), 655129863 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 655129863 (type:int), 3787742542 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 3787742542 (type:int), 3787742540 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 3787742540 (type:int), 8308941937 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (8308941937, 8308941938) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 8308941937 (type:int), 8308941938 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=23.965989065500622 for stop_idx=13, stops_count=9
+[DEBUG] Calculated ride_time=22.302852939359955 for stop_idx=14, stops_count=8
+[DEBUG] Calculated ride_time=15.862223295645938 for stop_idx=15, stops_count=7
+[DEBUG] Calculated ride_time=12.733420423010307 for stop_idx=16, stops_count=6
+[DEBUG] Calculated ride_time=9.388526935599456 for stop_idx=17, stops_count=5
+[DEBUG] Calculated ride_time=8.483341401324378 for stop_idx=18, stops_count=4
+[DEBUG] Calculated ride_time=4.6979129842704 for stop_idx=19, stops_count=3
+[DEBUG] Calculated ride_time=3.3484585196788017 for stop_idx=20, stops_count=2
+[DEBUG] Calculated ride_time=83.50198525508527 for stop_idx=1, stops_count=22
+[DEBUG] Calculated ride_time=83.00271512622852 for stop_idx=2, stops_count=21
+[DEBUG] Calculated ride_time=70.92025385123634 for stop_idx=3, stops_count=20
+[DEBUG] Calculated ride_time=65.09582975777462 for stop_idx=4, stops_count=19
+[DEBUG] Calculated ride_time=62.26863004867396 for stop_idx=5, stops_count=18
+[DEBUG] Calculated ride_time=61.28735972937323 for stop_idx=6, stops_count=17
+[DEBUG] Calculated ride_time=59.74062345386111 for stop_idx=7, stops_count=16
+[DEBUG] Calculated ride_time=58.69737357085808 for stop_idx=8, stops_count=15
+[DEBUG] Calculated ride_time=51.317328680313004 for stop_idx=9, stops_count=14
+[DEBUG] Calculated ride_time=45.827746830990584 for stop_idx=10, stops_count=13
+[DEBUG] Calculated ride_time=42.10604953137402 for stop_idx=11, stops_count=12
+[DEBUG] Calculated ride_time=37.81510284263954 for stop_idx=12, stops_count=11
+[DEBUG] Calculated ride_time=34.10457812356417 for stop_idx=13, stops_count=10
+[DEBUG] Calculated ride_time=31.322717428205983 for stop_idx=14, stops_count=9
+[DEBUG] Calculated ride_time=28.186450795764323 for stop_idx=15, stops_count=8
+[DEBUG] Calculated ride_time=25.776153681880224 for stop_idx=16, stops_count=7
+[DEBUG] Calculated ride_time=18.963367220076464 for stop_idx=17, stops_count=6
+[DEBUG] Calculated ride_time=17.880015352331817 for stop_idx=18, stops_count=5
+[DEBUG] Calculated ride_time=10.498688184058869 for stop_idx=19, stops_count=4
+[DEBUG] Calculated ride_time=8.49436901267238 for stop_idx=20, stops_count=3
+[DEBUG] Calculated ride_time=6.375907980568864 for stop_idx=21, stops_count=2
+[DEBUG] Calculated ride_time=73.14103758667459 for stop_idx=1, stops_count=19
+[DEBUG] Calculated ride_time=72.07019932794795 for stop_idx=2, stops_count=18
+[DEBUG] Calculated ride_time=66.90020617454593 for stop_idx=3, stops_count=17
+[DEBUG] Calculated ride_time=66.14106658247637 for stop_idx=4, stops_count=16
+[DEBUG] Calculated ride_time=59.515296039297795 for stop_idx=5, stops_count=15
+[DEBUG] Calculated ride_time=56.16528462159741 for stop_idx=6, stops_count=14
+[DEBUG] Calculated ride_time=53.44134869562469 for stop_idx=7, stops_count=13
+[DEBUG] Calculated ride_time=45.638620290578615 for stop_idx=8, stops_count=12
+[DEBUG] Calculated ride_time=41.44763073300216 for stop_idx=9, stops_count=11
+[DEBUG] Calculated ride_time=31.992326220959196 for stop_idx=10, stops_count=10
+[DEBUG] Calculated ride_time=25.340884348714056 for stop_idx=11, stops_count=9
+[DEBUG] Calculated ride_time=22.749681941322777 for stop_idx=12, stops_count=8
+[DEBUG] Calculated ride_time=18.88112652666201 for stop_idx=13, stops_count=7
+[DEBUG] Calculated ride_time=13.067911549690745 for stop_idx=14, stops_count=6
+[DEBUG] Calculated ride_time=12.169389336080641 for stop_idx=15, stops_count=5
+[DEBUG] Calculated ride_time=9.567671150233604 for stop_idx=16, stops_count=4
+[DEBUG] Calculated ride_time=7.958798187257576 for stop_idx=17, stops_count=3
+[DEBUG] Calculated ride_time=2.9698576020548026 for stop_idx=18, stops_count=2
+[DEBUG] Calculated ride_time=71.32677690078148 for stop_idx=1, stops_count=17
+[DEBUG] Calculated ride_time=67.60713247737121 for stop_idx=2, stops_count=16
+[DEBUG] Calculated ride_time=65.77834374566555 for stop_idx=3, stops_count=15
+[DEBUG] Calculated ride_time=61.89716312152727 for stop_idx=4, stops_count=14
+[DEBUG] Calculated ride_time=61.508340953280104 for stop_idx=5, stops_count=13
+[DEBUG] Calculated ride_time=48.601812272979096 for stop_idx=6, stops_count=12
+[DEBUG] Calculated ride_time=47.74074652541909 for stop_idx=7, stops_count=11
+[DEBUG] Calculated ride_time=45.70122602991803 for stop_idx=8, stops_count=10
+[DEBUG] Calculated ride_time=41.23290062084493 for stop_idx=9, stops_count=9
+[DEBUG] Calculated ride_time=39.17587344491061 for stop_idx=10, stops_count=8
+[DEBUG] Calculated ride_time=25.25842374369454 for stop_idx=11, stops_count=7
+[DEBUG] Calculated ride_time=19.303049716852385 for stop_idx=12, stops_count=6
+[DEBUG] Calculated ride_time=16.46535433003092 for stop_idx=13, stops_count=5
+[DEBUG] Calculated ride_time=15.01141800449379 for stop_idx=14, stops_count=4
+[DEBUG] Calculated ride_time=7.95607113788591 for stop_idx=15, stops_count=3
+[DEBUG] Calculated ride_time=7.085822047048815 for stop_idx=16, stops_count=2
+[DEBUG] Calculated ride_time=82.92430287973373 for stop_idx=1, stops_count=14
+[DEBUG] Calculated ride_time=81.68215740122237 for stop_idx=2, stops_count=13
+[DEBUG] Calculated ride_time=79.30315723218236 for stop_idx=3, stops_count=12
+[DEBUG] Calculated ride_time=44.64830745789799 for stop_idx=4, stops_count=11
+[DEBUG] Calculated ride_time=40.87109519371677 for stop_idx=5, stops_count=10
+[DEBUG] Calculated ride_time=35.30374255588452 for stop_idx=6, stops_count=9
+[DEBUG] Calculated ride_time=32.679212192806446 for stop_idx=7, stops_count=8
+[DEBUG] Calculated ride_time=30.157145199169 for stop_idx=8, stops_count=7
+[DEBUG] Calculated ride_time=22.004208725977175 for stop_idx=9, stops_count=6
+[DEBUG] Calculated ride_time=15.833612707842109 for stop_idx=10, stops_count=5
+[DEBUG] Calculated ride_time=13.320198050103357 for stop_idx=11, stops_count=4
+[DEBUG] Calculated ride_time=11.085302252807374 for stop_idx=12, stops_count=3
+[DEBUG] Calculated ride_time=8.136953833911202 for stop_idx=13, stops_count=2
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=1. Node IDs: 6644297974 (type:int), 6445449705 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=1, stops_count=18
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=2. Node IDs: 6445449705 (type:int), 6445449698 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=2, stops_count=17
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=3. Node IDs: 6445449698 (type:int), 6669643990 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=3, stops_count=16
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=4. Node IDs: 6669643990 (type:int), 6455331858 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=4, stops_count=15
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=5. Node IDs: 6455331858 (type:int), 6444955169 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=5, stops_count=14
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=6. Node IDs: 6444955169 (type:int), 6445185271 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=6, stops_count=13
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=7. Node IDs: 6445185271 (type:int), 6661448195 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=7, stops_count=12
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=8. Node IDs: 6661448195 (type:int), 6443528465 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=8, stops_count=11
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=9. Node IDs: 6443528465 (type:int), 6446132598 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=9, stops_count=10
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=10. Node IDs: 6446132598 (type:int), 6446132603 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=10, stops_count=9
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=11. Node IDs: 6446132603 (type:int), 6587005493 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=11, stops_count=8
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=12. Node IDs: 6587005493 (type:int), 6587005497 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=12, stops_count=7
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=13. Node IDs: 6587005497 (type:int), 6587005581 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=13, stops_count=6
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=14. Node IDs: 6587005581 (type:int), 6594277914 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=14, stops_count=5
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=15. Node IDs: 6594277914 (type:int), 6594277898 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=15, stops_count=4
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Pair (6594277898, 6594701700) in cache but value is inf
+[DEBUG] ride_time=9999 for stop_idx=16. Node IDs: 6594277898 (type:int), 6594701700 (type:int)
+[DEBUG]   First node in G_unc: True, Second node in G_unc: True
+[DEBUG]   G_unc has 606515 nodes
+[DEBUG] Calculated ride_time=9999.0 for stop_idx=16, stops_count=3
+[DEBUG] ride_time >= 9999, setting to None
+[DEBUG] Calculated ride_time=6.7225274308044325 for stop_idx=17, stops_count=2
+  Metrics  : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/cb83ab07_dmrt_7/output.json
+  ALNS log : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/cb83ab07_dmrt_7/alns_log_mode_c.json
+
+============================================================
+  COMPARISON SUMMARY DMRT
+============================================================
+Mode                           Routes     Time     Dist   Served  Crossings  Wall(s)
+------------------------------------------------------------------------------------
+Door-to-Door (No Walking)          20    940.5    453.2 383/  400          0    414.7
+Strictly Constrained (Safe Walking)                                            — SKIPPED —
+Weakly Constrained (Any Walking)                                            — SKIPPED —
+
+Wall-clock per mode:  C=414.7s
+Total wall-clock:     1132.6s
+
+Stage distribution used: {'KG': 0.25, 'ELEMENTARY': 0.25, 'MIDDLE': 0.25, 'HIGH': 0.25}
+Walk limits used: {'KG': 0, 'ELEMENTARY': 0, 'MIDDLE': 250, 'HIGH': 500}
+
+Open '/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/cb83ab07_dmrt_7/comparison_map.html' in a browser to explore.

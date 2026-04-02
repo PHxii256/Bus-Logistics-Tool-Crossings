@@ -90,7 +90,7 @@
     "peak_km": 2.0,
     "sigma_km": 5.0,
     "min_km": 0.4,
-    "max_km": 7.5,
+    "max_km": 120,
     "dynamic_max_km": false
   },
 
@@ -103,7 +103,7 @@
     "run_build_map": true,
     "visualize_walk_graph": {
       "enabled": true,
-      "sample_rate": 1.0
+      "sample_rate": 0.2
     },
     "_comment": "visualize_walk_graph: enabled=true/false, sample_rate=1.0 (all edges) or 0.2 (20% sample)"
   }
