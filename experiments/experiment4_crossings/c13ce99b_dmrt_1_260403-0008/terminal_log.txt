@@ -1,0 +1,7 @@
+Experiment 4 – Crossings
+  Config hash  : c13ce99b
+  MRT Status   : dmrt
+  Run folder   : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/c13ce99b_dmrt_1_260403-0008
+  Input config : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/input.json
+  Output map   : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/c13ce99b_dmrt_1_260403-0008/comparison_map.html
+

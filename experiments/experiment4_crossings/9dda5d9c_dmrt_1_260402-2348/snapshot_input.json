@@ -42,7 +42,7 @@
     
   "walk_graph": {
     "enabled": true,
-    "radius_km": 6.0
+    "radius_km": 3.0
   },
 
   "synthetic_crossings": {
@@ -87,9 +87,9 @@
   },
 
   "annulus": {
-    "peak_km": 5.0,
-    "sigma_km": 100.0,
-    "min_km": 1.0,
+    "peak_km": 3.0,
+    "sigma_km": 40.0,
+    "min_km": 0.4,
     "max_km": 120,
     "dynamic_max_km": false
   },

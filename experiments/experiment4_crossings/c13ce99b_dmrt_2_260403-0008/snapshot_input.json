@@ -42,7 +42,7 @@
     
   "walk_graph": {
     "enabled": true,
-    "radius_km": 6.0
+    "radius_km": 3.0
   },
 
   "synthetic_crossings": {

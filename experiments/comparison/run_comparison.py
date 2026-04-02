@@ -21,6 +21,7 @@ Usage (from the repo root):
 """
 
 import os, sys, json, time, copy, math, argparse, datetime, statistics, random, pickle
+# import tracemalloc  # Disabled temporarily to test performance
 
 # ── path fix: ensure repo root is on sys.path ──
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -2261,6 +2262,26 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                         "walk_distance_m": round(walk_dist, 1),
                     })
         
+        # Calculate aggregate ride time statistics from students
+        valid_ride_times = [s["ride_time_min"] for s in students_list if s["ride_time_min"] is not None]
+        avg_ride_time = round(sum(valid_ride_times) / len(valid_ride_times), 2) if valid_ride_times else None
+        max_ride_time = round(max(valid_ride_times), 2) if valid_ride_times else None
+        
+        # Build per-route statistics
+        routes_list = []
+        for route in sol.routes:
+            if route.get_student_count() == 0:
+                continue
+            routes_list.append({
+                "route_id": route.route_id,
+                "students_count": route.get_student_count(),
+                "total_time_min": round(route.total_time, 2),
+                "total_distance_km": round(route.total_distance, 2),
+            })
+        
+        # Get final objective value (after ALNS optimization)
+        objective_final = round(sol.calculate_objective(), 2) if sol else None
+        
         buses_cfg = meta.get("buses", {})
         buses_available = buses_cfg.get("count")
         bus_capacity = buses_cfg.get("capacity")
@@ -2278,6 +2299,9 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "dwell_time_per_stop_seconds": s.get("dwell_time_per_stop_seconds", 0.0),
             "total_route_dist_km":  round(s["total_dist"],  2),
             "avg_route_time_min":   round(s["total_time"] / n_routes, 2) if n_routes else 0,
+            "avg_ride_time_min":    avg_ride_time,
+            "max_ride_time_min":    max_ride_time,
+            "objective_value":      objective_final,
             "alns_runtime_seconds": round(s["runtime"],     2),
             "mode_wall_time_seconds": s.get("mode_wall_time"),
             "operator_performance": s.get("operator_performance"),
@@ -2287,6 +2311,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "synthetic_edges_timing": s.get("synthetic_edges_timing"),
             "unsafe_crossings":     cx,
             "walk_stats":           walk,
+            "routes":               routes_list,
             "students":             students_list,
             "buses_available":       buses_available,
             "bus_capacity":          bus_capacity,
@@ -2380,9 +2405,18 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         "synthetic_crossings": _eng.get_synthetic_diagnostics(),
     }
 
+    # Capture memory usage (disabled temporarily to test performance)
+    # current, peak = tracemalloc.get_traced_memory()
+    # memory_consumption = {
+    #     "current_mb": round(current / (1024 * 1024), 2),
+    #     "peak_mb": round(peak / (1024 * 1024), 2)
+    # }
+    # tracemalloc.stop()
+
     return {
         "generated_at": (lambda n: n.strftime("%d/%m/%y") + f" {n.hour%12 or 12:02d}:{n.strftime('%M')} {'am' if n.hour<12 else 'pm'}")(datetime.datetime.now()),
         "total_wall_time_seconds": total_wall,
+        # "memory_consumption": memory_consumption,  # Re-enable when testing performance
         "debug_stats": _debug_stats,
         "config": {
             "n_students":       meta.get("n_students"),
@@ -2472,7 +2506,10 @@ def run(input_path=None, output_path=None, iterations=None):
         Override ALNS iteration count from input.json.
     """
     import time as _wtime
+    # import tracemalloc  # Disabled temporarily to test performance
+    
     _run_start = _wtime.time()
+    # tracemalloc.start()
 
     meta           = _load_meta(input_path)
     iters          = iterations or meta.get("algorithm", {}).get("iterations", 30)

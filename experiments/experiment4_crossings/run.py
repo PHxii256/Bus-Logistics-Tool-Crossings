@@ -19,6 +19,7 @@ import json
 import os
 import shutil
 import sys
+from datetime import datetime
 from io import StringIO
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
@@ -81,13 +82,14 @@ def main():
 
     h = _input_hash(input_path)
     mrt_status = _get_mrt_status(input_path)
+    timestamp = datetime.now().strftime("%y%m%d-%H%M")
     base_dir = os.path.join(_DIR, f"{h}_{mrt_status}")
-    run_dir = base_dir
+    run_dir = f"{base_dir}_1_{timestamp}"
     
     i = 1
     while os.path.exists(run_dir):
-        run_dir = f"{base_dir}_{i}"
         i += 1
+        run_dir = f"{base_dir}_{i}_{timestamp}"
     os.makedirs(run_dir)
 
 
@@ -136,11 +138,32 @@ def main():
         sys.stdout = original_stdout
         sys.stderr = original_stderr
         
-        # Write log to file after completion
+        # Get complete log content
+        log_content = log_buffer.getvalue()
+        
+        # Split debug logs to separate file
+        debug_log_path = os.path.join(run_dir, "debug.txt")
+        terminal_lines = []
+        debug_lines = []
+        
+        for line in log_content.splitlines(keepends=True):
+            if '[DEBUG]' in line:
+                debug_lines.append(line)
+            else:
+                terminal_lines.append(line)
+        
+        # Write non-debug lines to terminal_log.txt
         with open(log_path, 'w', encoding='utf-8') as f:
-            f.write(log_buffer.getvalue())
+            f.writelines(terminal_lines)
+        
+        # Write debug lines to debug.txt
+        if debug_lines:
+            with open(debug_log_path, 'w', encoding='utf-8') as f:
+                f.writelines(debug_lines)
         
         print(f"\n[Log saved to: {log_path}]")
+        if debug_lines:
+            print(f"[Debug log saved to: {debug_log_path}] ({len(debug_lines)} lines)")
 
 
 if __name__ == "__main__":
