@@ -1,0 +1,79 @@
+Experiment 4 – Crossings
+  Config hash  : 42ea2967
+  MRT Status   : dmrt
+  Run folder   : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/42ea2967_dmrt
+  Input config : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/input.json
+  Output map   : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/42ea2967_dmrt/comparison_map.html
+
+  Matrix cache cfg: enabled=False, force_disable=False, isolate_per_run=False, min_finite_ratio=0.0001
+============================================================
+  THREE-MODE ROUTING COMPARISON  (input.json)
+============================================================
+  Students : 400
+  Seed     : 2000
+  Stages   : {'KG': 0.25, 'ELEMENTARY': 0.25, 'MIDDLE': 0.25, 'HIGH': 0.25}
+  Walk lim : {'KG': 0, 'ELEMENTARY': 0, 'MIDDLE': 250, 'HIGH': 500}
+  Iters    : 10000
+  Dwell    : 30s per pickup stop
+  BuildMap : ON
+  Running  : Door-to-Door
+  Skipping : Strictly Constrained, Weakly Constrained (debug flags)
+
+  Random seed: 2000 (ALNS deterministic)
+[1/7] Generating dataset …
+Generating 400 students around Victory College School...
+Downloading graph around school (5 km radius)...
+  Graph bbox: N=30.0094, S=29.9196, E=31.3222, W=31.2185
+  Max distance to bbox corner: 7.07 km
+  Annulus max_km: static=120.00 km (dynamic_max_km=false)
+Fetching restricted landuse zones...
+  Loaded 18 restricted-zone polygons.
+Found 4244 nodes on restricted highways.
+Placement stats: 4 restricted-zone rejections, 72 no-residential rejections.
+  Stage breakdown: {'KG': 107, 'HIGH': 85, 'MIDDLE': 91, 'ELEMENTARY': 117}
+
+[2/7] Building STRICTLY CONSTRAINED graph …
+Loading cached road network (pickle): cache/graph_734648a4.pkl
+Applying road speed config...
+Adding edge bearings for turn-penalty calculations...
+Graph ready: 604679 nodes, 1605743 edges
+
+  Pre-building BallTree …  [snap] BallTree built for 604,679 nodes
+ 3.0s
+[3/7] Building WEAKLY CONSTRAINED graph …
+Loading cached road network (pickle): cache/graph_734648a4.pkl
+Applying road speed config...
+Adding edge bearings for turn-penalty calculations...
+Graph ready: 604679 nodes, 1605743 edges
+
+[3b/7] Building WALK graph...
+Loading cached walking network (pickle): cache/graph_walk_a220ac69.pkl
+Walk graph ready: 11140 nodes, 31268 edges
+
+
+--------------------------------------------------
+MODE A: SKIPPED (debug.run_mode_a=false)
+--------------------------------------------------
+
+--------------------------------------------------
+MODE B: SKIPPED (debug.run_mode_b=false)
+--------------------------------------------------
+
+--------------------------------------------------
+MODE C: Door-to-Door (walk=0, bus visits every home)
+--------------------------------------------------
+  Pre-building BallTree …  [snap] BallTree built for 604,679 nodes
+ 1.4s
+  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode C
+
+[FleetSearch] 400 students, capacity 22, searching k=19..20
+[Optimization] Preparing distance matrix...
+Asking local OSRM to calculate matrix for 339 nodes...
+OSRM Matrix calculation complete! Cache populated.
+Starting ALNS Optimization (time budget: 300.0s, max 10000 iterations)...
+Initial State: ServiceSolution(served=0/400, objective=0.00)
+Iteration 10: Best Obj = 2904018.70, Temp = 817.1, Last 10 iter: 7.93s
+Iteration 20: Best Obj = 3343973.73, Temp = 667.6, Last 10 iter: 20.40s
+Iteration 30: Best Obj = 3393971.17, Temp = 545.5, Last 10 iter: 11.37s
+Iteration 40: Best Obj = 3403968.37, Temp = 445.7, Last 10 iter: 10.00s
+Iteration 50: Best Obj = 3423966.61, Temp = 364.2, Last 10 iter: 6.96s

@@ -202,9 +202,9 @@ def generate_dataset(
                 G = ox.graph_from_bbox(north, south, east, west,
                                        network_type='drive', simplify=False)
 
-    # ── Dynamic max_km based on graph bbox ──
-    # Calculate distance from school to farthest corner of bbox to prevent
-    # students spawning outside the downloaded graph area
+    # ── Optional dynamic max_km based on graph bbox ──
+    # When enabled, clamp max_km by graph extent so students never spawn outside.
+    # When disabled, keep static max_km from input JSON.
     from math import radians, cos, sin, asin, sqrt
     
     def haversine_km(lat1, lon1, lat2, lon2):
@@ -232,12 +232,17 @@ def generate_dataset(
     bbox_max_dist = max(haversine_km(center_lat, center_lon, clat, clon) 
                         for clat, clon in corners)
     
-    # Set max_km to 95% of bbox max distance (slight margin for safety)
-    max_km = min(max_km_config, bbox_max_dist * 0.95)
-    
+    use_dynamic_max_km = bool(annulus.get("dynamic_max_km", False))
+    # Set max_km to 95% of bbox max distance (slight margin for safety) only when enabled
+    max_km_dynamic = min(max_km_config, bbox_max_dist * 0.95)
+    max_km = max_km_dynamic if use_dynamic_max_km else max_km_config
+
     print(f"  Graph bbox: N={bbox_north:.4f}, S={bbox_south:.4f}, E={bbox_east:.4f}, W={bbox_west:.4f}")
     print(f"  Max distance to bbox corner: {bbox_max_dist:.2f} km")
-    print(f"  Annulus max_km: configured={max_km_config:.1f} km, auto-adjusted={max_km:.2f} km (bbox constraint)")
+    if use_dynamic_max_km:
+        print(f"  Annulus max_km: configured={max_km_config:.1f} km, auto-adjusted={max_km:.2f} km (bbox constraint)")
+    else:
+        print(f"  Annulus max_km: static={max_km:.2f} km (dynamic_max_km=false)")
 
     # ── Restricted zones ──
     print("Fetching restricted landuse zones...")

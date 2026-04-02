@@ -1760,6 +1760,17 @@ def _build_custom_layer_control_js(
     v_danger  = fg_danger.get_name()
     v_unclass = fg_unclass.get_name()
     v_syn = fg_syn_cross.get_name()
+    
+    # Bbox and walk graph variables
+    bbox_row = ""
+    if fg_bbox is not None:
+        v_bbox = fg_bbox.get_name()
+        bbox_row = f"\n                row('Bounding Box (Intended + Actual)', [{v_bbox}], map.hasLayer({v_bbox}));"
+    walk_row = ""
+    if fg_walk is not None:
+        v_walk = fg_walk.get_name()
+        walk_row = f"\n                row('Walk Graph Network', [{v_walk}], map.hasLayer({v_walk}));"
+    
     syn_label = syn_label or "Synthetic Crossings"
     injected_label = injected_label or "Injected Crossings"
 
@@ -1867,7 +1878,7 @@ def _build_custom_layer_control_js(
                 row('Unclassified Roads (no student placement)',
                     [{v_unclass}], map.hasLayer({v_unclass}));
                 row('{syn_label}',
-                    [{v_syn}], map.hasLayer({v_syn}));{injected_row}{usage_rows}{unserved_rows}
+                    [{v_syn}], map.hasLayer({v_syn}));{bbox_row}{walk_row}{injected_row}{usage_rows}{unserved_rows}
                 sep();
                 var hdr2 = L.DomUtil.create('div', '', c);
                 hdr2.textContent = 'Candidate Stop Inspector';
@@ -2894,29 +2905,61 @@ def run(input_path=None, output_path=None, iterations=None):
         fg_unclass.add_to(m)
         print(f"  Unclassified-road segments: {len(unclass_segs)}")
 
-        # Bounding Box layer (blue rectangle showing graph extent)
-        fg_bbox = FeatureGroup(name="Graph Bounding Box", show=False)
+        # Bounding Box layers - show both intended and actual extent
+        fg_bbox = FeatureGroup(name="Bounding Box (Intended + Actual)", show=False)
         try:
-            # Get bbox from G_unc nodes
+            # 1. Draw INTENDED bbox (from config) - GREEN dashed
+            from run_algorithm import _DEFAULT_BBOX
+            intended_bbox = meta.get("graph", {}).get("bbox", _DEFAULT_BBOX)
+            intended_north = intended_bbox[2]  # max_lat
+            intended_south = intended_bbox[0]  # min_lat
+            intended_east = intended_bbox[3]   # max_lon
+            intended_west = intended_bbox[1]   # min_lon
+            
+            intended_coords = [
+                [intended_north, intended_west],
+                [intended_north, intended_east],
+                [intended_south, intended_east],
+                [intended_south, intended_west],
+                [intended_north, intended_west],  # close the loop
+            ]
+            folium.PolyLine(
+                intended_coords,
+                color="#27ae60",  # green
+                weight=3,
+                opacity=0.8,
+                dash_array="5,5",
+                tooltip="Intended bbox (from config)",
+            ).add_to(fg_bbox)
+            
+            # 2. Draw ACTUAL graph extent - BLUE solid
             lats = [G_unc.nodes[n]['y'] for n in G_unc.nodes]
             lons = [G_unc.nodes[n]['x'] for n in G_unc.nodes]
-            bbox_north, bbox_south = max(lats), min(lats)
-            bbox_east, bbox_west = max(lons), min(lons)
+            actual_north, actual_south = max(lats), min(lats)
+            actual_east, actual_west = max(lons), min(lons)
             
-            # Draw rectangle
-            bbox_coords = [
-                [bbox_north, bbox_west],
-                [bbox_north, bbox_east],
-                [bbox_south, bbox_east],
-                [bbox_south, bbox_west],
-                [bbox_north, bbox_west],  # close the loop
+            actual_coords = [
+                [actual_north, actual_west],
+                [actual_north, actual_east],
+                [actual_south, actual_east],
+                [actual_south, actual_west],
+                [actual_north, actual_west],  # close the loop
             ]
-            folium.PolyLine(bbox_coords, color="#3498db", weight=3, opacity=0.7,
-                           dash_array="10,5", tooltip="Graph boundary").add_to(fg_bbox)
-            fg_bbox.add_to(m)
-            print(f"  Bounding box: N={bbox_north:.4f}, S={bbox_south:.4f}, E={bbox_east:.4f}, W={bbox_west:.4f}")
+            folium.PolyLine(
+                actual_coords,
+                color="#3498db",  # blue
+                weight=3,
+                opacity=0.7,
+                dash_array="10,5",
+                tooltip="Actual graph extent (downloaded)",
+            ).add_to(fg_bbox)
+            
+            print(f"  Intended bbox: N={intended_north:.4f}, S={intended_south:.4f}, E={intended_east:.4f}, W={intended_west:.4f}")
+            print(f"  Actual extent: N={actual_north:.4f}, S={actual_south:.4f}, E={actual_east:.4f}, W={actual_west:.4f}")
         except Exception as e:
             print(f"  Warning: Could not draw bounding box: {e}")
+        # Always add to map so custom control JS variable exists
+        fg_bbox.add_to(m)
 
         # Walk Graph layer (green network showing pedestrian paths)
         fg_walk = FeatureGroup(name="Walk Graph Network", show=False)
@@ -3058,6 +3101,8 @@ def run(input_path=None, output_path=None, iterations=None):
             fg_usage_a=fgs_crossing_usage.get("A"),
             fg_usage_b=fgs_crossing_usage.get("B"),
             fg_usage_c=fgs_crossing_usage.get("C"),
+            fg_bbox=fg_bbox,
+            fg_walk=fg_walk,
         )
         m.get_root().script.add_child(folium.Element(ctrl_js))
 

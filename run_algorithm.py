@@ -78,8 +78,10 @@ def save_run(input_data: dict, output_data: dict, report_data: dict,
 # ============================================================================
 
 
-# FORMAT: long1 latl1, long2, lat2
-_DEFAULT_BBOX = [31.229084, 29.925630, 31.33660186220229, 30.048847047121367]
+# FORMAT: [min_lat, min_lon, max_lat, max_lon]
+# South-West Corner: Al Abadiah Al Bahriya (29.925630, 31.229084)
+# North-East Corner: International Park (30.051972, 31.338611)
+_DEFAULT_BBOX = [29.925630, 31.229084, 30.051972, 31.338611]
 _ROAD_SPEEDS_CONFIG_PATH = 'road_speeds_config.json'
 
 def _load_road_speeds(override: dict = None) -> dict:
@@ -131,7 +133,8 @@ def setup_graph(meta: dict = None, unconstrained: bool = False):
             pickle.dump(G, fh, protocol=pickle.HIGHEST_PROTOCOL)
     else:
         print("Downloading road network...")
-        north, south, east, west = bbox[3], bbox[1], bbox[2], bbox[0]
+        # bbox format is [min_lat, min_lon, max_lat, max_lon]
+        north, south, east, west = bbox[2], bbox[0], bbox[3], bbox[1]
         # OSMnx 2.0+ expects a single tuple (north, south, east, west)
         G = ox.graph_from_bbox((north, south, east, west), network_type='drive')
         ox.save_graphml(G, cache_file)
@@ -201,7 +204,8 @@ def setup_walk_graph(meta: dict = None, center: tuple = None, radius_m: float = 
             # Radius-based walk graph is much smaller than full-bbox graph.
             G_walk = ox.graph_from_point(center, dist=radius_m, network_type='walk', simplify=True)
         else:
-            north, south, east, west = bbox[3], bbox[1], bbox[2], bbox[0]
+            # bbox format is [min_lat, min_lon, max_lat, max_lon]
+            north, south, east, west = bbox[2], bbox[0], bbox[3], bbox[1]
             G_walk = ox.graph_from_bbox((north, south, east, west), network_type='walk')
         ox.save_graphml(G_walk, cache_file)
         import pickle

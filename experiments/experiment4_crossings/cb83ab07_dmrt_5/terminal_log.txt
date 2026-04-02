@@ -1,0 +1,31 @@
+Experiment 4 – Crossings
+  Config hash  : cb83ab07
+  MRT Status   : dmrt
+  Run folder   : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/cb83ab07_dmrt_5
+  Input config : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/input.json
+  Output map   : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/cb83ab07_dmrt_5/comparison_map.html
+
+  Matrix cache cfg: enabled=False, force_disable=False, isolate_per_run=False, min_finite_ratio=0.0001
+============================================================
+  THREE-MODE ROUTING COMPARISON  (input.json)
+============================================================
+  Students : 400
+  Seed     : 2000
+  Stages   : {'KG': 0.25, 'ELEMENTARY': 0.25, 'MIDDLE': 0.25, 'HIGH': 0.25}
+  Walk lim : {'KG': 0, 'ELEMENTARY': 0, 'MIDDLE': 250, 'HIGH': 500}
+  Iters    : 10000
+  Dwell    : 30s per pickup stop
+  BuildMap : ON
+  Running  : Door-to-Door
+  Skipping : Strictly Constrained, Weakly Constrained (debug flags)
+
+  Random seed: 2000 (ALNS deterministic)
+[1/7] Generating dataset …
+Generating 400 students around Victory College School...
+Downloading graph around school (5 km radius)...
+  Graph bbox: N=30.0094, S=29.9196, E=31.3222, W=31.2185
+  Max distance to bbox corner: 7.07 km
+  Annulus max_km: static=7.50 km (dynamic_max_km=false)
+Fetching restricted landuse zones...
+  Loaded 18 restricted-zone polygons.
+Found 4244 nodes on restricted highways.
