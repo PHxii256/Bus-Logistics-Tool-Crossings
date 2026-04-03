@@ -8,7 +8,9 @@ Dispatches based on the 'mode' field in the input JSON:
 
 import sys
 import os
+import glob
 import json
+import csv
 import time as _t
 import hashlib
 import pickle
@@ -16,6 +18,9 @@ import shutil
 import osmnx as ox
 import networkx as nx
 import argparse
+from datetime import datetime
+from typing import Optional
+from shapely.geometry import Polygon
 
 from data_loader import (
     load_json, load_mode1_input, load_mode2_input,
@@ -83,17 +88,145 @@ def save_run(input_data: dict, output_data: dict, report_data: dict,
 # North-East Corner: International Park (30.051972, 31.338611)
 _DEFAULT_BBOX = [29.925630, 31.229084, 30.051972, 31.338611]
 _ROAD_SPEEDS_CONFIG_PATH = 'road_speeds_config.json'
+_REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
+def _cache_timestamp_tag() -> str:
+    return datetime.now().strftime('%m%d-%H%M')
+
+
+def _cache_hash(seed: str) -> str:
+    return hashlib.md5(seed.encode()).hexdigest()[:8]
+
+
+def _find_latest_cache_file(cache_dir: str, prefix: str, hash_key: str):
+    pattern = os.path.join(cache_dir, f"{prefix}_{hash_key}_*.pkl")
+    candidates = sorted(glob.glob(pattern), key=os.path.getmtime, reverse=True)
+    if candidates:
+        return candidates[0]
+
+    # Backward compatibility with older single-file naming.
+    legacy = os.path.join(cache_dir, f"{prefix}_{hash_key}.pkl")
+    if os.path.exists(legacy):
+        return legacy
+    return None
+
+
+def _write_cache_metadata_sidecar(cache_path: str, metadata: dict):
+    try:
+        meta_path = os.path.splitext(cache_path)[0] + ".meta.json"
+        with open(meta_path, "w", encoding="utf-8") as fh:
+            json.dump(metadata, fh, indent=2, ensure_ascii=True)
+    except Exception as e:
+        print(f"Warning: failed to write cache metadata sidecar for {cache_path}: {e}")
+
+
+def _resolve_boundary_polygon_path(raw_path: str):
+    if not raw_path:
+        return None
+    if os.path.isabs(raw_path):
+        return raw_path
+    candidates = [
+        os.path.abspath(os.path.join(_REPO_ROOT, raw_path)),
+        os.path.abspath(raw_path),
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            return p
+    return candidates[0]
+
+
+def _load_boundary_polygon_points_from_csv(csv_path: str):
+    points = []
+    with open(csv_path, newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        if reader.fieldnames and {"lat", "lon"}.issubset(set(reader.fieldnames)):
+            for row in reader:
+                lat = float(row["lat"])
+                lon = float(row["lon"])
+                points.append((lat, lon))
+        else:
+            fh.seek(0)
+            plain = csv.reader(fh)
+            rows = list(plain)
+            for row in rows:
+                if len(row) < 2:
+                    continue
+                try:
+                    lon = float(row[0])
+                    lat = float(row[1])
+                except Exception:
+                    continue
+                points.append((lat, lon))
+
+    if len(points) < 3:
+        raise ValueError(f"Boundary polygon CSV must contain at least 3 points: {csv_path}")
+    if points[0] != points[-1]:
+        points.append(points[0])
+    return points
+
+
+def _resolve_graph_boundary(graph_cfg: dict):
+    cfg = graph_cfg or {}
+    mode = str(cfg.get("boundary_mode", "bbox")).strip().lower()
+    bbox = cfg.get("bbox", _DEFAULT_BBOX)
+    boundary_polygon = None
+    boundary_points = None
+
+    if mode == "polygon":
+        polygon_cfg = cfg.get("boundary_polygon")
+        polygon_path_raw = str(cfg.get("boundary_polygon_path", "")).strip()
+
+        if isinstance(polygon_cfg, list) and len(polygon_cfg) >= 3:
+            parsed = []
+            for pt in polygon_cfg:
+                if not isinstance(pt, (list, tuple)) or len(pt) < 2:
+                    continue
+                parsed.append((float(pt[0]), float(pt[1])))  # [lat, lon]
+            if len(parsed) >= 3:
+                if parsed[0] != parsed[-1]:
+                    parsed.append(parsed[0])
+                boundary_points = parsed
+        elif polygon_path_raw:
+            polygon_path = _resolve_boundary_polygon_path(polygon_path_raw)
+            if polygon_path and os.path.exists(polygon_path):
+                boundary_points = _load_boundary_polygon_points_from_csv(polygon_path)
+            else:
+                print(f"Warning: boundary_polygon_path not found: {polygon_path}")
+
+        if boundary_points and len(boundary_points) >= 3:
+            boundary_polygon = Polygon([(lon, lat) for lat, lon in boundary_points])
+            if not boundary_polygon.is_valid:
+                boundary_polygon = boundary_polygon.buffer(0)
+            min_lon, min_lat, max_lon, max_lat = boundary_polygon.bounds
+            bbox = [float(min_lat), float(min_lon), float(max_lat), float(max_lon)]
+        else:
+            print("Warning: boundary_mode='polygon' requested but no valid polygon provided; falling back to bbox mode.")
+            mode = "bbox"
+
+    if not isinstance(bbox, (list, tuple)) or len(bbox) != 4:
+        bbox = list(_DEFAULT_BBOX)
+    else:
+        bbox = [float(v) for v in bbox]
+
+    seed_payload = {
+        "mode": mode,
+        "bbox": bbox,
+        "polygon_points": boundary_points if mode == "polygon" else None,
+    }
+    boundary_seed = json.dumps(seed_payload, sort_keys=True, ensure_ascii=True)
+    return mode, bbox, boundary_polygon, boundary_seed
 
 def _load_road_speeds(override: dict = None) -> dict:
     builtin = {
         'default_speed_kph': 30,
         'road_types': {
-            'primary':       {'speed_multiplier': 0.8, 'safe_to_cross': False},
-            'trunk':         {'speed_multiplier': 0.8, 'safe_to_cross': False},
-            'secondary':     {'speed_multiplier': 0.6, 'safe_to_cross': False},
-            'tertiary':      {'speed_multiplier': 0.6, 'safe_to_cross': True},
-            'residential':   {'speed_multiplier': 0.3, 'safe_to_cross': True},
-            'living_street': {'speed_multiplier': 0.3, 'safe_to_cross': True},
+            'primary':       {'speed_multiplier': 0.6, 'safe_to_cross': False},
+            'trunk':         {'speed_multiplier': 0.6, 'safe_to_cross': False},
+            'secondary':     {'speed_multiplier': 0.4, 'safe_to_cross': False},
+            'tertiary':      {'speed_multiplier': 0.4, 'safe_to_cross': True},
+            'residential':   {'speed_multiplier': 0.2, 'safe_to_cross': True},
+            'living_street': {'speed_multiplier': 0.2, 'safe_to_cross': True},
             'default':       {'speed_multiplier': 0.2, 'safe_to_cross': True},
         }
     }
@@ -109,38 +242,67 @@ def _load_road_speeds(override: dict = None) -> dict:
 
 def setup_graph(meta: dict = None, unconstrained: bool = False):
     graph_cfg    = (meta or {}).get('graph', {})
-    bbox         = graph_cfg.get('bbox', _DEFAULT_BBOX)
-    
-    # Simple hash of bbox for caching
-    bbox_hash = hashlib.md5(str(bbox).encode()).hexdigest()[:8]
-    cache_dir   = 'cache'
-    pkl_file    = os.path.join(cache_dir, f"graph_{bbox_hash}.pkl")
-    cache_file  = os.path.join(cache_dir, f"graph_{bbox_hash}.graphml")
-    os.makedirs(cache_dir, exist_ok=True)
+    boundary_mode, bbox, boundary_polygon, boundary_seed = _resolve_graph_boundary(graph_cfg)
+    cache_enabled = graph_cfg.get('cache', {}).get('enabled', True)
+    graph_pkl_path = graph_cfg.get('pkl_path')
 
-    if os.path.exists(pkl_file):
-        import pickle
-        print(f"Loading cached road network (pickle): {pkl_file}")
-        with open(pkl_file, 'rb') as fh:
-            G = pickle.load(fh)
-    elif os.path.exists(cache_file):
-        print(f"Loading cached road network: {cache_file}")
-        G = ox.load_graphml(cache_file)
-        # Save as pickle for faster future loads
-        import pickle
-        print(f"Saving pickle cache for faster future loads...")
-        with open(pkl_file, 'wb') as fh:
-            pickle.dump(G, fh, protocol=pickle.HIGHEST_PROTOCOL)
+    if graph_pkl_path:
+        pkl_abs = os.path.abspath(graph_pkl_path)
+        if not os.path.exists(pkl_abs):
+            raise FileNotFoundError(f"graph.pkl_path not found: {pkl_abs}")
+        print(f"Loading drive graph from configured pickle: {pkl_abs}")
+        with open(pkl_abs, 'rb') as fh:
+            loaded = pickle.load(fh)
+        G = loaded.get('graph') if isinstance(loaded, dict) and 'graph' in loaded else loaded
+        if not isinstance(G, nx.MultiDiGraph):
+            raise TypeError(f"Unsupported graph object in {pkl_abs}: {type(G)}")
     else:
-        print("Downloading road network...")
-        # bbox format is [min_lat, min_lon, max_lat, max_lon]
-        north, south, east, west = bbox[2], bbox[0], bbox[3], bbox[1]
-        # OSMnx 2.0+ expects a single tuple (north, south, east, west)
-        G = ox.graph_from_bbox((north, south, east, west), network_type='drive')
-        ox.save_graphml(G, cache_file)
-        import pickle
-        with open(pkl_file, 'wb') as fh:
-            pickle.dump(G, fh, protocol=pickle.HIGHEST_PROTOCOL)
+        # Hash boundary seed for caching (supports both bbox and polygon modes)
+        bbox_hash = _cache_hash(boundary_seed)
+        cache_dir   = 'cache'
+        os.makedirs(cache_dir, exist_ok=True)
+        
+        # Generate timestamp for new cache files (MMDD-HHMM format)
+        timestamp = datetime.now().strftime('%m%d-%H%M')
+        
+        pkl_file    = os.path.join(cache_dir, f"graph_{bbox_hash}.pkl")
+        pkl_file_ts = os.path.join(cache_dir, f"graph_{timestamp}_{bbox_hash}.pkl")
+        cache_file  = os.path.join(cache_dir, f"graph_{bbox_hash}.graphml")
+    
+        if cache_enabled and os.path.exists(pkl_file):
+            print(f"Loading cached road network (pickle): {pkl_file}")
+            with open(pkl_file, 'rb') as fh:
+                G = pickle.load(fh)
+        elif cache_enabled and os.path.exists(cache_file):
+            print(f"Loading cached road network: {cache_file}")
+            G = ox.load_graphml(cache_file)
+            # Save as pickle for faster future loads
+            print(f"Saving pickle cache for faster future loads...")
+            with open(pkl_file, 'wb') as fh:
+                pickle.dump(G, fh, protocol=pickle.HIGHEST_PROTOCOL)
+        else:
+            if not cache_enabled:
+                print("Cache disabled - downloading road network...")
+            else:
+                print("Downloading road network...")
+            if boundary_mode == 'polygon' and boundary_polygon is not None:
+                print("Using configured boundary polygon for drive graph download...")
+                G = ox.graph_from_polygon(boundary_polygon, network_type='drive')
+            else:
+                # bbox format is [min_lat, min_lon, max_lat, max_lon]
+                west, south, east, north = bbox[1], bbox[0], bbox[3], bbox[2]
+                # OSMnx 2.x expects bbox tuple in (left, bottom, right, top) order.
+                G = ox.graph_from_bbox((west, south, east, north), network_type='drive')
+            
+            if cache_enabled:
+                ox.save_graphml(G, cache_file)
+                # Save with timestamp to track when it was created
+                with open(pkl_file_ts, 'wb') as fh:
+                    pickle.dump(G, fh, protocol=pickle.HIGHEST_PROTOCOL)
+                # Also save without timestamp for backward compatibility
+                with open(pkl_file, 'wb') as fh:
+                    pickle.dump(G, fh, protocol=pickle.HIGHEST_PROTOCOL)
+                print(f"Saved cache: {pkl_file_ts}")
 
     road_cfg     = _load_road_speeds((meta or {}).get('road_speeds'))
     road_types   = road_cfg['road_types']
@@ -168,49 +330,71 @@ def setup_graph(meta: dict = None, unconstrained: bool = False):
     return G
 
 
-def setup_walk_graph(meta: dict = None, center: tuple = None, radius_m: float = None):
+def setup_walk_graph(meta: Optional[dict] = None, center: Optional[tuple] = None, radius_m: Optional[float] = None):
     """Build/load a walking graph (pedestrian network).
 
     This is cached separately from the drive graph so it can be reused
     across runs and used for walk-path visualization or walking BFS.
     """
     graph_cfg = (meta or {}).get('graph', {})
-    bbox = graph_cfg.get('bbox', _DEFAULT_BBOX)
-    if center is not None and radius_m is not None:
-        cache_seed = f"center={center}|radius={int(radius_m)}"
+    walk_cfg = (meta or {}).get('walk_graph', {})
+    cache_enabled = walk_cfg.get('cache', {}).get('enabled', True)
+    boundary_mode, bbox, boundary_polygon, boundary_seed = _resolve_graph_boundary(graph_cfg)
+    coverage_mode = str(walk_cfg.get('coverage_mode', 'radius')).strip().lower()
+    
+    if center is not None and radius_m is not None and coverage_mode not in {'bbox', 'strict_bbox', 'bbox_strict', 'bbox_rectangle'}:
+        cache_seed = f"mode=radius|center={center}|radius={int(radius_m)}"
     else:
-        cache_seed = str(bbox)
-    bbox_hash = hashlib.md5(cache_seed.encode()).hexdigest()[:8]
+        cache_seed = f"mode={boundary_mode}|seed={boundary_seed}"
+    bbox_hash = _cache_hash(cache_seed)
     cache_dir = 'cache'
-    pkl_file = os.path.join(cache_dir, f"graph_walk_{bbox_hash}.pkl")
-    cache_file = os.path.join(cache_dir, f"graph_walk_{bbox_hash}.graphml")
     os.makedirs(cache_dir, exist_ok=True)
 
-    if os.path.exists(pkl_file):
-        import pickle
-        print(f"Loading cached walking network (pickle): {pkl_file}")
-        with open(pkl_file, 'rb') as fh:
-            G_walk = pickle.load(fh)
-    elif os.path.exists(cache_file):
-        print(f"Loading cached walking network: {cache_file}")
-        G_walk = ox.load_graphml(cache_file)
-        import pickle
-        print("Saving walk pickle cache for faster future loads...")
-        with open(pkl_file, 'wb') as fh:
-            pickle.dump(G_walk, fh, protocol=pickle.HIGHEST_PROTOCOL)
+    latest_cache = _find_latest_cache_file(cache_dir, "walk_graph", bbox_hash)
+    if cache_enabled and latest_cache:
+        print(f"Loading cached walking network (pickle): {latest_cache}")
+        with open(latest_cache, 'rb') as fh:
+            loaded = pickle.load(fh)
+        G_walk = loaded.get('graph') if isinstance(loaded, dict) and 'graph' in loaded else loaded
+        if not isinstance(G_walk, nx.MultiDiGraph):
+            raise TypeError(f"Unsupported walk graph object in {latest_cache}: {type(G_walk)}")
     else:
-        print("Downloading walking network...")
-        if center is not None and radius_m is not None:
+        if not cache_enabled:
+            print("Walk cache disabled - regenerating walking network and writing a fresh cache...")
+        else:
+            print("Downloading walking network...")
+        
+        if center is not None and radius_m is not None and coverage_mode not in {'bbox', 'strict_bbox', 'bbox_strict', 'bbox_rectangle'}:
             # Radius-based walk graph is much smaller than full-bbox graph.
             G_walk = ox.graph_from_point(center, dist=radius_m, network_type='walk', simplify=True)
         else:
-            # bbox format is [min_lat, min_lon, max_lat, max_lon]
-            north, south, east, west = bbox[2], bbox[0], bbox[3], bbox[1]
-            G_walk = ox.graph_from_bbox((north, south, east, west), network_type='walk')
-        ox.save_graphml(G_walk, cache_file)
-        import pickle
-        with open(pkl_file, 'wb') as fh:
-            pickle.dump(G_walk, fh, protocol=pickle.HIGHEST_PROTOCOL)
+            if boundary_mode == 'polygon' and boundary_polygon is not None:
+                print("Using configured boundary polygon for walk graph download...")
+                G_walk = ox.graph_from_polygon(boundary_polygon, network_type='walk')
+            else:
+                # bbox format is [min_lat, min_lon, max_lat, max_lon]
+                west, south, east, north = bbox[1], bbox[0], bbox[3], bbox[2]
+                G_walk = ox.graph_from_bbox((west, south, east, north), network_type='walk')
+
+        timestamp = _cache_timestamp_tag()
+        walk_cache_path = os.path.join(cache_dir, f"walk_graph_{bbox_hash}_{timestamp}.pkl")
+        walk_meta = {
+            "type": "walk_graph",
+            "hash": bbox_hash,
+            "timestamp": timestamp,
+            "created_unix": _t.time(),
+            "cache_seed": cache_seed,
+            "coverage_mode": coverage_mode,
+            "bbox": list(bbox),
+            "center": list(center) if center is not None else None,
+            "radius_m": float(radius_m) if radius_m is not None else None,
+            "nodes": int(G_walk.number_of_nodes()),
+            "edges": int(G_walk.number_of_edges()),
+        }
+        with open(walk_cache_path, 'wb') as fh:
+            pickle.dump({"graph": G_walk, "meta": walk_meta}, fh, protocol=pickle.HIGHEST_PROTOCOL)
+        _write_cache_metadata_sidecar(walk_cache_path, walk_meta)
+        print(f"Saved walk cache: {walk_cache_path}")
 
     print(f"Walk graph ready: {G_walk.number_of_nodes()} nodes, {G_walk.number_of_edges()} edges\n")
     return G_walk
@@ -514,8 +698,25 @@ def _save_matrix_cache_to_disk(pkl_path, cache_key, node_ids, cache_context=None
             "student_count": (cache_context or {}).get("student_count") if isinstance(cache_context, dict) else None,
         }
 
+        filename = os.path.basename(pkl_path)
+        payload.setdefault("metadata", {})
+        payload["metadata"].update({
+            "type": "distance_matrix",
+            "path": os.path.abspath(pkl_path),
+            "filename": filename,
+            "updated_unix": _t.time(),
+            "cache_key_count": len(payload.get("entries", {})),
+        })
+
+        stem = os.path.splitext(filename)[0]
+        parts = stem.split("_")
+        if len(parts) >= 4 and parts[0] == "distance" and parts[1] == "matrix":
+            payload["metadata"]["hash"] = parts[2]
+            payload["metadata"]["timestamp"] = parts[3]
+
         with open(pkl_path, "wb") as fh:
             pickle.dump(payload, fh, protocol=pickle.HIGHEST_PROTOCOL)
+        _write_cache_metadata_sidecar(pkl_path, payload.get("metadata", {}))
         print(f"[Optimization] Saved matrix cache to: {pkl_path}")
         return True
     except Exception as e:

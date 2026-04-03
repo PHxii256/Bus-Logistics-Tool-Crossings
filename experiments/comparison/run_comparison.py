@@ -20,7 +20,7 @@ Usage (from the repo root):
     python -m experiments.comparison.run_comparison --iterations 50
 """
 
-import os, sys, json, time, copy, math, argparse, datetime, statistics, random, pickle
+import os, sys, json, time, copy, math, argparse, datetime, statistics, random, pickle, glob, hashlib, csv
 # import tracemalloc  # Disabled temporarily to test performance
 
 # ── path fix: ensure repo root is on sys.path ──
@@ -34,10 +34,12 @@ from folium import plugins, FeatureGroup
 
 import detour_engine as _eng
 import alns_engine   as _alns
+import osmnx as ox
+import networkx as nx
 
 from run_algorithm import (
     setup_graph, setup_walk_graph, precompute_matrix, run_algorithm, find_minimum_fleet,
-    DEFAULT_STAGE_WALK_LIMITS,
+    DEFAULT_STAGE_WALK_LIMITS, _DEFAULT_BBOX,
 )
 from data_loader   import load_mode1_input
 from solution_state import ServiceSolution
@@ -67,10 +69,36 @@ def _load_meta(path=None):
         return json.load(f)
 
 
-def _resolve_injection_pkl_path(injection_cfg, input_path):
-    if not isinstance(injection_cfg, dict):
-        return None
-    raw = injection_cfg.get("pkl_path")
+def _cache_timestamp_tag() -> str:
+    return datetime.datetime.now().strftime("%m%d-%H%M")
+
+
+def _cache_hash_from_obj(obj) -> str:
+    canonical = json.dumps(obj, sort_keys=True, ensure_ascii=True, default=str)
+    return hashlib.md5(canonical.encode()).hexdigest()[:8]
+
+
+def _latest_cache_file(cache_dir, prefix, hash_key):
+    pattern = os.path.join(cache_dir, f"{prefix}_{hash_key}_*.pkl")
+    candidates = sorted(glob.glob(pattern), key=os.path.getmtime, reverse=True)
+    return candidates[0] if candidates else None
+
+
+def _new_cache_file_path(cache_dir, prefix, hash_key):
+    ts = _cache_timestamp_tag()
+    return os.path.join(cache_dir, f"{prefix}_{hash_key}_{ts}.pkl"), ts
+
+
+def _write_cache_sidecar(cache_path, metadata):
+    try:
+        meta_path = os.path.splitext(cache_path)[0] + ".meta.json"
+        with open(meta_path, "w", encoding="utf-8") as fh:
+            json.dump(metadata, fh, indent=2, ensure_ascii=True)
+    except Exception as e:
+        print(f"  Warning: failed to write sidecar metadata for {cache_path}: {e}")
+
+
+def _resolve_optional_path(raw, input_path):
     if not raw:
         return None
     if os.path.isabs(raw):
@@ -91,36 +119,135 @@ def _resolve_injection_pkl_path(injection_cfg, input_path):
     return os.path.abspath(os.path.join(base, raw))
 
 
-def _resolve_matrix_cache_pkl_path(matrix_cfg, input_path, output_path):
+def _load_polygon_points_from_csv(csv_path):
+    points = []
+    with open(csv_path, newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        if reader.fieldnames and {"lat", "lon"}.issubset(set(reader.fieldnames)):
+            for row in reader:
+                points.append((float(row["lat"]), float(row["lon"])))
+        else:
+            fh.seek(0)
+            plain = csv.reader(fh)
+            for row in plain:
+                if len(row) < 2:
+                    continue
+                try:
+                    lon = float(row[0])
+                    lat = float(row[1])
+                except Exception:
+                    continue
+                points.append((lat, lon))
+    if len(points) < 3:
+        return None
+    return points
+
+
+def _resolve_graph_bbox_from_cfg(graph_cfg):
+    cfg = graph_cfg if isinstance(graph_cfg, dict) else {}
+    mode = str(cfg.get("boundary_mode", "bbox")).strip().lower()
+
+    if mode == "polygon":
+        points = None
+        polygon_cfg = cfg.get("boundary_polygon")
+        if isinstance(polygon_cfg, list) and len(polygon_cfg) >= 3:
+            parsed = []
+            for pt in polygon_cfg:
+                if isinstance(pt, (list, tuple)) and len(pt) >= 2:
+                    parsed.append((float(pt[0]), float(pt[1])))
+            if len(parsed) >= 3:
+                points = parsed
+        else:
+            polygon_path = _resolve_optional_path(str(cfg.get("boundary_polygon_path", "")).strip(), None)
+            if polygon_path and os.path.exists(polygon_path):
+                points = _load_polygon_points_from_csv(polygon_path)
+
+        if points and len(points) >= 3:
+            lats = [p[0] for p in points]
+            lons = [p[1] for p in points]
+            return [min(lats), min(lons), max(lats), max(lons)]
+
+    bbox = cfg.get("bbox")
+    if isinstance(bbox, (list, tuple)) and len(bbox) == 4:
+        return [float(v) for v in bbox]
+    return list(_DEFAULT_BBOX)
+
+
+def _build_crossings_cache_hash(meta, synth_cfg, graph_bbox, walk_radius_km, walk_radius_mode):
+    graph_cfg = (meta or {}).get("graph", {}) if isinstance(meta, dict) else {}
+    pkl_path = graph_cfg.get("pkl_path")
+    pkl_abs = os.path.abspath(pkl_path) if pkl_path else None
+    pkl_stat = None
+    if pkl_abs and os.path.exists(pkl_abs):
+        st = os.stat(pkl_abs)
+        pkl_stat = {"path": pkl_abs, "size": int(st.st_size), "mtime": int(st.st_mtime)}
+
+    cfg_payload = {
+        k: v for k, v in (synth_cfg or {}).items()
+        if k not in {"cache", "center_lat", "center_lon"}
+    }
+    seed = {
+        "bbox": list(graph_bbox) if isinstance(graph_bbox, (list, tuple)) else graph_bbox,
+        "walk_radius_km": walk_radius_km,
+        "walk_radius_mode": walk_radius_mode,
+        "school": (meta or {}).get("school"),
+        "synthetic_cfg": cfg_payload,
+        "drive_graph": pkl_stat,
+    }
+    return _cache_hash_from_obj(seed), seed
+
+
+def _build_matrix_cache_hash(meta):
+    graph_cfg = (meta or {}).get("graph", {}) if isinstance(meta, dict) else {}
+    resolved_bbox = _resolve_graph_bbox_from_cfg(graph_cfg)
+    pkl_path = graph_cfg.get("pkl_path")
+    pkl_abs = os.path.abspath(pkl_path) if pkl_path else None
+    pkl_stat = None
+    if pkl_abs and os.path.exists(pkl_abs):
+        st = os.stat(pkl_abs)
+        pkl_stat = {"path": pkl_abs, "size": int(st.st_size), "mtime": int(st.st_mtime)}
+
+    seed = {
+        "graph_bbox": resolved_bbox,
+        "graph_boundary_mode": graph_cfg.get("boundary_mode", "bbox"),
+        "graph_boundary_polygon_path": graph_cfg.get("boundary_polygon_path"),
+        "drive_graph": pkl_stat,
+        "school": (meta or {}).get("school"),
+        "seed": (meta or {}).get("seed"),
+        "n_students": (meta or {}).get("n_students"),
+        "stage_walk_limits": (meta or {}).get("stage_walk_limits"),
+        "annulus": (meta or {}).get("annulus"),
+    }
+    return _cache_hash_from_obj(seed), seed
+
+
+def _resolve_injection_pkl_path(injection_cfg, input_path):
+    if not isinstance(injection_cfg, dict):
+        return None
+    raw = injection_cfg.get("pkl_path")
+    return _resolve_optional_path(raw, input_path)
+
+
+def _resolve_matrix_cache_pkl_path(matrix_cfg, input_path, output_path, meta=None):
     if not isinstance(matrix_cfg, dict):
         return None
     if bool(matrix_cfg.get("force_disable", False)):
         return None
-    enabled = bool(matrix_cfg.get("enabled", False))
-    raw = matrix_cfg.get("pkl_path")
-    if not enabled and not raw:
-        return None
-    if raw:
-        if os.path.isabs(raw):
-            return _maybe_isolate_matrix_cache_path(raw, matrix_cfg)
-        bases = []
-        if input_path:
-            input_dir = os.path.dirname(input_path)
-            bases.append(input_dir)
-            bases.append(os.path.dirname(input_dir))
-        bases.extend([_SCRIPT_DIR, _ROOT])
-        for base in bases:
-            if not base:
-                continue
-            candidate = os.path.abspath(os.path.join(base, raw))
-            if os.path.exists(candidate):
-                return _maybe_isolate_matrix_cache_path(candidate, matrix_cfg)
-        base = os.path.dirname(input_path) if input_path else _SCRIPT_DIR
-        return _maybe_isolate_matrix_cache_path(os.path.abspath(os.path.join(base, raw)), matrix_cfg)
 
-    # Enabled with no explicit path: default to the run output directory.
-    base = os.path.join(os.path.dirname(output_path), "distance_matrix_cache.pkl")
-    return _maybe_isolate_matrix_cache_path(base, matrix_cfg)
+    enabled = bool(matrix_cfg.get("enabled", False))
+    raw = (matrix_cfg.get("pkl_path") or "").strip()
+    cache_dir = os.path.join(_ROOT, "cache")
+    os.makedirs(cache_dir, exist_ok=True)
+
+    if enabled and raw:
+        # Explicit user-selected path takes precedence when enabled.
+        resolved = _resolve_optional_path(raw, input_path)
+        return _maybe_isolate_matrix_cache_path(resolved, matrix_cfg)
+
+    hash_key, _seed_payload = _build_matrix_cache_hash(meta or {})
+    timestamp = _cache_timestamp_tag()
+    auto_path = os.path.join(cache_dir, f"distance_matrix_{hash_key}_{timestamp}.pkl")
+    return _maybe_isolate_matrix_cache_path(auto_path, matrix_cfg)
 
 def _maybe_isolate_matrix_cache_path(path, matrix_cfg):
     if not path:
@@ -233,7 +360,7 @@ def _inject_crossings_into_walk_graph(walk_graph, payload):
     }
 
 
-def _build_crossings_injection_payload_from_walk_graph(walk_graph, synth_cfg=None):
+def _build_crossings_injection_payload_from_walk_graph(walk_graph, synth_cfg=None, metadata_extra=None):
     edge_pairs = []
     nodes_by_id = {}
     seen_undirected = set()
@@ -301,15 +428,19 @@ def _build_crossings_injection_payload_from_walk_graph(walk_graph, synth_cfg=Non
                 "node_b": e["node_b"],
             })
 
+    metadata = {
+        "strategy": str((synth_cfg or {}).get("strategy", "drive_node_crossings")),
+        "created_unix": time.time(),
+        "source": "run_comparison_autosave",
+    }
+    if isinstance(metadata_extra, dict):
+        metadata.update(metadata_extra)
+
     return {
         "nodes": list(nodes_by_id.values()),
         "edge_pairs": edge_pairs,
         "crossings": crossings,
-        "metadata": {
-            "strategy": str((synth_cfg or {}).get("strategy", "drive_node_crossings")),
-            "created_unix": time.time(),
-            "source": "run_comparison_autosave",
-        },
+        "metadata": metadata,
     }
 
 
@@ -319,6 +450,8 @@ def _save_crossings_injection_payload(payload, pkl_path):
         os.makedirs(folder, exist_ok=True)
     with open(pkl_path, "wb") as f:
         pickle.dump(payload, f, protocol=pickle.HIGHEST_PROTOCOL)
+    if isinstance(payload, dict):
+        _write_cache_sidecar(pkl_path, payload.get("metadata", {}))
 
 
 # ────────────────────────────────────────────────────────────────────
@@ -329,17 +462,94 @@ def _generate_dataset(meta):
     sys.path.insert(0, os.path.join(_ROOT, "experiments"))
     from generate_dataset import generate_dataset
 
+    graph_bbox = None
+    graph_cfg = {}
+    graph_pkl_path = None
+    if isinstance(meta, dict):
+        graph_cfg = meta.get("graph") or {}
+        graph_bbox = _resolve_graph_bbox_from_cfg(graph_cfg)
+        graph_pkl_path = graph_cfg.get("pkl_path")
+    if not isinstance(graph_bbox, (list, tuple)) or len(graph_bbox) != 4:
+        graph_bbox = list(_DEFAULT_BBOX)
+    else:
+        graph_bbox = list(graph_bbox)
+
     return generate_dataset(
         n_students=meta["n_students"],
         seed=meta["seed"],
         school=meta["school"],
         stage_dist=meta["stage_distribution"],
-        annulus=meta.get("annulus"),
+        annulus=meta.get("annulus") or {},
+        graph_bbox=graph_bbox,
+        graph_boundary_mode=graph_cfg.get("boundary_mode") if isinstance(graph_cfg, dict) else None,
+        graph_boundary_polygon=graph_cfg.get("boundary_polygon") if isinstance(graph_cfg, dict) else None,
+        graph_boundary_polygon_path=graph_cfg.get("boundary_polygon_path") if isinstance(graph_cfg, dict) else None,
+        graph_pkl_path=graph_pkl_path,
         buses_count=meta.get("buses", {}).get("count", 4),
         bus_capacity=meta.get("buses", {}).get("capacity", 60),
-        constraints=meta.get("constraints"),
+        constraints=meta.get("constraints") or {},
         iterations=meta.get("algorithm", {}).get("iterations", 30),
     )
+
+
+def _haversine_km(lat1, lon1, lat2, lon2):
+    """Great-circle distance in km between two lat/lon points."""
+    rlat1 = math.radians(float(lat1))
+    rlon1 = math.radians(float(lon1))
+    rlat2 = math.radians(float(lat2))
+    rlon2 = math.radians(float(lon2))
+    dlat = rlat2 - rlat1
+    dlon = rlon2 - rlon1
+    a = math.sin(dlat / 2.0) ** 2 + math.cos(rlat1) * math.cos(rlat2) * math.sin(dlon / 2.0) ** 2
+    c = 2.0 * math.asin(math.sqrt(a))
+    return 6371.0 * c
+
+
+def _bbox_enclosing_radius_km(center_lat, center_lon, bbox):
+    """Radius of the smallest school-centered circle that covers the bbox corners."""
+    if not isinstance(bbox, (list, tuple)) or len(bbox) != 4:
+        return None
+    min_lat, min_lon, max_lat, max_lon = [float(v) for v in bbox]
+    corners = [
+        (max_lat, max_lon),
+        (max_lat, min_lon),
+        (min_lat, max_lon),
+        (min_lat, min_lon),
+    ]
+    return max(_haversine_km(center_lat, center_lon, clat, clon) for clat, clon in corners)
+
+
+def _resolve_walk_radius_km(walk_cfg, school_cfg, graph_bbox):
+    """Resolve walk graph radius from config (manual or bbox-enclosing-circle mode)."""
+    cfg = walk_cfg if isinstance(walk_cfg, dict) else {}
+    mode = str(cfg.get("coverage_mode", "radius")).strip().lower()
+    if cfg.get("auto_from_bbox_circle") is True:
+        mode = "bbox_enclosing_circle"
+
+    if mode in {"bbox", "bbox_strict", "strict_bbox", "bbox_rectangle"}:
+        return None, "bbox_strict"
+
+    if mode == "bbox_enclosing_circle":
+        bbox_radius = _bbox_enclosing_radius_km(
+            school_cfg["latitude"],
+            school_cfg["longitude"],
+            graph_bbox,
+        )
+        if bbox_radius is None:
+            return float(cfg.get("radius_km", 5.0)), "radius_fallback"
+        scale = float(cfg.get("bbox_radius_scale", 1.0) or 1.0)
+        resolved = float(bbox_radius) * scale
+        min_radius = float(cfg.get("min_radius_km", 0.0) or 0.0)
+        max_radius = cfg.get("max_radius_km")
+        resolved = max(min_radius, resolved)
+        if max_radius is not None:
+            try:
+                resolved = min(resolved, float(max_radius))
+            except Exception:
+                pass
+        return resolved, "bbox_enclosing_circle"
+
+    return float(cfg.get("radius_km", 5.0)), "radius"
 
 
 # ────────────────────────────────────────────────────────────────────
@@ -2548,7 +2758,7 @@ def run(input_path=None, output_path=None, iterations=None):
         else 0.0001
     )
     matrix_cache_pkl_path = _resolve_matrix_cache_pkl_path(
-        matrix_cache_cfg, input_path, output
+        matrix_cache_cfg, input_path, output, meta=meta
     )
     if matrix_cache_pkl_path:
         print(f"  Matrix cache pkl: {matrix_cache_pkl_path}")
@@ -2597,6 +2807,11 @@ def run(input_path=None, output_path=None, iterations=None):
     print("[1/7] Generating dataset …")
     _t0 = _wtime.time()
     base_data = _generate_dataset(meta)
+    # Preserve graph-related config from input so all stages use the same bbox/cache policy.
+    base_data["meta"]["graph"] = copy.deepcopy(meta.get("graph", {}))
+    base_data["meta"]["walk_graph"] = copy.deepcopy(meta.get("walk_graph", {}))
+    if "road_speeds" in meta:
+        base_data["meta"]["road_speeds"] = copy.deepcopy(meta.get("road_speeds"))
     # Preserve full algorithm config from input meta (early-stop, time budget, etc.).
     base_data["meta"]["algorithm"] = copy.deepcopy(meta.get("algorithm", {}))
     base_data["meta"]["algorithm"]["iterations"] = iters
@@ -2632,6 +2847,7 @@ def run(input_path=None, output_path=None, iterations=None):
     injection_cfg = meta.get("crossings_injection", {}) if isinstance(meta, dict) else {}
     injection_enabled = bool(injection_cfg.get("enabled", False))
     injection_strict = bool(injection_cfg.get("strict_validation", False))
+    injection_raw_path = (injection_cfg.get("pkl_path") or "").strip() if isinstance(injection_cfg, dict) else ""
     injection_pkl_path = _resolve_injection_pkl_path(injection_cfg, input_path)
     synthetic_edges_timing = {
         "source": "none",
@@ -2640,6 +2856,7 @@ def run(input_path=None, output_path=None, iterations=None):
         "generate_time_s": 0.0,
         "auto_save_pkl_time_s": 0.0,
         "pkl_path": injection_pkl_path,
+        "cache_hash": None,
     }
     synth_cfg = (meta.get("synthetic_crossings") if isinstance(meta, dict) else None) or {
         "enabled": False,
@@ -2659,29 +2876,80 @@ def run(input_path=None, output_path=None, iterations=None):
     if use_walk_graph:
         print("[3b/7] Building WALK graph...")
         _t0 = _wtime.time()
-        walk_radius_km = float(walk_cfg.get("radius_km", 5.0))
-        G_walk = setup_walk_graph(
-            base_data["meta"],
-            center=(school_cfg["latitude"], school_cfg["longitude"]),
-            radius_m=walk_radius_km * 1000.0,
+        graph_bbox = _resolve_graph_bbox_from_cfg((base_data.get("meta", {}).get("graph", {}) or {}))
+        walk_radius_km, walk_radius_mode = _resolve_walk_radius_km(
+            walk_cfg,
+            school_cfg,
+            graph_bbox,
         )
+        if walk_radius_mode == "bbox_strict":
+            print("  Walk graph coverage mode: bbox_strict (exact graph bbox rectangle)")
+            G_walk = setup_walk_graph(base_data["meta"], center=None, radius_m=None)
+        else:
+            print(f"  Walk graph coverage mode: {walk_radius_mode}, radius={walk_radius_km:.2f} km")
+            walk_radius_m = float(walk_radius_km or 0.0) * 1000.0
+            G_walk = setup_walk_graph(
+                base_data["meta"],
+                center=(school_cfg["latitude"], school_cfg["longitude"]),
+                radius_m=walk_radius_m,
+            )
         synth_cfg["center_lat"] = school_cfg["latitude"]
         synth_cfg["center_lon"] = school_cfg["longitude"]
-        synth_cfg.setdefault("radius_km", walk_radius_km)
+        synth_cfg["walk_coverage_mode"] = walk_radius_mode
+        if walk_radius_km is not None:
+            synth_cfg.setdefault("radius_km", walk_radius_km)
+
+        crossings_cache_dir = os.path.join(_ROOT, "cache")
+        os.makedirs(crossings_cache_dir, exist_ok=True)
+        crossings_hash, crossings_seed = _build_crossings_cache_hash(
+            meta,
+            synth_cfg,
+            graph_bbox,
+            walk_radius_km,
+            walk_radius_mode,
+        )
+        auto_crossings_path, auto_crossings_ts = _new_cache_file_path(crossings_cache_dir, "crossings", crossings_hash)
+        synthetic_edges_timing["cache_hash"] = crossings_hash
+
         # Save clean walk graph BEFORE crossings are added (set_walk_graph modifies in-place)
         import copy as _copy_mod
         _clean_walk_graph = _copy_mod.deepcopy(G_walk)
 
-        if injection_enabled and injection_pkl_path:
-            print(f"  [Crossings Injection] Loading: {injection_pkl_path}")
+        should_generate = True
+        target_crossings_save_path = auto_crossings_path
+
+        if injection_enabled:
+            load_candidate = None
+            if injection_pkl_path and os.path.exists(injection_pkl_path):
+                load_candidate = injection_pkl_path
+
+            if load_candidate:
+                print(f"  [Crossings Injection] Loading: {load_candidate}")
+                target_crossings_save_path = load_candidate
+                should_generate = False
+            else:
+                # Policy: enabled but empty/missing path => regenerate and save a fresh auto cache.
+                if injection_raw_path:
+                    print(
+                        "  [Crossings Injection] Configured path not found; "
+                        "regenerating to hash/timestamp cache."
+                    )
+                target_crossings_save_path = auto_crossings_path
+
+        if not injection_enabled:
+            # User policy: disabled means regenerate fresh crossings and cache by hash+timestamp.
+            should_generate = True
+            target_crossings_save_path = auto_crossings_path
+
+        if not should_generate:
             try:
                 _tpkl = _wtime.time()
-                injected_payload = _load_crossings_injection_payload(injection_pkl_path)
+                injected_payload = _load_crossings_injection_payload(target_crossings_save_path)
                 _validate_crossings_injection_payload(injected_payload, synth_cfg)
                 synthetic_edges_timing["pkl_load_time_s"] = round(_wtime.time() - _tpkl, 4)
                 _eng.set_walk_graph(G_walk, synthetic_cfg={"enabled": False})
                 injected_result = _inject_crossings_into_walk_graph(G_walk, injected_payload)
-                synthetic_edges_timing["source"] = "injection_pkl"
+                synthetic_edges_timing["source"] = "injection_pkl" if injection_enabled else "crossings_auto_cache"
                 _eng._SYNTHETIC_CROSSINGS = list(injected_result.get("markers", []))
                 syn_list = list(injected_result.get("markers", []))
                 print(
@@ -2694,36 +2962,44 @@ def run(input_path=None, output_path=None, iterations=None):
                 print(f"  [Crossings Injection] Warning: {e}. Falling back to synthetic generation.")
                 injected_payload = None
                 injected_result = None
-                _tgen = _wtime.time()
-                syn_list = _eng.set_walk_graph(G_walk, synthetic_cfg=synth_cfg, drive_graph=G_con)
-                synthetic_edges_timing["source"] = "generated_synthetic"
-                synthetic_edges_timing["generate_time_s"] = round(_wtime.time() - _tgen, 4)
-        else:
+
+                should_generate = True
+
+        if should_generate:
             _tgen = _wtime.time()
             syn_list = _eng.set_walk_graph(G_walk, synthetic_cfg=synth_cfg, drive_graph=G_con)
             synthetic_edges_timing["source"] = "generated_synthetic"
             synthetic_edges_timing["generate_time_s"] = round(_wtime.time() - _tgen, 4)
 
-        if use_walk_graph and not injection_pkl_path:
-            auto_inj_path = os.path.join(
-                output_dir,
-                "crossings_nodes_injection.pkl",
-            )
             try:
                 _tsave = _wtime.time()
-                auto_payload = _build_crossings_injection_payload_from_walk_graph(G_walk, synth_cfg=synth_cfg)
+                extra_meta = {
+                    "hash": crossings_hash,
+                    "hash_seed": crossings_seed,
+                    "timestamp": auto_crossings_ts,
+                    "walk_coverage_mode": walk_radius_mode,
+                    "walk_radius_km": walk_radius_km,
+                    "graph_bbox": list(graph_bbox) if isinstance(graph_bbox, (list, tuple)) else graph_bbox,
+                }
+                auto_payload = _build_crossings_injection_payload_from_walk_graph(
+                    G_walk,
+                    synth_cfg=synth_cfg,
+                    metadata_extra=extra_meta,
+                )
                 if auto_payload.get("edge_pairs"):
-                    _save_crossings_injection_payload(auto_payload, auto_inj_path)
+                    _save_crossings_injection_payload(auto_payload, target_crossings_save_path)
                     synthetic_edges_timing["auto_save_pkl_time_s"] = round(_wtime.time() - _tsave, 4)
                     print(
-                        f"  [Crossings Injection] Auto-saved PKL: {auto_inj_path} "
+                        f"  [Crossings Injection] Saved PKL: {target_crossings_save_path} "
                         f"({len(auto_payload.get('edge_pairs', []))} edges)"
                     )
                 else:
                     synthetic_edges_timing["auto_save_pkl_time_s"] = round(_wtime.time() - _tsave, 4)
-                    print("  [Crossings Injection] Auto-save skipped: no synthetic/injected crossing edges found.")
+                    print("  [Crossings Injection] Save skipped: no synthetic/injected crossing edges found.")
             except Exception as e:
-                print(f"  [Crossings Injection] Warning: could not auto-save PKL: {e}")
+                print(f"  [Crossings Injection] Warning: could not save PKL: {e}")
+
+        synthetic_edges_timing["pkl_path"] = target_crossings_save_path
 
         synthetic_edges_timing["prepare_time_s"] = round(_wtime.time() - _t0, 4)
         _step_times["build_walk_graph_s"] = round(_wtime.time() - _t0, 2)
@@ -3004,8 +3280,7 @@ def run(input_path=None, output_path=None, iterations=None):
         fg_bbox = FeatureGroup(name="Bounding Box (Intended + Actual)", show=False)
         try:
             # 1. Draw INTENDED bbox (from config) - GREEN dashed
-            from run_algorithm import _DEFAULT_BBOX
-            intended_bbox = meta.get("graph", {}).get("bbox", _DEFAULT_BBOX)
+            intended_bbox = _resolve_graph_bbox_from_cfg(meta.get("graph", {}))
             intended_north = intended_bbox[2]  # max_lat
             intended_south = intended_bbox[0]  # min_lat
             intended_east = intended_bbox[3]   # max_lon

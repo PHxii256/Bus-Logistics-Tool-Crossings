@@ -7,7 +7,7 @@
     "longitude": 31.270319
   },
 
-  "n_students": 400,
+  "n_students": 200,
   "seed": 2000,
 
   "stage_distribution": {
@@ -29,6 +29,16 @@
     "capacity": 22
   },
 
+  "graph": {
+    "bbox": [29.753694770217, 31.214796485023, 30.201444959827, 31.466764435799],
+    "boundary_mode": "polygon",
+    "boundary_polygon_path": "cairo_boundaries/cairo_boundary_points.csv",
+    "pkl_path": "",
+    "cache": {
+      "enabled": true
+    }
+  },
+
   "constraints": {
     "enabled": true,
     "ride_time_multiplier": 2,
@@ -42,7 +52,12 @@
     
   "walk_graph": {
     "enabled": true,
-    "radius_km": 6.0
+    "coverage_mode": "bbox_strict",
+    "bbox_radius_scale": 1.0,
+    "radius_km": 10.0,
+    "cache": {
+      "enabled": true
+    }
   },
 
   "synthetic_crossings": {
@@ -61,7 +76,10 @@
     "max_total": 3000,
     "enable_guaranteed_connection": true,
     "guaranteed_connection_distance_m": 6.0,
-    "fallback_mode": "adaptive"
+    "fallback_mode": "adaptive",
+    "cache": {
+      "enabled": true
+    }
   },
 
   "crossings_injection": {
@@ -88,10 +106,18 @@
 
   "annulus": {
     "peak_km": 5.0,
-    "sigma_km": 100.0,
+    "sigma_km": 50.0,
     "min_km": 1.0,
     "max_km": 120,
-    "dynamic_max_km": false
+    "dynamic_max_km": false,
+    "auto_from_bbox_circle": true,
+    "auto_peak_km": true,
+    "auto_sigma_km": true,
+    "peak_ratio": 0.55,
+    "sigma_ratio": 0.18,
+    "bbox_radius_scale": 1.0,
+    "max_attempts_per_student": 12000,
+    "attempts_log_every": 25000
   },
 
   "output": "comparison_map.html",
@@ -102,8 +128,8 @@
     "run_mode_c": true,
     "run_build_map": true,
     "visualize_walk_graph": {
-      "enabled": true,
-      "sample_rate": 0.2
+      "enabled": false,
+      "sample_rate": 0.1
     },
     "_comment": "visualize_walk_graph: enabled=true/false, sample_rate=1.0 (all edges) or 0.2 (20% sample)"
   }

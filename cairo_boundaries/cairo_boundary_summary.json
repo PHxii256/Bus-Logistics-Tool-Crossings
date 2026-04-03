@@ -1,0 +1,10 @@
+{
+  "num_vertices": 157,
+  "bbox": {
+    "min_lon": 31.214796485022667,
+    "max_lon": 31.466764435798858,
+    "min_lat": 29.753694770216995,
+    "max_lat": 30.201444959826553
+  },
+  "source": "Cairo boundries.shp"
+}

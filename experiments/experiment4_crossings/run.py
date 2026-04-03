@@ -82,7 +82,7 @@ def main():
 
     h = _input_hash(input_path)
     mrt_status = _get_mrt_status(input_path)
-    timestamp = datetime.now().strftime("%y%m%d-%H%M")
+    timestamp = datetime.now().strftime("%m%d-%H%M")  # Removed YY
     base_dir = os.path.join(_DIR, f"{h}_{mrt_status}")
     run_dir = f"{base_dir}_1_{timestamp}"
     
