@@ -46,7 +46,7 @@
     "ceiling_minutes": 60,
     "daily_detour_budget_minutes": 10,
     "bidirectional_check": true,
-    "mrt_enabled": false,
+    "mrt_enabled": true,
     "mrt": 120
   },
     
@@ -83,7 +83,7 @@
   },
 
   "crossings_injection": {
-    "enabled": false,
+    "enabled": true,
     "pkl_path": "cache/crossings_3eab1f2e_0403-2023.pkl",
     "strict_validation": false
   },

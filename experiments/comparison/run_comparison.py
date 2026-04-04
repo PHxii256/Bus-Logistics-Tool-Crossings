@@ -1644,6 +1644,29 @@ def _add_unserved_layer(m, sol, mode_key):
     """Add a FeatureGroup with X-pin markers for every unserved student in *sol*."""
     show = mode_key in ("A", "B")
     fg = FeatureGroup(name=f"{_MODE_NAMES[mode_key]} – Unserved Students", show=show)
+
+    # Resolve school node once so we can show direct home->school distance when available.
+    school_node = None
+    for route in sol.routes:
+        for stop in route.stops:
+            if getattr(stop, "stop_type", None) == "school":
+                school_node = getattr(stop, "node_id", None)
+                break
+        if school_node is not None:
+            break
+
+    def _is_missing(v):
+        return v is None or (isinstance(v, str) and v.strip() == "")
+
+    def _fmt(v):
+        if isinstance(v, bool):
+            return "true" if v else "false"
+        if isinstance(v, (int, float)):
+            return f"{v:.2f}" if isinstance(v, float) else str(v)
+        if hasattr(v, "name"):
+            return str(v.name)
+        return str(v)
+
     for student in sol.students:
         if getattr(student, 'is_served', False):
             continue
@@ -1652,13 +1675,56 @@ def _add_unserved_layer(m, sol, mode_key):
             if hasattr(student.school_stage, 'name')
             else str(student.school_stage)
         )
+
+        details = [
+            ("Student", student.id),
+            ("Stage", stage_name),
+            ("Home", f"{student.coords[0]:.5f}, {student.coords[1]:.5f}"),
+            ("Mode", _MODE_NAMES[mode_key]),
+            ("walk_limit_m", getattr(student, "walk_radius", None)),
+            ("direct_from_school_min", getattr(student, "direct_time_from_school", None)),
+            ("rejection_reason", getattr(student, "failure_reason", None)),
+        ]
+
+        # Add computed direct distance if we can resolve both home and school nodes.
+        graph = getattr(sol, "graph", None)
+        if graph is not None and school_node is not None:
+            try:
+                direct_t = compute_direct_time(student, school_node, graph)
+                if direct_t is not None and math.isfinite(direct_t):
+                    details.append(("direct_potential_min", round(direct_t, 2)))
+
+                home_node = _eng.fast_nearest_node(graph, student.coords[1], student.coords[0])
+                d_m = _MATRIX_CACHE_LENGTH.get((home_node, school_node))
+                if d_m is None:
+                    d_m = _MATRIX_CACHE_LENGTH.get((school_node, home_node))
+                if d_m is not None and math.isfinite(d_m):
+                    details.append(("direct_distance_km", d_m / 1000.0))
+            except Exception:
+                pass
+
+        # Show every additional non-null attribute on the Student object.
+        excluded = {
+            "id", "coords", "school_stage", "assigned_stop", "is_served",
+            "walk_radius", "direct_time_to_school", "direct_time_from_school", "failure_reason",
+        }
+        for attr_name in sorted(vars(student).keys()):
+            if attr_name in excluded:
+                continue
+            attr_val = getattr(student, attr_name, None)
+            if not _is_missing(attr_val):
+                details.append((attr_name, attr_val))
+
+        detail_lines = [
+            f"<b>{k}:</b> {_fmt(v)}"
+            for k, v in details
+            if not _is_missing(v)
+        ]
+
         popup_html = (
-            f'<div style="width:220px;font-size:12px;">'
-            f'<b style="color:#c0392b;">&#x2716; Unserved</b><br>'
-            f'<b>Student: {student.id}</b><br>'
-            f'Stage: {stage_name}<br>'
-            f'Home: {student.coords[0]:.5f}, {student.coords[1]:.5f}<br>'
-            f'Mode: {_MODE_NAMES[mode_key]}'
+            f'<div style="width:300px;font-size:12px;">'
+            f'<b style="color:#c0392b;">&#x2716; Unserved Student</b><br>'
+            f'{"<br>".join(detail_lines)}'
             f'</div>'
         )
         folium.Marker(
@@ -2391,12 +2457,35 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         sw = stage_walk if mode_key != "door_to_door" else {k: 0 for k in stage_walk}
         walk = _compute_walk_stats(sol, G_unc, sw)
         
+        # Resolve school node once so served and unserved students use a common reference.
+        school_node_for_mode = None
+        if sol.routes:
+            for _route in sol.routes:
+                if not _route.stops:
+                    continue
+                school_stop = next((st for st in _route.stops if st.stop_type == "school"), None)
+                if school_stop is not None:
+                    school_node_for_mode = school_stop.node_id
+                    break
+                school_node_for_mode = _route.stops[-1].node_id
+                break
+        if school_node_for_mode is None:
+            school_cfg = meta.get("school", {}) if isinstance(meta, dict) else {}
+            try:
+                school_node_for_mode = _eng.fast_nearest_node(
+                    G_unc,
+                    float(school_cfg.get("longitude")),
+                    float(school_cfg.get("latitude")),
+                )
+            except Exception:
+                school_node_for_mode = None
+
         # Build student list with ride time, direct potential, walk distance
         students_list = []
         for route in sol.routes:
             # Pre-compute per-stop ride-time using matrix-cache summation
             # (safe against cleared caches; falls back to lazy A* on miss)
-            school_node = route.stops[-1].node_id
+            school_node = school_node_for_mode if school_node_for_mode is not None else route.stops[-1].node_id
             for stop in route.stops:
                 if stop.stop_type == "school":
                     continue
@@ -2471,6 +2560,55 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                         "direct_distance_km": direct_distance_km,
                         "walk_distance_m": round(walk_dist, 1),
                     })
+
+        # Build unserved student list with matching metrics schema where possible.
+        unserved_students_list = []
+        for student in sol.students:
+            if student.is_served:
+                continue
+
+            stage_name = (
+                student.school_stage.name
+                if hasattr(student.school_stage, "name")
+                else str(student.school_stage)
+            )
+
+            direct_time = None
+            direct_distance_km = None
+            home_node = None
+
+            if school_node_for_mode is not None:
+                dt = compute_direct_time(student, school_node_for_mode, G_unc)
+                if math.isfinite(dt):
+                    direct_time = round(dt, 2)
+
+                try:
+                    home_node = _eng.fast_nearest_node(G_unc, student.coords[1], student.coords[0])
+                except Exception:
+                    home_node = None
+
+                if home_node is not None:
+                    dd = _MATRIX_CACHE_LENGTH.get((home_node, school_node_for_mode), None)
+                    if dd is not None and math.isfinite(dd):
+                        direct_distance_km = round(dd / 1000.0, 2)
+
+            walk_limit_m = getattr(student, "walk_radius", None)
+            if walk_limit_m is None and isinstance(stage_walk, dict):
+                walk_limit_m = stage_walk.get(stage_name)
+
+            unserved_students_list.append({
+                "id": student.id,
+                "stage": stage_name,
+                "route_id": None,
+                "pickup_order": None,
+                "ride_time_min": None,
+                "ride_distance_km": None,
+                "direct_potential_min": direct_time,
+                "direct_distance_km": direct_distance_km,
+                "walk_distance_m": None,
+                "walk_limit_m": float(walk_limit_m) if walk_limit_m is not None else None,
+                "rejection_reason": (student.failure_reason or None),
+            })
         
         # Calculate aggregate ride time statistics from students
         valid_ride_times = [s["ride_time_min"] for s in students_list if s["ride_time_min"] is not None]
@@ -2523,6 +2661,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "walk_stats":           walk,
             "routes":               routes_list,
             "students":             students_list,
+            "unserved_students":    unserved_students_list,
             "buses_available":       buses_available,
             "bus_capacity":          bus_capacity,
             "buses_used":            buses_used,
@@ -2776,9 +2915,13 @@ def run(input_path=None, output_path=None, iterations=None):
     # Filter out _comment and other non-stage keys
     stage_walk = {k: v for k, v in raw_walk.items()
                   if k in ("KG", "ELEMENTARY", "MIDDLE", "HIGH")}
+    
+    mrt_enabled = meta.get("constraints", {}).get("mrt_enabled", False)
+    mrt_enabled = meta.get("constraints", {}).get("mrt_enabled", False)
 
+    mrt_status_terminal = f" {'(MRT)' if mrt_enabled else '(DMRT)'}"
     print("=" * 60)
-    print("  THREE-MODE ROUTING COMPARISON  (input.json)")
+    print(f"  THREE-MODE ROUTING COMPARISON{mrt_status_terminal}")
     print("=" * 60)
     print(f"  Students : {meta['n_students']}")
     print(f"  Seed     : {meta['seed']}")
