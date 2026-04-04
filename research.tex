@@ -1,7 +1,3 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% IEEE Conference Template - School Bus Routing Project
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \documentclass[letterpaper, 10 pt, conference]{ieeeconf}
 
 \IEEEoverridecommandlockouts                             
@@ -31,10 +27,9 @@
 \usepackage{hyperref}
 \hypersetup{
     colorlinks=true,
-    linkcolor=black,
-    citecolor=black,
-    filecolor=blue,      
-    urlcolor=blue,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
 }
 
 \SetNlSty{large}{}{:}
@@ -46,9 +41,9 @@
 
 \pagestyle{plain} 
 
-% --- Title and Author ---
 \title{\LARGE \bf
-Routing Under Passenger Welfare Constraints: Efficiency, Safety, and Comfort in Demand-Responsive Bus Systems — A School Bus Case Study
+A Student Welfare-Focused Approach To The School Bus Routing Problem 
+In Developing Countries
 }
 
 \author{Authors Names\\
@@ -64,214 +59,568 @@ Misr University For Science And Technology \\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-This paper presents a demand-responsive optimization framework for the School Bus Routing Problem (SBRP) for developing regions such as Cairo, Egypt, characterized by limited pedestrian infrastructure and informal road usage (jaywalking). We propose a pipeline that balances operator efficiency with passenger welfare and safety. Using real-world OpenStreetMap data, we implement an Adaptive Large Neighborhood Search (ALNS) that integrates safety-aware bus stop generation with school-stage-appropriate walking constraints and proportional ride-time caps. By evaluating the system across a School-Stage-Tiered Safety Framework, ranging from a Direct (Point-to-Point) baseline to Strictly-Constrained and Weakly-Constrained regimes based on school-stage-tiered network permeability, we quantify the ``safety premium'' associated with avoiding potentially hazardous crossings, and the ``comfort premium'' associated with minimal walking and fast rides. Our findings provide a measurable trade-off between fiscal optimization and student well-being, offering a scalable model for schools in developing regions where comprehensive data for public road networks are often scarce.
+This paper addresses the limited transferability of existing School 
+Bus Routing Problem (SBRP) formulations to developing countries. We 
+introduce two key, student welfare focused, contributions: (1) a 
+dynamic maximum ride time (DMRT) constraint, computed per student from 
+geospatial OpenStreetMap data, replacing the policy based fixed maximum 
+ride time (MRT) constraint common in literature involving developed 
+countries, which is often absent in developing countries. Unlike fixed 
+MRT, DMRT scales with each student's direct travel time, reducing the 
+disparity between direct and assigned travel times while accommodating 
+larger service areas; and (2) a refined student age-based stop 
+selection process that enforces maximum walking distance (MWD) and 
+street crossing constraints, accounting for limited pedestrian 
+infrastructure such as crosswalks prevalent in developing countries. 
+The proposed model is implemented using Adaptive Large Neighborhood 
+Search (ALNS).
 \end{abstract}
 
 \begin{keywords}
-School Bus Routing Problem, Vehicle routing, Stop Selection, Metaheuristic Algorithms
+School Bus Routing Problem, Stop Selection, Developing Countries, ALNS
 \end{keywords}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{INTRODUCTION}
 
-Transportation is a critical yet expensive component of educational infrastructure. In cities like Cairo, the School Bus Routing Problem (SBRP) is further complicated by the scarcity of high-quality, detailed road network data and a lack of formal pedestrian infrastructure, which renders jaywalking the systemic norm. Historically, optimization research has prioritized operator efficiency—minimizing fleet size and total distance—while treating passenger welfare, such as ride-time comfort or pedestrian access, as secondary parameters or static constraints.
+Transportation is a critical yet costly component of educational 
+infrastructure \cite{c1}. The School Bus Routing Problem (SBRP) seeks 
+to determine the most efficient way to transport students to and from 
+school using a fleet of buses, and has been studied for over five 
+decades since its formalization by Newton and Thomas \cite{c2}. 
+Applying existing SBRP formulations to developing countries introduces 
+unique challenges: the absence of standardized maximum ride time (MRT) 
+policies, which are a common constraint in SBRP literature \cite{c3}, 
+and the lack of formal pedestrian infrastructure such as designated 
+crosswalks, making uncontrolled street crossing the systemic norm, a 
+reality not captured in current stop selection models \cite{c4}. Stop 
+selection determines which candidate bus stops should be used and 
+assigns students to them, commonly subject to a maximum walking 
+distance (MWD) or time (MWT) constraint \cite{c5}. These challenges 
+are further compounded by the scarcity of highly detailed road network 
+data in developing countries \cite{c4}.
 
-This study introduces a pipeline that balances operator efficiency with passenger welfare. We analyze the trade-offs between three core pillars:
-\begin{itemize}
-    \item \textbf{Efficiency:} The minimization of the active fleet size and total route duration.
-    \item \textbf{Safety:} The dynamic selection of bus stops based on student-specific needs and the avoidance of hazardous street crossings.
-    \item \textbf{Comfort and Equity:} The enforcement of school-stage-appropriate walking limits and the mitigation of excessive ride times through dynamic, proportional caps. 
-\end{itemize}
+This study makes two key contributions to the SBRP literature. First, 
+we introduce a Dynamic Maximum Ride Time (DMRT) constraint that 
+replaces the conventional fixed MRT \cite{c3} with a per-student 
+threshold proportional to each student's direct travel time to school, 
+balancing operational efficiency with equitable student welfare. 
+Second, we propose modifications to the stop selection process 
+\cite{c6} tailored to developing-country conditions, where uncontrolled 
+street crossing is common. Synthetic crossings are introduced into the 
+map data, and crossing permissions are assigned based on road class and 
+student school stage as a proxy for age \cite{c4}. For example, 
+residential streets are considered safe to cross in most instances, 
+while tertiary roads are restricted for younger students. Crossing is 
+prohibited entirely for students with physical disabilities \cite{c7}. 
+MWT constraints are similarly differentiated by school stage and 
+physical ability rather than applying a uniform threshold \cite{c1}.
 
-The core contribution of this work is a School-Stage-Tiered Comparison Framework that isolates the impact of these constraints. By evaluating a Strictly-Constrained safety regime (restricting crossings by school stage and road class) against a Weakly-Constrained model (allowing higher network permeability for older students) and a Direct Point-to-Point baseline, we provide a measurable ``safety premium.'' This research utilizes real-world geospatial data from OpenStreetMap and employs an Adaptive Large Neighbourhood Search (ALNS) to solve the resulting high-dimensional combinatorial problem.
+The proposed formulation uses real-world road network data from 
+OpenStreetMap (OSM) \cite{c19} and is solved using Adaptive Large 
+Neighborhood Search (ALNS) \cite{c9}. OSM data is accessed and 
+processed via the OSMnx library \cite{c8}. As no publicly available 
+dataset combining real student locations with real road network data 
+was found in the literature \cite{c4}, synthetic student addresses 
+were generated around a real school in Cairo, Egypt, a dense urban 
+setting representative of a developing country, to evaluate the 
+proposed approach.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{RELATED WORKS}
 
-The SBRP has been extensively studied as a specialized variant of the Vehicle Routing Problem (VRP) \cite{c1}. This section reviews the literature relevant to our three-pillar framework, focusing on stop selection, welfare constraints, and solution approaches for developing world contexts.
+The SBRP is a well-established combinatorial optimization problem and 
+a specialized variant of the Vehicle Routing Problem (VRP) \cite{c10}. 
+Desrosiers et al. \cite{c5} were among the first to formalize its 
+structure, decomposing it into five interrelated sub-problems: data 
+preparation, bus stop selection, route generation, school bell time 
+adjustment, and route scheduling. Comprehensive reviews by Park and 
+Kim \cite{c3} and Ellegood et al. \cite{c1} document the evolution of 
+the field across these sub-problems, while a recent systematic review 
+by Wang et al. \cite{c4} analyzing 127 peer-reviewed studies from 1970 
+to 2024 confirms that route generation has consistently attracted the 
+predominant share of scholarly attention, while stop selection remains 
+comparatively underexplored, appearing in approximately one quarter of 
+SBRP publications.
 
-\subsection{Problem Decomposition and Classification}
-The SBRP is conventionally decomposed into several sub-problems. Desrosiers et al. \cite{c1} established a framework comprising data preparation, bus stop selection, route generation, school bell time adjustment, and route scheduling. A comprehensive review by Wang et al. \cite{c2} confirms that route generation has attracted the predominant share of scholarly attention, while stop selection remains comparatively under-explored, appearing in approximately one-quarter of SBRP publications \cite{c2}.
+\subsection{Stop Selection}
 
-Our framework follows the location-allocation-routing (LAR) strategy identified by Park and Kim \cite{c1}, where stops are selected and students assigned before routes are generated. Unlike traditional sequential LAR, our framework integrates stop selection within the optimization loop through dynamic candidate generation per student.
+The stop selection sub-problem entails choosing a subset of candidate 
+bus stops and assigning students to them, subject to a maximum walking 
+distance (MWD) or time (MWT) constraint. Despite its operational 
+importance, it is frequently omitted or treated as a fixed parameter in 
+the literature, with prevailing studies assuming stop locations as 
+given inputs \cite{c4}. When stop selection is explicitly modeled, it 
+is most commonly addressed as part of a location-allocation-routing 
+(LAR) strategy, in which stops are first selected and students assigned 
+before routes are generated \cite{c11}. Schittekat et al. \cite{c6} 
+proposed metaheuristic approaches that jointly optimize stop selection 
+and routing, demonstrating that treating the two sub-problems 
+independently can yield sub-optimal solutions. Calvete et al. 
+\cite{c12} developed a partial-allocation matheuristic that handles 
+heterogeneous stop configurations, while Sciortino et al. \cite{c15} 
+integrated heterogeneous fleet structures with stop selection in a 
+single iterated local search framework, demonstrating both theoretical 
+innovation and practical relevance across 20 real-world instances.
 
-\subsection{Stop Selection and Safety Considerations}
-The stop selection sub-problem entails assigning students to boarding points while balancing walking distance, safety, and efficiency. Safety in stop selection has received particular attention recently, with guidelines emphasizing the hazards of getting to the stop, such as lack of suitable footpaths or crossing points. Despite these advances, literature often assumes stop locations as fixed inputs \cite{c3}. Our work extends this by generating candidate stops dynamically via safety-filtered BFS.
+Safety considerations in stop selection have received increasing 
+attention, with guidelines emphasizing hazards associated with walking 
+to stops, including the absence of suitable footpaths and crossing 
+points \cite{c4}. Parvasi et al. \cite{c13} proposed a bi-level 
+optimization model for stop selection that incorporates demand 
+outsourcing, while Bowerman et al. \cite{c14} addressed stop selection 
+within a multi-objective urban routing framework. Nevertheless, safety 
+constraints in existing formulations are predominantly modeled as 
+uniform walking thresholds and do not differentiate by student age, 
+physical ability, or road class. The MWT constraint, where it appears, 
+is almost universally a single fixed value applied across all students 
+regardless of their demographic characteristics \cite{c3}.
 
-\subsection{Passenger Welfare: Scaling Service Quality to Geographic Reality}
-Traditional SBRP models typically enforce service quality through a static, uniform maximum ride time ($T_{max}$). However, a fixed cap is fundamentally ``geographically blind,'' as it fails to account for the spatial diversity of a school’s catchment area. In a large-scale urban network, a single value for $T_{max}$ (e.g., 60 minutes) forces a rigid, binary threshold for all students regardless of their proximity. 
+\subsection{Maximum Ride Time Constraints}
 
+Vehicle capacity and maximum ride time (MRT) are the two most 
+universally enforced constraints in the SBRP literature. According to 
+Ellegood et al. \cite{c1}, approximately 35\% of reviewed SBRP 
+publications include an MRT constraint. In Wales, for instance, a 
+maximum journey time of 45 and 60 minutes is recommended for primary 
+and secondary pupils respectively, and a maximum walking distance of 
+1.6 km is considered reasonable \cite{c15}. In Malta, school transport 
+is provided free of charge to students residing at least 1 km from 
+school, with no formal MRT policy \cite{c15}. These examples 
+illustrate that MRT values are policy-derived and jurisdiction-specific, 
+and are almost exclusively associated with developed-country contexts.
 
-
-To address this, we propose a \textit{Dynamic Proportional Cap} (formulated in Section III-B) which scales the allowable ride time to the student's direct distance, ensuring equity between short and long commutes.
+In virtually all formulations, the MRT is implemented as a single 
+fixed scalar value applied uniformly to all students \cite{c3}. This 
+approach is geographically blind in that it fails to account for the 
+spatial diversity of a school's catchment area. A student residing five 
+minutes from school and one residing an hour away are held to the same 
+absolute threshold, which can produce structurally inequitable outcomes 
+in large service areas. Wang et al. \cite{c4} note the school time 
+windows (STW) constraint used by L\'opez Santana and Romero Carvajal 
+\cite{c16}, which ensures a student's ride time does not exceed twice 
+the direct travel time from stop to school, as an attempt to introduce 
+proportionality into ride time constraints. No formulation in the 
+reviewed literature, however, computes a per-student dynamic ride time 
+threshold based on real-world network travel data.
 
 \subsection{Metaheuristic Solution Approaches}
-Given the NP-hard nature of SBRP \cite{c2}, metaheuristics dominate the landscape. Adaptive Large Neighbourhood Search (ALNS) has emerged as an effective approach for complex SBRP sub-classes. Its success is due to the adaptive selection of operators \cite{c7}, which allow the algorithm to target specific constraint violations through various destroy-and-repair mechanisms.
 
-\subsection{Developing World Applications and Research Gaps}
-Cairo's road environment is characterized by limited pedestrian infrastructure and informal crossing behavior, directly motivating our safety-constrained mode. Developed-world assumptions regarding pedestrian safety and bus stop access cannot be transferred uncritically to such contexts. Our work addresses several identified research gaps:
-\begin{itemize}
-    \item \textbf{Safety-Aware Stop Generation via School-Stage-Tiered Permeability:} Unlike traditional models that treat the road network as a uniform graph, our approach integrates pedestrian route safety into the candidate stop generation phase via a school-stage safety matrix. This filters the network based on a student’s school stage, ensuring Tertiary and Secondary roads are treated as impassable barriers for younger students while permitting ``Weakly-Constrained'' access for older age groups.
-    \item \textbf{Dynamic Welfare Constraints:} Existing formulations predominantly employ static ride-time maximums \cite{c1, c5}. A dynamic cap proportional to $T_{direct}$ provides a more equitable service level.
-    \item \textbf{The School-Stage-Tiered Comparison Framework:} Quantifying the marginal costs of welfare constraints by comparing regimes (Strictly-Constrained, Weakly-Constrained, and Direct) with varying levels of network access and student-walking requirements.
-\end{itemize}
+Given the NP-hard nature of the SBRP \cite{c1}, metaheuristics 
+dominate the solution landscape. Wang et al. \cite{c4} report that 
+metaheuristic and hybrid approaches account for over 60\% of solution 
+methods in recent literature, with Genetic Algorithms (GA) being the 
+most widely adopted. Adaptive Large Neighbourhood Search (ALNS) has 
+emerged as a particularly effective approach for complex SBRP 
+sub-classes due to its adaptive selection of destroy-and-repair 
+operators, which allow the algorithm to target specific constraint 
+violations and escape deep local optima \cite{c9}. Sciortino et al. 
+\cite{c15} demonstrated the effectiveness of iterated local search for 
+joint stop-selection and routing across instances with up to 1,817 
+potential stops and 757 students, comparing favorably against a 
+memetic algorithm benchmark \cite{c17} across 100 instances. The 
+integration of real-world geographic data has also improved model 
+realism, with several studies replacing Euclidean distance metrics with 
+road network travel times derived from OpenStreetMap \cite{c19}, 
+accessed via tools such as OSMnx \cite{c8}.
 
-\begin{table}[h]
-\centering
-\caption{\textbf{Summary of Related Work Positioning}}
-\label{tab:positioning}
-\begin{tabular}{|>{\raggedright\arraybackslash}p{0.2\linewidth}|>{\raggedright\arraybackslash}p{0.25\linewidth}|>{\raggedright\arraybackslash}p{0.4\linewidth}|}
-\hline
-\textbf{Theme} & \textbf{Representative Study} & \textbf{Our Extension} \\
-\hline
-Stop Selection & \cite{c1, c3} & Safety-filtered BFS candidate generation \\
-\hline
-Safety & \cite{c1, c2} & Road classification as safe\_to\_cross \\
-\hline
-Ride Time & \cite{c1, c5} & Dynamic proportional caps ($k \times T_{direct}$) \\
-\hline
-Methodology & \cite{c7} & Adaptive destroy-repair ALNS with welfare-aware feasibility checks \\
-\hline
-Context & \cite{c5} & Cairo OSMnx implementation \\
-\hline
-\end{tabular}
-\end{table}
+\subsection{SBRP in Developing Countries and Research Gaps}
+
+The overwhelming majority of SBRP formulations have been developed 
+for and validated in developed-country contexts, where dense road 
+networks, robust pedestrian infrastructure, and formal transportation 
+policies can be assumed. Wang et al. \cite{c4} classify the service 
+environment as a primary determinant of SBRP structure, noting that 
+scholarly attention has been disproportionately concentrated on urban 
+settings with standardized infrastructure, while contexts characterized 
+by sparse networks and inconsistent pedestrian infrastructure remain 
+largely unaddressed. The few exceptions that address non-standard 
+infrastructure contexts tend to focus on rural routing under sparse 
+network connectivity \cite{c18}, without engaging with the specific 
+challenges of dense, informal urban environments where pedestrian 
+crossing infrastructure is absent and MRT policies do not exist.
+
+The reviewed literature reveals three persistent gaps directly 
+motivating this work. First, the MRT constraint in virtually all 
+formulations is a fixed, policy-derived value that is both unavailable 
+in many developing countries and structurally inequitable across 
+heterogeneous service areas. Second, stop selection processes rarely 
+differentiate by student characteristics such as age or physical 
+ability, and do not account for the absence of formal crossing 
+infrastructure. Third, no existing formulation has been designed 
+specifically for, or validated in, a dense urban developing-country 
+context using real road network data. This paper addresses these gaps 
+by introducing a Dynamic Maximum Ride Time (DMRT) constraint 
+personalized to each student's direct OSM-derived travel time, an 
+age-differentiated stop selection process incorporating road-class 
+crossing constraints, and a synthetic-crossing mechanism for 
+environments lacking formal pedestrian infrastructure, implemented and 
+evaluated using ALNS on a real road network in Cairo, Egypt.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{PROBLEM DESCRIPTION AND FORMULATION}
 
-The \textit{Welfare-Aware School Bus Routing Problem (WA-SBRP)} is solved on a directed road graph $G=(V,A)$ built from OpenStreetMap travel-time edges. Let $S$ be students, $R$ be bus routes, and $P$ be candidate pickup nodes generated from student-centered pedestrian reachability. In the implemented model, each route is school-anchored (pickup sequence ending at the school node) and students may remain unserved when no feasible insertion exists. Therefore, the optimization is a constrained \textit{service maximization} model, not a strict all-served minimization model.
+The SBRP is solved on a directed road graph $G=(V,A)$ built from 
+OpenStreetMap \cite{c19} driving edges, accessed via OSMnx \cite{c8}. 
+Let $S$ be students, $R$ be bus routes, and $P$ be candidate pickup 
+nodes generated from student-centered pedestrian reachability. In the 
+implemented model, each route is school-anchored (pickup sequence 
+ending at the school node), the bus fleet used is homogeneous (all 
+buses have the same capacity) and students may remain unserved when no 
+feasible insertion exists. Therefore, the optimization is a constrained 
+\textit{service maximization} model, not a strict all-served 
+minimization model \cite{c1}.
 
 \subsection{The Objective Function}
-We maximize a weighted score that prioritizes serving students, then compact routing, while penalizing long bus travel and excessive walking:
+We maximize a weighted score that prioritizes serving students, then 
+compact routing, while penalizing long bus travel time and excessive 
+student walking distance \cite{c14}:
 
 \begin{equation}
-\max F = w_s\!\sum_{s\in S} y_s - w_r\!\sum_{r\in R} z_r - \sum_{r\in R} T_r - \sum_{s\in S} \phi_s
+\max F = w_s\!\sum_{s\in S} y_s - w_r\!\sum_{r\in R} z_r - 
+\sum_{r\in R} T_r - \sum_{s\in S} \phi_s
 \end{equation}
 
-where $y_s\in\{0,1\}$ indicates whether student $s$ is served, $z_r\in\{0,1\}$ indicates whether route $r$ is active, $T_r$ is route travel time, and $\phi_s$ is the walking penalty for student $s$. The implementation uses $w_s=10000$ and $w_r=5000$, which ensures one additional served student dominates the activation of one additional bus.
+where $y_s\in\{0,1\}$ indicates whether student $s$ is served, 
+$z_r\in\{0,1\}$ indicates whether route $r$ is active, $T_r$ is 
+route travel time, and $\phi_s$ is the walking penalty for student 
+$s$. The implementation uses $w_s=10000$ and $w_r=5000$, which 
+ensures one additional served student dominates the activation of one 
+additional bus \cite{c15}.
 
-\subsection{Passenger Welfare Constraints}
-The WA-SBRP transforms welfare into geographic and temporal constraints with a hard-feasibility layer (candidate generation and insertion checks) and a soft-cost layer (walking penalty in the objective):
+\subsection{Student Welfare Focused Constraints}
+The SBRP transforms student welfare into geographic and temporal 
+constraints with a hard-feasibility layer (candidate generation and 
+insertion checks) and a soft-cost layer (walking penalty in the 
+objective) \cite{c3}. Hard constraints include:
 
 \begin{enumerate}
-    \item \textbf{School-Stage-Tiered Network Permeability (Safety):} For each student $s$, the pedestrian exploration graph is filtered by road safety permissions defined for their school stage.
-    \item \textbf{School-Stage Walking Eligibility:} A stop $p$ is a feasible candidate for student $s$ only if pedestrian distance in the filtered graph satisfies $d_{walk}(s,p)\le W_{stage(s)}$.
-    \item \textbf{Dynamic Proportional Ride-Time Cap:} To prevent specific geographical discrimination, we define a feasibility corridor for the maximum ride time $T^{\max}_s$:
+    \item \textbf{School-Stage Dependent Street Crossing:} For each 
+    student $s$, the pedestrian exploration graph is filtered by 
+    street crossing safety permissions defined for their school stage 
+    and physical ability \cite{c7}.
+    
+    \item \textbf{School-Stage Dependent Walking Distance (MWD):} A 
+    stop $p$ is a feasible candidate for student $s$ only if 
+    pedestrian distance in the filtered graph satisfies 
+    $d_{walk}(s,p)\le W_{stage(s)}$, and the student is physically 
+    able \cite{c6}.
+    
+    \item \textbf{Dynamic Maximum Ride Time (DMRT):} To prevent 
+    potential maximum ride time unfairness arising from the 
+    geographical distribution of students \cite{c4}, we define a 
+    feasibility corridor for the student dynamic maximum ride time 
+    $T^{\max}_s$:
     \begin{equation}
-    T^{\max}_s = \max\left(\tau_{\mathrm{min}},\min\left(k\,T^{direct}_s,\;T^{direct}_s+\tau_{\mathrm{add}}\right)\right)
+    T^{\max}_s = \max\left(\tau_{\mathrm{min}},\min\left(k\,
+    T^{direct}_s,\;T^{direct}_s+\tau_{\mathrm{add}}\right)\right)
     \end{equation}
     
-This logic establishes a ``feasibility corridor'' serving three objectives:
-\begin{enumerate}
-    \item \textbf{The Floor (Operational Efficiency):} Sets a minimum baseline enrolling students can expect (e.g., 45 min) to ensure the system remains efficient without constraining the optimization too much by students who live really close to the school (eg. 10 min away).
-    \item \textbf{The Multiplier ($k$):} Maintains a consistent service quality ratio for the median student population.
-    \item \textbf{The Additive Ceiling (Student Comfort):} Imposes an absolute cap especially relevant for long-distance commutes where the multiplicative nature of  $k\,T^{direct}_s$ leads to an unacceptable $T^{\max}_s$ for students who live far away.
-\end{enumerate}
-    \item \textbf{Configurable Directional Enforcement:} Let $T^{AM}_s$ and $T^{PM}_s$ denote morning and afternoon in-vehicle times. In strict directional mode, insertion requires $T^{AM}_s\le T^{\max}_s$. In bidirectional-lenient mode (default), insertion is rejected only when both directions violate the cap:
+    This logic establishes a ``feasibility corridor'' serving three 
+    objectives:
+    \begin{enumerate}
+        \item \textbf{The Floor (Operational Efficiency):} Sets a 
+        minimum baseline ride time that any student can expect 
+        (e.g., 30 min) to ensure the system remains operationally 
+        efficient without over-constraining students who live close 
+        to school \cite{c3}.
+        
+        \item \textbf{The Multiplier ($k$):} Maintains a consistent 
+        service quality ratio for the median student population, using 
+        it as a multiple of direct travel time \cite{c16}.
+        
+        \item \textbf{The Additive Ceiling (Student Comfort):} 
+        Imposes an absolute cap especially relevant for long-distance 
+        commutes where the multiplicative factor $k\,T^{direct}_s$ 
+        would otherwise yield an unacceptably large $T^{\max}_s$ 
+        \cite{c1}.
+    \end{enumerate}
+    
+    \item \textbf{Configurable Directional Enforcement:} Let 
+    $T^{AM}_s$ and $T^{PM}_s$ denote morning and afternoon in-vehicle 
+    times \cite{c15}. In strict directional mode, insertion requires 
+    $T^{AM}_s\le T^{\max}_s$. In a bidirectional-lenient mode, 
+    insertion is rejected only when both directions violate the cap:
     \begin{equation}
-    \text{reject iff } \left(T^{AM}_s>T^{\max}_s\right) \wedge \left(T^{PM}_s>T^{\max}_s\right)
+    \text{reject iff } \left(T^{AM}_s>T^{\max}_s\right) \wedge 
+    \left(T^{PM}_s>T^{\max}_s\right)
     \end{equation}
-    \item \textbf{Walking Penalty Layer:} Even among feasible candidates, longer walks are penalized in the objective by $\phi_s$; non-computable walking paths receive a heavy fallback penalty, discouraging but not hard-forbidding assignment.
+    which handles cases where a student who boards the bus first in 
+    the AM direction may also be dropped off first in the PM 
+    direction, resulting in a shorter effective ride time.
+    
+    \item \textbf{Walking Penalty Layer:} Even among feasible 
+    candidates, longer walks are penalized in the objective by 
+    $\phi_s$, thereby discouraging unnecessary walking to bus stops 
+    \cite{c14}.
 \end{enumerate}
 
 \subsection{Operational Constraints}
 \begin{itemize}
-    \item \textbf{Capacity:} For each route $r$, assigned students satisfy $\sum_{s\in S_r}1 \le Q_r$.
-    \item \textbf{School-Anchored Route Structure:} Each route is an ordered pickup sequence terminating at the school node.
-    \item \textbf{Single Assignment for Served Students:} Each served student is assigned to exactly one stop on one route. Unserved students are allowed and reflected through reduced objective value.
-    \item \textbf{Insertion Feasibility:} Candidate insertions must satisfy capacity and ride-time rules for both the inserted student and previously assigned downstream students.
+    \item \textbf{Capacity:} For each route $r$, assigned students 
+    satisfy $\sum_{s\in S_r}1 \le Q_r$ \cite{c15}.
+    
+    \item \textbf{School-Anchored Route Structure:} Each route is an 
+    ordered pickup sequence terminating at the school node \cite{c5}.
+    
+    \item \textbf{Single Assignment for Served Students:} Each served 
+    student is assigned to exactly one stop on one route. Unserved 
+    students are allowed and reflected through a reduced objective 
+    value \cite{c1}.
+    
+    \item \textbf{Insertion Feasibility:} Candidate insertions must 
+    satisfy capacity and ride-time rules for both the inserted student 
+    and previously assigned downstream students \cite{c9}.
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{PROPOSED METHOD}
 
-This section details the computational framework developed to solve the Welfare-Aware School Bus Routing Problem (WA-SBRP). The approach integrates geospatial data processing, dynamic candidate stop generation based on pedestrian safety heuristics, and a tailored metaheuristic optimizer. We first outline the end-to-end pipeline before detailing the synthetic data generation, network augmentation strategies, and the core routing algorithm.
+This section details the pipeline developed to solve the School Bus 
+Routing Problem with a focus on student welfare in developing 
+countries. The approach integrates geospatial data processing from 
+OpenStreetMap \cite{c19} via OSMnx \cite{c8}, dynamic candidate stop 
+generation based on pedestrian safety heuristics, and a metaheuristic 
+optimizer (ALNS) \cite{c9}. We first outline the end-to-end pipeline 
+before detailing the synthetic data generation, network augmentation 
+strategies, school-stage and physical-ability based candidate bus stop 
+selection, and the core routing algorithm.
 
 \subsection{Pipeline Overview}
-The implemented workflow follows five stages:
+The implemented workflow follows four stages:
 \begin{enumerate}
-    \item \textbf{Data Generation and Graph Construction:} Synthesize student populations via an annulus-based distribution around the school (Algorithm~\ref{alg:synthetic_data_gen}), build drive and pedestrian graphs from OpenStreetMap, and cache reusable artifacts.
-    \item \textbf{School-Stage-Tiered Candidate Generation:} For each student, perform safety-filtered pedestrian search to enumerate reachable pickup nodes under mode-specific crossing rules (Strictly-Constrained, Weakly-Constrained, or Direct).
-    \item \textbf{Pedestrian Graph Augmentation:} Inject synthetic pedestrian crossings between opposite carriageways (when safety predicates hold) to model informal crossing behavior not represented in car-centric topology.
-    \item \textbf{ALNS Route Optimization:} Solve the service-maximization objective with destroy-repair neighborhoods and simulated-annealing acceptance.
-    \item \textbf{Experiment Logging and Comparison:} Export per-mode outputs including objective progression, operator statistics, crossing metrics, and timing telemetry.
+    \item \textbf{Synthetic Data Generation and Graph Construction:} 
+    Synthesize student populations via an annulus-based distribution 
+    around the school (Algorithm~\ref{alg:synthetic_data_gen}), and 
+    build a drive graph from OpenStreetMap \cite{c19}.
+    
+    \item \textbf{Pedestrian Graph Augmentation:} Inject synthetic 
+    pedestrian crossings between opposite carriageways (when safety 
+    predicates hold) to model informal crossing behavior present in 
+    many developing countries, where formal pedestrian infrastructure 
+    is absent \cite{c4}.
+    
+    \item \textbf{School-Stage-Tiered Candidate Stop Selection:} For 
+    each student, perform safety-filtered pedestrian search to 
+    enumerate reachable pickup nodes and select the most promising 
+    subset of stops \cite{c6}.
+    
+    \item \textbf{ALNS Route Optimization:} Solve the 
+    service-maximization objective with destroy and repair operators 
+    and simulated-annealing acceptance, creating bus routes from the 
+    set of candidate bus stops \cite{c9}.
 \end{enumerate}
 
-\subsection{Synthetic Dataset Generation}
-Due to privacy constraints and the lack of publicly available school registries in the studied region, student home locations are synthetically generated using a Gaussian annulus-based spatial distribution model. Rather than distributing students uniformly across the map, this approach more accurately models real-world school catchments where the density of bus-riding students is highest in a "commuter ring" at a specific distance from the school.
+\subsection{Synthetic Student Dataset Generation}
+Due to privacy constraints and the lack of publicly available school 
+registries in the studied region, student home locations are 
+synthetically generated using a Gaussian annulus-based spatial model. 
+Rather than distributing students uniformly, the method concentrates 
+sampling in a ring around the school, which better reflects practical 
+bus-catchment behavior.
 
-Centered on a selected real-world school node, the generation process samples a student's distance from the school using a bounded Gaussian distribution (e.g., concentrated around a peak distance of 2.0 km with a specified standard deviation). To prevent unrealistic edge cases, generated distances that fall outside predefined minimum (e.g., 0.4 km) and maximum bounds are discarded and resampled. Then a uniformly random angle ($0$ to $2\pi$) is selected to determine the direction bearing. Finally, these polar variables (distance and angle) are translated into geographical latitude and longitude coordinates. Algorithm~\ref{alg:synthetic_data_gen} summarizes the exact generation workflow used for experiments.
+In our workflow, the input provides a random seed and a boundary polygon. 
+The polygon is first resolved into its enclosing bounding box, and the 
+school-to-corner maximum distance of that box defines the annulus scale. 
+Annulus parameters are then ratio-driven: 
+$d_{\max}=R_{bbox}\cdot\text{bbox\_radius\_scale}$, 
+$\mu_d=d_{\max}\cdot\text{peak\_ratio}$, and 
+$\sigma_d=(d_{\max}-d_{\min})\cdot\text{sigma\_ratio}$. 
+For each attempt, a bearing is sampled uniformly in $[0,2\pi)$, converted 
+to latitude/longitude, snapped to the nearest drive node \cite{c8}, and 
+validated using boundary, forbidden-highway, restricted-landuse, and 
+residential-context checks.
 
-Each generated student is assigned a specific school stage based on the school's specific demographics; otherwise we assume a uniform distribution of students across all school stages, which subsequently governs their allowable walking limits and safety-filtered permissions for crossing roads.
+Each accepted student is assigned a school stage from the configured stage 
+distribution, an age from the stage-specific age band, and a disability 
+flag sampled from a configured probability $\rho_{dis}$. The disability 
+attribute is included to support downstream accessibility-aware constraints.
+
+We construct an OSM-based graph \cite{c19} using OSMnx \cite{c8} and 
+extract road classification data from network edges. These attributes 
+are used to estimate speeds and calculate travel times for the 
+proposed bus routes.
 
 \begin{algorithm}[!t]
-\caption{Synthetic Student Dataset Generation (Annulus-Gaussian)}
+\caption{Annulus-Based Synthetic Student Dataset Generation}
 \label{alg:synthetic_data_gen}
-\KwIn{School center $(\phi_c,\lambda_c)$, number of students $N$, distance bounds $[d_{min}, d_{max}]$, Gaussian parameters $(\mu_d,\sigma_d)$, stage policy}
-\KwOut{Student set $S$ with coordinates and school stages}
-$S \leftarrow \emptyset$\;
-\For{$i \leftarrow 1$ \KwTo $N$}{
-    Sample $d \sim \mathcal{N}(\mu_d,\sigma_d)$ until $d_{min} \le d \le d_{max}$\;
-    Sample $\theta \sim \mathcal{U}(0, 2\pi)$\;
-    Convert polar offset $(d,\theta)$ around $(\phi_c,\lambda_c)$ to geographic point $(\phi_i,\lambda_i)$\;
-    Sample school stage $g_i$ from configured stage distribution (or uniform fallback)\;
-    Create student $s_i=(\phi_i,\lambda_i,g_i)$ and append to $S$\;
+\KwIn{School center $(\phi_c,\lambda_c)$, students $N$, seed, polygon $P$, 
+stage distribution $\pi$, ratio params $(\text{peak\_ratio},\text{sigma\_ratio},\text{bbox\_radius\_scale})$, 
+$d_{\min}$, disability rate $\rho_{dis}$, attempt cap $A_{\max}$}
+\KwOut{Student set $S$ with snapped coordinates, stage, age, disability}
+Set random seeds from input\;
+Resolve polygon $P$ to bounding box and compute enclosing radius $R_{bbox}$\;
+Set $d_{\max}\leftarrow R_{bbox}\cdot\text{bbox\_radius\_scale}$\;
+Set $\mu_d\leftarrow d_{\max}\cdot\text{peak\_ratio}$ and 
+$\sigma_d\leftarrow(d_{\max}-d_{\min})\cdot\text{sigma\_ratio}$\;
+Build validity filters (boundary, forbidden highways, restricted landuse, residential context)\;
+$S\leftarrow\emptyset$\;
+\For{$i\leftarrow1$ \KwTo $N$}{
+    \For{$a\leftarrow1$ \KwTo $A_{\max}$}{
+        Sample $d\sim\mathcal{N}(\mu_d,\sigma_d)$ truncated to $[d_{\min},d_{\max}]$, 
+        $\theta\sim\mathcal{U}(0,2\pi)$\;
+        Convert $(d,\theta)$ to candidate point and snap to nearest drive node\;
+        \If{candidate passes all validity filters}{
+            Sample stage $g_i\sim\pi$, sample age from stage band, sample disability 
+            $q_i\sim\mathrm{Bernoulli}(\rho_{dis})$\;
+            Append $s_i=(\phi_i,\lambda_i,g_i,\text{age}_i,q_i)$ to $S$; \textbf{break}\;
+        }
+    }
 }
 \Return{$S$}\;
 \end{algorithm}
 
-\subsection{Candidate Stop Generation and Safety Modes}
-Candidate stops are not predefined; they are generated dynamically from each student location using pedestrian reachability under road-class safety rules. The three comparison modes are:
-\begin{itemize}
-    \item \textbf{Strictly-Constrained:} conservative crossing permissions by school stage.
-    \item \textbf{Weakly-Constrained:} increased permeability, especially for older stages.
-    \item \textbf{Direct (Point-to-Point):} walking suppressed (effectively home pickup), used as a baseline.
-\end{itemize}
+\subsection{School-Stage-Tiered Candidate Stop Selection}
+
+Candidate stops are not predefined; they are generated dynamically 
+from each student's location using pedestrian reachability under 
+road-class safety rules. This approach departs from the prevailing 
+convention in the SBRP literature, where candidate stops are typically 
+provided as fixed inputs \cite{c4}, and instead treats stop generation 
+as an integrated part of the optimization pipeline \cite{c6}.
+
+For each student $s$, a bounded pedestrian search is conducted on 
+the augmented walk graph, producing a set of reachable road-network 
+nodes within the student's school-stage-dependent maximum walking 
+distance $W_{stage(s)}$. The search is constrained by a 
+school-stage safety matrix $\Pi$ that governs which road classes the 
+student is permitted to cross.
+
+Reachable nodes are then mapped to drive-graph nodes and scored 
+according to four criteria: pedestrian safety, adjacent road 
+speed (based on road class); the routing algorithm prefers to route busses through wider and faster roads, walking distance from the student's 
+home node, and consolidation potential (the number of other students 
+who share the same candidate stop, favoring stops that serve multiple 
+students and thus improve vehicle utilization \cite{c15}). The 
+top-$K$ candidates per student are retained and passed to the ALNS 
+optimizer as the feasible insertion set for that student. This ensures that the optimizer only evaluates welfare-compliant insertions, eliminating the need for 
+post-hoc feasibility filtering of stop assignments \cite{c12}.
+
+This design is particularly important in the context 
+of developing countries addressed by this paper. In the absence of formally designated stops and pedestrian crossings \cite{c19}, a purely road-network-based 
+candidate set would either over-restrict reachability (by treating 
+divided carriageways as impenetrable barriers) or under-restrict it 
+(by ignoring crossing safety entirely). The synthetic crossing 
+augmentation described in the following subsection resolves this 
+tension by selectively enabling crossings where geometric and safety 
+conditions are satisfied.
 
 \subsection{Pedestrian Graph Augmentation via Synthetic Crossings}
-OpenStreetMap drive topology frequently represents divided roads as two opposite carriageways without direct pedestrian edge between sides. In Egypt-like contexts, this causes us to not be able to model crossing streets (jaywalking) if the candidate generation relies only on the native car-network. To address this, we augment the \emph{pedestrian} graph with synthetic crossing edges between opposite sides of eligible roads (typically tertiary/secondary classes) when geometric and safety checks are satisfied. These synthetic edges are used only for pedestrian reachability and stop-candidate generation; bus routing remains on the original directed drive graph. This separation preserves vehicular realism while enabling context-faithful modeling of informal crossing behavior.
 
-Algorithm~\ref{alg:candidate_synth} summarizes the integrated stop-candidate pipeline. It combines school-stage safety permissions with synthetic crossing augmentation before bounded pedestrian exploration and ranking to generate the feasible insertion universe. The dominant runtime comes from bounded graph traversal on the augmented walk graph; with neighborhood-bounded search, practical behavior is near-linear in explored edges per student. This step is critical because it decides the feasible insertion universe seen by the ALNS optimizer.
+OpenStreetMap \cite{c19} drive topology frequently represents divided 
+roads as two opposite carriageways without a direct pedestrian edge 
+between sides. This prevents modeling of informal street crossing 
+(jaywalking) when candidate generation relies only on the driving 
+network. To address this, we augment the driving network with 
+synthetic crossing edges between opposite sides of eligible roads 
+(typically tertiary and secondary classes) when geometric and safety 
+checks are satisfied, producing an augmented pedestrian graph. The 
+pedestrian graph is used exclusively for bus stop candidate 
+generation; bus routing remains on the original drive graph 
+\cite{c8}.
+
+Algorithm~\ref{alg:candidate_synth} summarizes the integrated 
+stop-candidate pipeline. It combines school-stage safety permissions 
+with synthetic crossing augmentation before bounded pedestrian 
+exploration and ranking to generate the feasible insertion set. The 
+dominant runtime comes from bounded graph traversal on the augmented 
+walk graph; with neighborhood-bounded search, practical behavior is 
+near-linear in explored edges per student. This step is critical 
+because it decides the feasible insertion set seen by the ALNS 
+optimizer.
 
 \begin{algorithm}[h]
-\caption{Safety-Aware Candidate Generation with Synthetic Crossings}
+\caption{Candidate Bus Stop Generation with Synthetic Crossings}
 \label{alg:candidate_synth}
-\KwIn{Drive graph $G_d$, pedestrian graph $G_w$, student $s$, school-stage policy $\Pi$, mode config}
+\KwIn{Drive graph $G_d$, pedestrian graph $G_w$, student $s$, 
+school-stage policy $\Pi$, mode config}
 \KwOut{Ranked candidate stop set $C_s$}
 Construct stage-filtered pedestrian permissions for $s$ from $\Pi$\;
-Detect eligible opposite-carriageway pairs under geometry and road-class rules\;
-Insert synthetic crossing edges into $G_w$ only when safety predicates are satisfied\;
-Run bounded pedestrian search from student frontage/home node on augmented $G_w$\;
+Detect eligible opposite-carriageway pairs under geometry and 
+road-class rules\;
+Insert synthetic crossing edges into $G_w$ only when safety 
+predicates are satisfied\;
+Run bounded pedestrian search from student frontage/home node on 
+augmented $G_w$\;
 Map reachable pedestrian nodes to drive-graph stop nodes\;
-Score and rank candidates (safety, walk distance, consolidation potential)\;
+Score and rank candidates (safety, adjacent road speed, walk 
+distance, consolidation potential)\;
 Truncate to top-$K$ mode-dependent candidates\;
 \Return{$C_s$}\;
 \end{algorithm}
 
 \subsection{ALNS Design}
-The optimizer uses an Adaptive Large Neighbourhood Search (ALNS) to solve the service-maximization objective. ALNS employs roulette-wheel operator selection with adaptive weight updates, allowing the algorithm to dynamically choose the most effective destroy and repair strategies based on recent success. Destroy operators include random removal, worst-cost removal, relatedness (Shaw-style) removal, sequence removal, and route-merge removal. Repair uses regret-based insertion as the primary reconstruction policy, with random-order best insertion as a diversification companion. Acceptance follows a simulated annealing (SA) criterion. Stopping is hybrid: no-improvement patience, freeze-based stopping when temperature becomes very low, and wall-clock budget termination (after a minimum-iteration floor). To eliminate excessive computation when an optimal state is reached, the optimizer employs a \textit{satisficing polishing window}: if all students are served and the active fleet size matches the theoretical minimum ($\lceil |S| / C \rceil$), the patience window is tightened to a small constant (30 iterations). After the main loop, if all students are served but active fleet exceeds the theoretical minimum, an optional short merge-focused tail (route-merge destroy + regret repair) attempts additional fleet consolidation. A final repair pass then attempts to insert any remaining unserved students.
+
+The optimizer uses Adaptive Large Neighborhood Search (ALNS) 
+\cite{c9} to solve the service-maximization objective. ALNS was 
+selected over simpler metaheuristics due to its demonstrated 
+effectiveness on large-scale routing problems with complex, 
+heterogeneous constraints \cite{c4}, and its natural support for 
+welfare-aware feasibility checks at the operator level. The 
+framework employs roulette-wheel operator selection with adaptive 
+weight updates \cite{c9}, allowing the algorithm to favor 
+destroy-repair pairs that recently improved solution quality.
+
+Destroy operators include random removal, worst-cost removal, 
+relatedness (Shaw-style) removal \cite{c20}, sequence removal, and 
+route-merge removal. Repair uses two operators: random-order best 
+insertion and regret-based insertion \cite{c9}. The regret-based 
+operator is particularly effective in this setting because it 
+prioritizes students whose assignment options are most constrained 
+by the DMRT and MWD welfare constraints, reducing the likelihood 
+that hard-to-serve students are left unserved at the end of a repair 
+pass.
+
+The implementation includes a sparse-construction phase: when 
+service coverage is still low, destroy is skipped and repair is 
+biased to accelerate feasible assignment growth before stronger 
+diversification begins. Acceptance follows a simulated annealing 
+(SA) criterion \cite{c21} in the maximization setting, allowing 
+occasional acceptance of worse solutions to escape local optima. 
+Stopping is hybrid: no-improvement patience, freeze-based stopping 
+when temperature becomes very low, and wall-clock budget termination 
+(only after an iteration floor). Early-stop and freeze checks are 
+additionally gated by a minimum-iterations threshold to prevent 
+premature termination on large instances.
+
+To eliminate excessive computation when an effective optimum is 
+reached, the optimizer applies a polishing window: if all students 
+are served and active fleet size is at most the theoretical minimum 
+($\lceil |S| / C \rceil$), patience is tightened to 30 iterations. 
+After the main loop, if all students are served but active fleet 
+exceeds the theoretical minimum, an optional short merge-focused 
+tail (route-merge destroy + regret repair) attempts additional fleet 
+consolidation \cite{c15}. A final repair pass then attempts to 
+insert any remaining unserved students.
 
 \begin{algorithm}[!t]
 \caption{ALNS Framework Loop}
 \label{alg:alns_loop}
-\KwIn{Initial solution $x_0$, destroy set $\mathcal{D}$, repair set $\mathcal{R}$, temperature $T_0$, cooling $\gamma$, patience limit $P_{max}$, time budget $B$, iteration floor $I_{floor}$, freeze threshold $T_{freeze}$, freeze patience $P_{freeze}$, merge-tail iterations $M$}
+\KwIn{Initial solution $x_0$, destroy set $\mathcal{D}$, repair 
+set $\mathcal{R}$, temperature $T_0$, cooling $\gamma$, patience 
+limit $P_{max}$, time budget $B$, iteration floor $I_{floor}$, 
+freeze threshold $T_{freeze}$, freeze patience $P_{freeze}$, 
+merge-tail iterations $M$}
 \KwOut{Best solution $x^*$}
-$x \leftarrow x_0$; $x^* \leftarrow x_0$; initialize operator weights and scores\;
-$P_{current} \leftarrow P_{max}$ ; $stagnation \leftarrow 0$\;
+$x \leftarrow x_0$; $x^* \leftarrow x_0$; initialize operator 
+weights and scores\;
+$P_{current} \leftarrow P_{max}$; $stagnation \leftarrow 0$\;
 \For{$it \leftarrow 1$ \KwTo $it_{max}$}{
     \If{$it > I_{floor}$ and elapsed wall-clock $\ge B$}{
         \textbf{break} \tcp*{Time budget stop}
     }
-    Select destroy $d \in \mathcal{D}$ and repair $r \in \mathcal{R}$ via roulette-wheel over adaptive weights\;
+    Select destroy $d \in \mathcal{D}$ and repair $r \in \mathcal{R}$ 
+    via roulette-wheel over adaptive weights\;
     $x' \leftarrow r(d(x))$\;
     \If{$f(x') > f(x)$}{
         $x \leftarrow x'$\;
     }
     \Else{
-        Accept $x'$ with SA probability $\exp((f(x')-f(x))/T)$\;
+        Accept $x'$ with SA probability 
+        $\exp((f(x')-f(x))/T)$\;
     }
-    Update operator scores and weights from solution quality signal\;
+    Update operator scores and weights from solution quality 
+    signal\;
     \If{$f(x) > f(x^*)$}{
         $x^* \leftarrow x$\;
         $stagnation \leftarrow 0$\;
@@ -279,240 +628,445 @@ $P_{current} \leftarrow P_{max}$ ; $stagnation \leftarrow 0$\;
     \Else{
         $stagnation \leftarrow stagnation + 1$\;
     }
-    \If{all served in $x^*$ and active buses $\le \lceil |S|/C \rceil$}{
-        $P_{current} \leftarrow \min(P_{current}, 30)$ \tcp*{Polishing window}
+    \If{all served in $x^*$ and active buses 
+    $\le \lceil |S|/C \rceil$}{
+        $P_{current} \leftarrow \min(P_{current}, 30)$ 
+        \tcp*{Polishing window}
     }
     \If{$it \ge I_{floor}$ and $stagnation \ge P_{current}$}{
         \textbf{break} \tcp*{Early stop triggered}
     }
-    \If{$it \ge I_{floor}$ and $T \le T_{freeze}$ and $stagnation \ge P_{freeze}$}{
+    \If{$it \ge I_{floor}$ and $T \le T_{freeze}$ and 
+    $stagnation \ge P_{freeze}$}{
         \textbf{break} \tcp*{Frozen search stop}
     }
     $T \leftarrow \gamma T$\;
 }
-\If{merge-tail enabled and all served and active buses $> \lceil |S|/C \rceil$}{
+\If{merge-tail enabled and all served and active buses 
+$> \lceil |S|/C \rceil$}{
     run $M$ merge-focused iterations under remaining budget\;
 }
 run one final repair pass for any unserved students\;
 \Return{$x^*$}\;
 \end{algorithm}
 
-Algorithm~\ref{alg:alns_loop} presents the implemented outer search structure, including time-budget and freeze-aware stopping, the satisficing polishing window, and the post-loop consolidation/rescue phases. Each main ALNS iteration costs one destroy, one repair, and one acceptance decision; empirical runtime is dominated by insertion feasibility checks inside repair.
+Algorithm~\ref{alg:alns_loop} presents the implemented outer search 
+structure, including time-budget and freeze-aware stopping, the 
+polishing window, and the post-loop consolidation and rescue phases. 
+Each main ALNS iteration costs one destroy, one repair, and one 
+acceptance decision; empirical runtime is dominated by insertion 
+feasibility checks inside repair.
 
 \subsection{Constraint Handling in Search}
-Each insertion is validated through a feasibility routine that checks bus capacity and personalized ride-time caps. The ride-time check supports two policies: morning-only strict enforcement or bidirectional leniency (default), where an insertion is rejected only if both AM and PM exceed the personalized cap. This design preserves welfare protection while reducing over-rejection caused by directional asymmetry in one-way street networks.
 
-Algorithm~\ref{alg:insertion_eval} gives the detailed feasibility evaluator used by repair operators. This evaluator is the main source of computational load during repair, because each candidate may trigger AM/PM cap checks plus downstream consistency checks for already assigned students. The benefit is strict welfare-feasibility control without requiring post-hoc repair of invalid routes.
+Constraint handling is designed to operationalize the two core 
+welfare contributions of this work \cite{c4}. First, stage-aware 
+pedestrian safety is enforced before insertion: candidate stops are 
+generated only from school-stage compliant walking reachability 
+(distance and crossing permissions), with physical-ability 
+restrictions applied in the pedestrian layer \cite{c7}. Second, 
+ride-time fairness is enforced at insertion time through DMRT caps, 
+so temporal feasibility is personalized rather than uniform \cite{c3}.
+
+During insertion, temporal feasibility supports three configurable 
+policy variants for deployment and comparison:
+\begin{enumerate}
+    \item[(i)] DMRT strict AM enforcement,
+    \item[(ii)] DMRT bidirectional leniency, where rejection occurs 
+    only if both AM and PM exceed the personalized cap,
+    \item[(iii)] fixed MRT \cite{c3}, enabling direct comparison and 
+    analysis of the effects of each variant on student welfare, 
+    service level, and operational efficiency.
+\end{enumerate}
+
+Algorithm~\ref{alg:insertion_eval} shows the feasibility evaluator 
+used by repair operators. This evaluator is the main source of 
+computational load during repair, because each candidate may trigger 
+AM/PM cap checks plus downstream consistency checks for already 
+assigned students.
 
 \begin{algorithm}[!t]
 \caption{Feasibility-Aware Insertion Evaluation}
 \label{alg:insertion_eval}
-\KwIn{Route $r$, student $s$, candidate stop $p$, insertion index $i$, cache/matrix, cap parameters}
+\KwIn{Route $r$, student $s$, candidate stop $p\in C_s$, insertion 
+index $i$, cache/matrix, cap parameters}
 \KwOut{Valid insertion flag and penalized insertion cost}
-Compute detour delta cost for inserting $p$ at index $i$\;
 \If{capacity would be violated}{reject}\;
-Compute AM ride for $s$ after insertion and personalized cap $T_s^{\max}$\;
-\If{strict directional mode and $T_s^{AM} > T_s^{\max}$}{reject}\;
-\If{bidirectional-lenient mode and $T_s^{AM} > T_s^{\max}$}{
-    compute $T_s^{PM}$ on reversed PM sequence\;
-    \If{$T_s^{PM} > T_s^{\max}$}{reject}\;
+Compute $T_s^{AM}$ and $T_s^{PM}$ after insertion\;
+\If{hard MRT mode is enabled \cite{c3}}{
+    \If{$T_s^{AM}>\mathrm{MRT}$ or $T_s^{PM}>\mathrm{MRT}$}
+    {reject}\;
 }
-Re-check impacted existing students for post-insertion cap violations\;
+\Else{
+    Compute personalized dynamic cap $T_s^{\max}$\;
+    \If{strict directional mode and $T_s^{AM} > T_s^{\max}$}
+    {reject}\;
+    \If{bidirectional-lenient mode and $T_s^{AM} > T_s^{\max}$ 
+    and $T_s^{PM} > T_s^{\max}$}{reject}\;
+}
+Re-check impacted existing students for post-insertion cap 
+violations\;
 Compute walking penalty $\phi_s$ for $s \rightarrow p$\;
 \If{walking is infeasible}{reject}\;
 \Return{valid, $(\text{detour delta} + \phi_s)$}\;
 \end{algorithm}
 
-\FloatBarrier
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EXPERIMENTS}
+\subsection{ Experimental Setup}
+This subsection provides the reproducibility scaffold for implementation, 
+configuration, and policy settings. Fill all bracketed fields with final 
+specifications.
 
-\subsection{Experimental Design}
-Mode A is \emph{Strictly-Constrained}, Mode B is \emph{Weakly-Constrained}, and
-Mode C is \emph{Direct (Door-to-Door)}. This section defines hypotheses,
-environment, datasets, and evaluation protocol before presenting results.
-
-\subsubsection{Research Hypotheses}
-\textbf{H1 (Efficiency):} Allowing limited walking (Mode B) improves operational
-efficiency relative to both strict safety (Mode A) and door-to-door (Mode C).
-\textbf{Primary metrics:} active routes (buses used), total route time (min),
-total route distance (km), and average occupancy
-$\left(\text{students served} / \text{routes}\right)$.
-
-\textbf{H2 (Safety):} Strict safety constraints (Mode A) reduce walking exposure
-without permitting unsafe crossings.
-\textbf{Primary metrics:} walking distance statistics (mean, median, max) and
-walk utilization rate. Unsafe crossing counts are expected to be zero by
-design, because synthetic crossings are not generated on dangerous road
-classes; thus safety is interpreted through reduced walking exposure and
-compliance with stage-specific limits.
-
-\textbf{H3 (Comfort):} Door-to-door service (Mode C) minimizes walking but can
-increase ride burden and efficiency cost; comfort gains are not free.
-\textbf{Primary metrics:} walking distance statistics, ride-cap violation counts
-and rates, and per-student travel burden
-$\left(\text{total route time} / \text{students served}\right)$.
-
-\textbf{H4 (Scalability / Search-Space Bottleneck):} At larger scales,
-candidate-space size dominates solver throughput, so smaller candidate sets
-(Mode C) yield higher iterations per second and faster convergence under fixed
-time budgets, even if they are not operationally optimal in smaller instances.
-\textbf{Primary metrics:} executed iterations, iterations per second, candidate
-counts considered, and served counts at large $|S|$. We anchor the scalability
-claim at $|S|=400$ (fully matched cohorts).
-
-\subsubsection{Simulation Environment and Hardware}
-All modes are executed in the same software pipeline and under identical
-algorithmic settings per paired seed. To support reproducibility and IEEE-style
-reporting, this subsection should include the exact execution stack used for
-the final runs:
+\textbf{Hardware and software environment:}
 \begin{itemize}
-    \item CPU model and core/thread count.
-    \item RAM capacity.
-    \item Operating system and version.
-    \item Python version and key package versions.
-\end{itemize}
-\subsubsection{Dataset Description}
-We evaluated the three modes on synthetic datasets generated around a fixed
-school location, using the annulus distribution described in Section IV-B. We
-used Victory College School (Maadi, Cairo) as the anchor site and a bounded
-study area around Maadi to keep computation tractable. The bounding box corners
-were $(29.991682,31.331909)$ and $(29.92563,31.229084)$, corresponding to
-approximately $72.76\,\text{km}^2$. Students were generated only inside this
-bounding box.
-Each instance size uses multiple random seeds to capture geographic
-variability. For each seed, all three modes are run on the same student set,
-ensuring paired comparison across modes. Unless otherwise stated, algorithm
-parameters (time budget, candidate cap, destroy/repair operators, and
-ride-time constraints) are held constant across modes.
-
-\subsubsection{Evaluation Metrics}
-We report solution quality using four groups of metrics:
-\begin{itemize}
-    \item \textbf{Coverage:} students served, students unserved, and served rate.
-    \item \textbf{Efficiency:} active routes (buses used), total route time,
-    total route distance, and average occupancy
-    $\left(\text{students served} / \text{routes}\right)$.
-    \item \textbf{Comfort:} walking distance statistics (mean/median/max), walk
-    utilization rate, and ride-cap violation counts or rates.
-    \item \textbf{Runtime and Scalability:} executed iterations, iterations per
-    second, and candidate breadth proxies (e.g., candidates considered or
-    critical matrix nodes).
+    \item Hardware: CPU = [TO FILL], RAM = [TO FILL], OS = [TO FILL].
+    \item Software: Python = [TO FILL], OSMnx = [TO FILL], NetworkX = [TO FILL], NumPy = [TO FILL], and other key packages = [TO FILL].
+    \item Reproducibility: random seed policy per instance size = [TO FILL].
 \end{itemize}
 
-\subsubsection{Paired Comparison Protocol}
-For each instance size, we compute per-seed differences between modes
-(e.g., Mode A minus Mode B) and test whether the median paired difference is
-significantly different from zero using the Wilcoxon signed-rank test. This
-controls for seed-specific geography, so differences are attributed to the mode
-rather than random layout effects. We report mean $\pm$ SD descriptively,
-Wilcoxon $p$-values inferentially, and rank-biserial correlation as effect
-size. Across each hypothesis-family of comparisons, $p$-values are adjusted via
-Holm-Bonferroni ($\alpha=0.05$). Formal inference uses complete matched cohorts
-($|S|\in\{100,200,400\}$).
-
-\input{tables/table1_aggregate_metrics.tex}
-
-\input{tables/table2_wilcoxon_effects.tex}
-
-\section{RESULTS AND DISCUSSION}
-This section reports the empirical outcomes and interprets them with
-respect to H1--H4.
-
-\subsubsection{Comparative Analysis}
-Aggregate results (Table~\ref{tab:aggregate_metrics}) show a stable operational
-trade-off across complete cohorts. Mode B consistently reduced route-time and
-route-distance relative to Mode A (e.g., at $|S|=400$, $711.22\pm62.31$ min vs
-$804.26\pm29.03$ min; $315.81\pm42.57$ km vs $335.07\pm16.90$ km), while also
-using slightly fewer routes on average. Relative to Mode C, Mode B reduced
-route-time and distance at all complete scales, but often with lower coverage
-(e.g., at $|S|=400$, $95.75\%$ served for B vs $99.85\%$ for C). Walking burden
-was lowest in Mode C where available, and higher in walking-enabled modes.
-
-Inferentially (Table~\ref{tab:wilcoxon_effects}), many paired deltas had strong
-directionality in rank-biserial effect size, but none remained significant
-after Holm correction with only five matched seeds per complete cohort. We
-therefore interpret the findings as consistent practical trends rather than
-high-confidence population-level significance claims.
-
-\begin{figure}[!t]
+\begin{table}[t]
+\caption{PARAMETER SETTING}
+\label{tab:parameter_setting}
 \centering
-\includegraphics[width=\linewidth]{figures/figure1_mode_comparison.png}
-\caption{Mode-level comparison across core outcomes (coverage, routes, route-time, and walking burden) by cohort.}
-\label{fig:mode_comparison}
-\end{figure}
+\begin{tabular}{p{3.2cm}p{1.3cm}p{2.8cm}}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Description} \\
+\midrule
+Initial temperature $T_0$ & [TO FILL] & [TO FILL] \\
+Cooling rate $\gamma$ & [TO FILL] & [TO FILL] \\
+Early-stop patience & [TO FILL] & [TO FILL] \\
+Iteration floor $I_{floor}$ & [TO FILL] & [TO FILL] \\
+Freeze threshold $T_{freeze}$ & [TO FILL] & [TO FILL] \\
+Freeze patience $P_{freeze}$ & [TO FILL] & [TO FILL] \\
+Operator update scores $(\sigma_1,\sigma_2,\sigma_3)$ & [TO FILL] & [TO FILL] \\
+Objective weights $(w_s,w_r)$ & [TO FILL] & [TO FILL] \\
+Top-$K$ candidates per student & [TO FILL] & [TO FILL] \\
+DMRT floor $\tau_{min}$ & [TO FILL] & [TO FILL] \\
+DMRT additive ceiling $\tau_{add}$ & [TO FILL] & [TO FILL] \\
+Tested multiplier set $k$ & [TO FILL] & [TO FILL] \\
+Seeds per instance size & [TO FILL] & [TO FILL] \\
+Travel-time extraction from OSM edges & [TO FILL] & [TO FILL] \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\begin{figure}[!t]
+\begin{table}[t]
+\caption{MWD THRESHOLDS BY SCHOOL STAGE}
+\label{tab:mwd_stage}
 \centering
-\includegraphics[width=\linewidth]{figures/figure4_walking_distribution.png}
-\caption{Walking-distance distributions by mode and cohort.}
-\label{fig:walking_distribution}
-\end{figure}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.65\linewidth}p{0.25\linewidth}}
+\toprule
+\textbf{Parameter} & \textbf{Value} \\
+\midrule
+KG max walking distance& [TO FILL] \\
+ELEMENTARY max walking distance& [TO FILL] \\
+MIDDLE max walking distance& [TO FILL] \\
+HIGH max walking distance& [TO FILL] \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\subsubsection{Performance and Scalability}
-Runtime and convergence diagnostics indicate scaling pressure as instance size
-increases, especially from $|S|=400$ onward. Convergence trajectories
-(Figure~\ref{fig:convergence}) show slower improvement blocks and earlier
-stagnation under larger candidate spaces, while scalability trends
-(Figure~\ref{fig:scalability}) show widening runtime variance at higher $|S|$.
-
-\begin{figure}[!t]
+\begin{table}[t]
+\caption{ROAD CROSSING PERMISSION MATRIX}
+\label{tab:crossing_matrix}
 \centering
-\includegraphics[width=\linewidth]{figures/figure2_convergence_curves.png}
-\caption{Mean best-objective convergence profile (shown on representative larger-cohort logs).}
-\label{fig:convergence}
-\end{figure}
+\begin{tabular}{p{2.0cm}p{1.4cm}p{1.4cm}p{1.4cm}p{1.4cm}}
+\toprule
+\textbf{Stage} & \textbf{Residential} & \textbf{Tertiary} & \textbf{Secondary} & \textbf{Primary+} \\
+\midrule
+KG & [TO FILL] & [TO FILL] & [TO FILL] & [TO FILL] \\
+ELEMENTARY & [TO FILL] & [TO FILL] & [TO FILL] & [TO FILL] \\
+MIDDLE & [TO FILL] & [TO FILL] & [TO FILL] & [TO FILL] \\
+HIGH & [TO FILL] & [TO FILL] & [TO FILL] & [TO FILL] \\
+Disability override & [TO FILL] & [TO FILL] & [TO FILL] & [TO FILL] \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\begin{figure}[!t]
-\centering
-\includegraphics[width=\linewidth]{figures/figure3_scalability_trends.png}
-\caption{Scalability trends for runtime and throughput (iterations/second) by mode.}
-\label{fig:scalability}
-\end{figure}
+\subsection{Dataset Description}
+The synthetic dataset is generated around 
+a fixed school location, using the implemented annulus pipeline 
+described in Section~IV-B. We used Victory College School (Maadi, 
+Cairo) as the anchor site,  The graph boundary was the Cairo administrative zone, corresponding to approximately 
+$573 \text{km}^2$. Student locations were accepted only if they are inside this boundary , and do not lie in restricted areas and with at least one residential road nearby. Road network data for this area was obtained from OpenStreetMap \cite{c19} via OSMnx \cite{c8}, and the Cairo boundary was obtained from The Built Environment Observatory \cite{c22}
 
-\subsubsection{Sensitivity Analysis (Optional)}
-Assess how key parameter changes (e.g., candidate cap, ride-time multiplier,
-or early-stopping settings) affect solution quality and runtime trade-offs.
+\textbf{Dataset-specific details to add:}
+\begin{itemize}
+    \item Anchor-school representativeness rationale for dense urban developing-country conditions: [TO FILL].
+    \item Bounding-box coordinates and enclosed area cross-check: [TO FILL].
+    \item Instance scale summary (students, generated candidate stops, bus capacity, bus count, theoretical minimum fleet): [TO FILL].
+    \item Annulus generation parameters used in experiments: [TO FILL].
+    \item School-stage distribution assumption: [TO FILL].
+    \item Stage-wise walking-distance policy reference: [TO FILL].
+    \item Synthetic-crossing totals (generated and used): [TO FILL].
+    \item Non-able/disability sampling rate, citation basis, and sensitivity note: [TO FILL].
+\end{itemize}
 
-\section{CONCLUSION}
-The experiments show a consistent practical trade-off among efficiency, safety,
-and comfort under matched-seed evaluation on complete cohorts
-($|S|\in\{100,200,400\}$). Mode B generally improved operational efficiency
-relative to Mode A and Mode C, with lower route-time and route-distance across
-cohorts (e.g., at $|S|=400$: $711.22\pm62.31$ min and $315.81\pm42.57$ km for
-Mode B versus $804.26\pm29.03$ min and $335.07\pm16.90$ km for Mode A).
-Mode C generally delivered the highest coverage and the lowest walking burden,
-but often at higher route-time than Mode B, confirming a policy trade-off
-between operator efficiency and passenger-side convenience.
+\subsection{Baseline and Comparison Modes}
+This subsection should isolate the effect of ride-time-cap policy while 
+holding all other components fixed.
 
-Inferentially, Wilcoxon paired tests with Holm correction did not yield
-statistically significant differences at the current seed count, despite
-strongly directional rank-biserial effect sizes in multiple comparisons.
-Accordingly, we treat the evidence as robust directional trends rather than
-population-level definitive effects.
+\textbf{Modes compared:}
+\begin{itemize}
+    \item Fixed MRT baseline (conventional literature setting): [TO FILL].
+    \item DMRT Strict (AM strict enforcement): [TO FILL].
+    \item DMRT Bidirectional Lenient (reject only when both directions violate): [TO FILL].
+    \item Optional ablation --- No MRT / unconstrained ride time (upper-bound service): [TO FILL].
+\end{itemize}
 
-Future work should expand matched large-scale cohorts and report hardware-fixed
-repetitions to tighten uncertainty bands for inferential claims.
+\textbf{Controlled factors held constant across modes:}
+\begin{itemize}
+    \item Candidate-stop set generation: [TO FILL].
+    \item ALNS operators and search configuration: [TO FILL].
+    \item Objective-function weights and penalties: [TO FILL].
+    \item Same random seeds and instance definitions: [TO FILL].
+\end{itemize}
+
+\textbf{Mode-isolation statement (to be finalized):} 
+[TO FILL --- explicitly state that only ride-time cap logic changes across modes].
+
+\subsection{Evaluation Metrics}
+All reported metrics should be defined before results. Let $S^{served}$ be 
+served students, $R^{act}$ active routes, $Q_r$ bus capacity on route $r$, and 
+$L_r$ assigned load on route $r$.
+
+\textbf{Service and coverage metrics:}
+\begin{equation}
+\text{ServiceRate}=\frac{|S^{served}|}{|S|}
+\end{equation}
+\begin{equation}
+\text{ActiveRoutes}=|R^{act}|
+\end{equation}
+
+\textbf{Operational efficiency metrics:}
+\begin{equation}
+\text{TotalRouteTime}=\sum_{r\in R^{act}} T_r
+\end{equation}
+\begin{equation}
+\text{AvgRouteTime}=\frac{1}{|R^{act}|}\sum_{r\in R^{act}} T_r
+\end{equation}
+\begin{equation}
+\text{FleetUtilization}=\frac{1}{|R^{act}|}\sum_{r\in R^{act}}\frac{L_r}{Q_r}
+\end{equation}
+
+\textbf{DMRT fairness metrics:}
+\begin{equation}
+\text{RideRatioMean}=\frac{1}{|S^{served}|}\sum_{s\in S^{served}}\frac{T_s^{assigned}}{T_s^{direct}}
+\end{equation}
+\begin{equation}
+\text{RideRatioStd}=\mathrm{Std}\left(\frac{T_s^{assigned}}{T_s^{direct}}\right)_{s\in S^{served}}
+\end{equation}
+\begin{equation}
+\text{ViolationRate}=\frac{1}{|S^{served}|}\sum_{s\in S^{served}}\mathbf{1}\{T_s^{assigned}>T_s^{\max}\}
+\end{equation}
+\begin{equation}
+\text{RideRatioMax}=\max_{s\in S^{served}}\frac{T_s^{assigned}}{T_s^{direct}}
+\end{equation}
+
+\textbf{Stop-selection and walking-safety metrics:}
+\begin{equation}
+\text{MeanWalkDist}=\frac{1}{|S^{served}|}\sum_{s\in S^{served}} d_{walk}(s,p_s)
+\end{equation}
+\begin{equation}
+\text{CrossingTierShare}_{\ell}=\frac{1}{|S^{served}|}\sum_{s\in S^{served}}\mathbf{1}\{\text{tier}(s)=\ell\}
+\end{equation}
+\begin{equation}
+\text{SyntheticCrossingsUsed}=[TO\ FILL\ DEFINITION]
+\end{equation}
+
+\textbf{Aggregation and uncertainty reporting:} 
+[TO FILL --- report mean $\pm$ standard deviation across seeds and instance sizes].
+
+\subsection{E. ALNS Convergence and Runtime}
+This subsection documents algorithmic behavior and stopping calibration.
+
+\textbf{Convergence diagnostics to report:}
+\begin{itemize}
+    \item Objective-vs-iteration curves for representative instances per mode: [TO FILL].
+    \item Convergence-figure construction details (windowing/smoothing): [TO FILL].
+\end{itemize}
+
+\textbf{Runtime diagnostics to report:}
+\begin{itemize}
+    \item Mean runtime per instance size: [TO FILL].
+    \item Polishing-window trigger frequency: [TO FILL].
+    \item Merge-tail improvement frequency and average gain: [TO FILL].
+    \item Stopping-reason distribution (early-stop vs freeze vs time-budget): [TO FILL].
+\end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\clearpage
+\section{RESULTS AND DISCUSSION}
+[Work in progress]
+
+\section{CONCLUSION}
+[Work in progress]
+
+\section{ACKNOWLEDGMENTS}
+[Work in progress]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \begin{thebibliography}{99}
 
-\bibitem{c1} J. Park and B.-I. Kim, ``The school bus routing problem: A review,'' \textit{European Journal of Operational Research}, vol. 202, no. 2, pp. 311--319, 2010, doi: \href{https://doi.org/10.1016/j.ejor.2009.05.017}{10.1016/j.ejor.2009.05.017}.
+\bibitem{c1}
+W. A. Ellegood, S. Solomon, J. North, and J. F. Campbell,
+``School bus routing problem: Contemporary trends and research 
+directions,''
+\textit{Omega}, vol. 95, p. 102056, 2020.
+\url{https://doi.org/10.1016/j.omega.2019.03.014}
 
-\bibitem{c2} K. Wang, Y. Yang, M. Liao, and A. Chen, ``The school bus routing problem: A comprehensive review,'' \textit{European Transport Studies}, vol. 2, Art. no. 100043, 2025, doi: \href{https://doi.org/10.1016/j.ets.2025.100043}{10.1016/j.ets.2025.100043}.
+\bibitem{c2}
+R. M. Newton and W. H. Thomas,
+``Design of school bus routes by computer,''
+\textit{Socio-Economic Planning Sciences}, vol. 3, no. 1,
+pp. 75--85, 1969.
+\url{https://doi.org/10.1016/0038-0121(69)90011-8}
 
-\bibitem{c3} P. Schittekat, J. Kinable, K. Sörensen, M. Sevaux, F. Spieksma, and J. Springael, ``A metaheuristic for the school bus routing problem with bus stop selection,'' \textit{European Journal of Operational Research}, vol. 229, no. 2, pp. 518--528, 2013, doi: \href{https://doi.org/10.1016/j.ejor.2013.02.025}{10.1016/j.ejor.2013.02.025}.
+\bibitem{c3}
+J. Park and B. I. Kim,
+``The school bus routing problem: A review,''
+\textit{European Journal of Operational Research}, vol. 202, no. 2,
+pp. 311--319, 2010.
+\url{https://doi.org/10.1016/j.ejor.2009.05.017}
 
-\bibitem{c4} H. I. Calvete, C. Galé, J. A. Iranzo, and P. Toth, ``A partial allocation local search matheuristic for solving the school bus routing problem with bus stop selection,'' \textit{Mathematics}, vol. 8, no. 8, Art. no. 1214, 2020, doi: \href{https://doi.org/10.3390/math8081214}{10.3390/math8081214}.
+\bibitem{c4}
+K. Wang, Y. Yang, M. Liao, and A. Chen,
+``The school bus routing problem: A comprehensive review,''
+\textit{European Transport Studies}, vol. 2, p. 100043, 2025.
+\url{https://doi.org/10.1016/j.ets.2025.100043}
 
-\bibitem{c5} W. A. Ellegood, S. Solomon, J. North, and J. F. Campbell, ``School bus routing problem: Contemporary trends and research directions,'' \textit{Omega}, vol. 95, Art. no. 102056, 2020, doi: \href{https://doi.org/10.1016/j.omega.2019.03.014}{10.1016/j.omega.2019.03.014}.
+\bibitem{c5}
+J. Desrosiers, J. A. Ferland, J. M. Rousseau, G. Lapalme, and
+L. Chapleau,
+``An overview of a school busing system,''
+\textit{Science in Management of Transport Systems}, pp. 235--243,
+1981.
+\url{https://doi.org/10.1016/B978-0-08-024180-9.50028-4}
 
-\bibitem{c6} F. M. S. Lima, D. S. Pereira, S. V. Conceição, and N. T. R. Nunes, ``A mixed load capacitated rural school bus routing problem with heterogeneous fleet: Algorithms for the Brazilian context,'' \textit{Expert Systems with Applications}, vol. 56, pp. 320--334, 2016, doi: \href{https://doi.org/10.1016/j.eswa.2016.03.005}{10.1016/j.eswa.2016.03.005}.
+\bibitem{c6}
+P. Schittekat, J. Kinable, K. S\"{o}rensen, M. Sevaux, F. Spieksma,
+and J. Springael,
+``A metaheuristic for the school bus routing problem with bus stop
+selection,''
+\textit{European Journal of Operational Research}, vol. 229, no. 2,
+pp. 518--528, 2013.
+\url{https://doi.org/10.1016/j.ejor.2013.02.025}
 
-\bibitem{c7} S. Ropke and D. Pisinger, ``An adaptive large neighborhood search heuristic for the pickup and delivery problem with time windows,'' \textit{Transportation Science}, vol. 40, no. 4, pp. 455--472, 2006, doi: \href{https://doi.org/10.1287/trsc.1050.0135}{10.1287/trsc.1050.0135}.
+\bibitem{c7}
+O. Paul, J. Handl, and M. L\'opez-Ib\'a\~{n}ez,
+``Capacitated school bus routing problem with time windows,
+heterogeneous fleets and travel assistants,''
+in \textit{Proc. Companion Conference on Genetic and Evolutionary
+Computation (GECCO)}, pp. 2374--2377, 2023.
+\url{https://doi.org/10.1145/3583133.3596375}
+
+\bibitem{c8}
+G. Boeing,
+``OSMnx: New methods for acquiring, constructing, analyzing, and
+visualizing complex street networks,''
+\textit{Computers, Environment and Urban Systems}, vol. 65,
+pp. 126--139, 2017.
+\url{https://doi.org/10.1016/j.compenvurbsys.2017.05.004}
+
+\bibitem{c9}
+S. Ropke and D. Pisinger,
+``An adaptive large neighborhood search heuristic for the pickup and
+delivery problem with time windows,''
+\textit{Transportation Science}, vol. 40, no. 4, pp. 455--472, 2006.
+\url{https://doi.org/10.1287/trsc.1050.0135}
+
+\bibitem{c10}
+K. Braekers, K. Ramaekers, and I. V. Nieuwenhuyse,
+``The vehicle routing problem: State of the art classification and
+review,''
+\textit{Computers \& Industrial Engineering}, vol. 99, pp. 300--313,
+2016.
+\url{https://doi.org/10.1016/j.cie.2015.12.007}
+
+\bibitem{c11}
+L. D. Bodin and L. Berman,
+``Routing and scheduling of school buses by computer,''
+\textit{Transportation Science}, vol. 13, no. 2, pp. 113--129, 1979.
+\url{https://doi.org/10.1287/trsc.13.2.113}
+
+\bibitem{c12}
+H. I. Calvete, C. Gal\'{e}, J. A. Iranzo, and P. Toth,
+``A partial allocation local search matheuristic for solving the school
+bus routing problem with bus stop selection,''
+\textit{Mathematics}, vol. 8, no. 8, p. 1214, 2020.
+\url{https://doi.org/10.3390/math8081214}
+
+\bibitem{c13}
+S. P. Parvasi, M. Mahmoodjanloo, and M. Setak,
+``A bi-level school bus routing problem with bus stops selection and
+possibility of demand outsourcing,''
+\textit{Applied Soft Computing}, vol. 61, pp. 222--238, 2017.
+\url{https://doi.org/10.1016/j.asoc.2017.08.018}
+
+\bibitem{c14}
+R. Bowerman, B. Hall, and P. Calamai,
+``A multi-objective optimization approach to urban school bus routing:
+Formulation and solution method,''
+\textit{Transportation Research Part A}, vol. 29, no. 2,
+pp. 107--123, 1995.
+\url{https://doi.org/10.1016/0965-8564(94)E0006-U}
+
+\bibitem{c15}
+M. Sciortino, R. Lewis, and J. Thompson,
+``A school bus routing heuristic algorithm allowing heterogeneous fleets
+and bus stop selection,''
+\textit{SN Computer Science}, vol. 4, p. 74, 2023.
+\url{https://doi.org/10.1007/s42979-022-01466-6}
+
+\bibitem{c16}
+E. R. L\'{o}pez Santana and J. de J. Romero Carvajal,
+``A hybrid column generation and clustering approach to the school bus
+routing problem with time windows,''
+\textit{Ingenier\'ia}, vol. 20, no. 2, pp. 101--117, 2015.
+\url{https://doi.org/10.14483/udistrital.jour.reving.2015.2.a01}
+
+\bibitem{c17}
+L. D. Sales, C. S. Melo, T. D. Bonates, and B. D. Prata,
+``Memetic algorithm for the heterogeneous fleet school bus routing
+problem,''
+\textit{Journal of Urban Planning and Development}, vol. 144, no. 2,
+p. 04018018, 2018.
+\url{https://doi.org/10.1061/(ASCE)UP.1943-5444.0000432}
+
+\bibitem{c18}
+D. M. Miranda, R. S. de Camargo, S. V. Concei\c{c}\~{a}o,
+M. F. Porto, and N. T. R. Nunes,
+``A metaheuristic for the rural school bus routing problem with bell
+adjustment,''
+\textit{Expert Systems with Applications}, vol. 180, p. 115086, 2021.
+\url{https://doi.org/10.1016/j.eswa.2021.115086}
+
+\bibitem{c19}
+OpenStreetMap contributors,
+``OpenStreetMap,''
+2024.
+\url{https://www.openstreetmap.org}
+
+\bibitem{c20}
+P. Shaw,
+``Using constraint programming and local search methods to solve
+vehicle routing problems,''
+in \textit{Proc. International Conference on Principles and Practice
+of Constraint Programming (CP)}, pp. 417--431, 1998.
+\url{https://doi.org/10.1007/3-540-49481-2_30}
+
+\bibitem{c21}
+S. Kirkpatrick, C. D. Gelatt, and M. P. Vecchi,
+``Optimization by simulated annealing,''
+\textit{Science}, vol. 220, no. 4598, pp. 671--680, 1983.
+\url{https://doi.org/10.1126/science.220.4598.671}
+
+
+\bibitem{c22}
+The Built Environment Observatory
+''(Re)Defining the Greater Cairo Region,''
+\url{https://marsadomran.info/en/2024/04/3265/}
 
 \end{thebibliography}
-
 \end{document}
