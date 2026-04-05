@@ -47,7 +47,7 @@
     "daily_detour_budget_minutes": 10,
     "bidirectional_check": true,
     "mrt_enabled": true,
-    "mrt": 120
+    "mrt": 90
   },
     
   "walk_graph": {
