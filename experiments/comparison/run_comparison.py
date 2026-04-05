@@ -1155,6 +1155,10 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
     ride_k       = float(con.get("ride_time_multiplier", 2.5))
     floor_min    = float(con.get("floor_minutes",        45))
     ceiling_min  = float(con.get("ceiling_minutes",      60))
+    try:
+        dmrt_offset_default = float(con.get("acceptable_offset_minutes", 30))
+    except (TypeError, ValueError):
+        dmrt_offset_default = 30.0
     mrt_enabled  = bool(con.get("mrt_enabled", con.get("mrt enabled", False)))
     mrt_raw      = con.get("mrt", None)
     try:
@@ -1286,19 +1290,25 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
                 k_eff = getattr(route, 'ride_time_multiplier', ride_k)
                 fl    = getattr(route, 'floor_minutes',        floor_min)
                 ce    = getattr(route, 'ceiling_minutes',      ceiling_min)
+                dmrt_offset = getattr(route, 'acceptable_offset_minutes', dmrt_offset_default)
                 mrt_on = bool(getattr(route, 'mrt_enabled', mrt_enabled))
                 mrt_val = getattr(route, 'mrt_minutes', mrt_minutes)
                 try:
                     mrt_val = float(mrt_val) if mrt_val is not None else None
                 except (TypeError, ValueError):
                     mrt_val = None
+                try:
+                    dmrt_offset = float(dmrt_offset)
+                except (TypeError, ValueError):
+                    dmrt_offset = dmrt_offset_default
+                base_dmrt = mrt_val if (mrt_val is not None and mrt_val > 0) else fl
 
                 def _cap(d):
                     if mrt_on and mrt_val is not None and mrt_val > 0:
                         return mrt_val
-                    if d is None or d <= 0:
+                    if d is None or d <= 0 or not math.isfinite(d):
                         return float('inf')
-                    return max(fl, min(k_eff * d, d + ce))
+                    return max(base_dmrt, d + dmrt_offset)
 
                 cap_html = (
                     _dir_cap_html('🟠 AM home→school', ride_time_am, direct_am, _cap(direct_am), k_eff) +
@@ -1364,9 +1374,11 @@ def _count_satisfied_per_route(sol, G, constraints):
     Students without a finite direct time are counted as satisfied.
     """
     con     = constraints or {}
-    k       = float(con.get('ride_time_multiplier', 2.5))
     fl      = float(con.get('floor_minutes',        45))
-    ce      = float(con.get('ceiling_minutes',      60))
+    try:
+        dmrt_offset = float(con.get('acceptable_offset_minutes', 30))
+    except (TypeError, ValueError):
+        dmrt_offset = 30.0
     mrt_enabled = bool(con.get("mrt_enabled", con.get("mrt enabled", False)))
     mrt_raw = con.get("mrt", None)
     try:
@@ -1379,7 +1391,8 @@ def _count_satisfied_per_route(sol, G, constraints):
     def _cap(d):
         if d is None or d <= 0 or not math.isfinite(d):
             return float('inf')
-        return max(fl, min(k * d, d + ce))
+        base_dmrt = mrt_minutes if (mrt_minutes is not None and mrt_minutes > 0) else fl
+        return max(base_dmrt, d + dmrt_offset)
 
     result = {}
     for route in sol.routes:
@@ -1457,9 +1470,11 @@ def _count_cap_violations(sol, G, constraints):
             "pm": None, "pm_checked": None, "pm_pct": None,
         }
 
-    k_mult = float(constraints.get("ride_time_multiplier", 2.5))
     floor_min = float(constraints.get("floor_minutes", 45))
-    ceiling_min = float(constraints.get("ceiling_minutes", 60))
+    try:
+        dmrt_offset = float(constraints.get("acceptable_offset_minutes", 30))
+    except (TypeError, ValueError):
+        dmrt_offset = 30.0
     mrt_enabled = bool(constraints.get("mrt_enabled", constraints.get("mrt enabled", False)))
     mrt_raw = constraints.get("mrt", None)
     try:
@@ -1527,7 +1542,8 @@ def _count_cap_violations(sol, G, constraints):
                     direct_time = compute_direct_time(student, school_node, G)
                     if direct_time is None or not math.isfinite(direct_time) or direct_time <= 0:
                         continue
-                    cap = max(floor_min, min(k_mult * direct_time, direct_time + ceiling_min))
+                    base_dmrt = mrt_minutes if (mrt_minutes is not None and mrt_minutes > 0) else floor_min
+                    cap = max(base_dmrt, direct_time + dmrt_offset)
 
                 if ride_am is not None:
                     am_checked += 1
@@ -2798,6 +2814,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                 "ride_time_multiplier": meta.get("constraints", {}).get("ride_time_multiplier"),
                 "floor_minutes": meta.get("constraints", {}).get("floor_minutes"),
                 "ceiling_minutes": meta.get("constraints", {}).get("ceiling_minutes"),
+                "acceptable_offset_minutes": meta.get("constraints", {}).get("acceptable_offset_minutes", 30),
                 "bidirectional_check": meta.get("constraints", {}).get("bidirectional_check"),
                 "mrt_enabled": meta.get("constraints", {}).get("mrt_enabled", meta.get("constraints", {}).get("mrt enabled", False)),
                 "mrt": meta.get("constraints", {}).get("mrt"),

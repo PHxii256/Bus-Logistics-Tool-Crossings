@@ -3181,46 +3181,31 @@ def compute_afternoon_direct_time(student, school_node, graph):
 def compute_student_tmax(student, school_node, G,
                           multiplier=2.5,
                           floor_minutes=45,
-                          ceiling_minutes=60):  # changed default 30 → 60
+                                                    ceiling_minutes=60,
+                                                    base_mrt_minutes=None,
+                                                    acceptable_offset_minutes=None):
     """
-    Tiered per-student ride time cap (morning direction: home -> school):
+        DMRT per-student ride-time cap (morning direction: home -> school):
 
-        T_max(s) = clamp(k * T_direct, floor_minutes, T_direct + ceiling_minutes)
+                T_max(s) = max(base_mrt_minutes, T_direct + acceptable_offset_minutes)
 
-    ceiling_minutes = max EXTRA minutes allowed on top of T_direct.
-    The absolute upper bound grows with distance, not a fixed number.
-
-    Default parameters:  k=2.5,  floor=45,  ceiling_extra=60
-    ┌─────────────┬──────────────┬──────────────┬─────────────┬──────────────────────┐
-    │  T_direct   │  k×T_direct  │  T_d+ceiling │  Effective  │  Which rule binds    │
-    ├─────────────┼──────────────┼──────────────┼─────────────┼──────────────────────┤
-    │   2  min    │     5  min   │    62  min   │   45  min   │ FLOOR (student nearby)│
-    │   5  min    │    12.5 min  │    65  min   │   45  min   │ FLOOR                │
-    │  10  min    │    25  min   │    70  min   │   45  min   │ FLOOR                │
-    │  18  min    │    45  min   │    78  min   │   45  min   │ FLOOR / RATIO tie    │
-    │  20  min    │    50  min   │    80  min   │   50  min   │ RATIO (2.5x binds)   │
-    │  25  min    │    62.5 min  │    85  min   │   62.5 min  │ RATIO                │
-    │  30  min    │    75  min   │    90  min   │   75  min   │ RATIO                │
-    │  40  min    │   100  min   │   100  min   │  100  min   │ RATIO / CEILING tie  │
-    │  45  min    │   112.5 min  │   105  min   │  105  min   │ CEILING (+60 binds)  │
-    │  60  min    │   150  min   │   120  min   │  120  min   │ CEILING              │
-    │  90  min    │   225  min   │   150  min   │  150  min   │ CEILING              │
-    └─────────────┴──────────────┴──────────────┴─────────────┴──────────────────────┘
-
-    Breakpoints (where control transfers between rules):
-      FLOOR → RATIO  at  T_direct = floor / k = 45 / 2.5 = 18 min
-      RATIO → CEILING at  T_direct = ceiling / (k-1) = 60 / 1.5 = 40 min
+        Defaults:
+            base_mrt_minutes          -> floor_minutes (legacy fallback)
+            acceptable_offset_minutes -> ceiling_minutes (legacy fallback)
     """
     t_direct = compute_direct_time(student, school_node, G)
 
     if t_direct == float('inf'):
         return float('inf')
     if t_direct <= 0:
-        return floor_minutes
+        return float(base_mrt_minutes if base_mrt_minutes is not None else floor_minutes)
 
-    raw_cap          = multiplier * t_direct
-    absolute_ceiling = t_direct + ceiling_minutes
-    personal_tmax    = max(floor_minutes, min(raw_cap, absolute_ceiling))
+    if base_mrt_minutes is None:
+        base_mrt_minutes = floor_minutes
+    if acceptable_offset_minutes is None:
+        acceptable_offset_minutes = ceiling_minutes
+
+    personal_tmax = max(float(base_mrt_minutes), float(t_direct) + float(acceptable_offset_minutes))
 
     # Cache on student for visualization and logging
     student.direct_time_to_school = t_direct
@@ -3233,7 +3218,7 @@ def validate_permanent_student(new_stop, route, insert_position, delta_time_minu
     """Validate if a permanent student can be added to the route.
     
     Uses per-student ride-time caps when the student object is available:
-        T_ride \u2264 min(k * T_direct,  T_direct + Δmax)
+        T_ride \u2264 max(base_mrt, T_direct + acceptable_offset)
     Falls back to the flat route_tmax when no student object is provided.
     
     Also checks that no existing student on the route has their personal
@@ -3262,12 +3247,18 @@ def validate_permanent_student(new_stop, route, insert_position, delta_time_minu
     k            = getattr(route, 'ride_time_multiplier', 2.5)
     floor_min    = getattr(route, 'floor_minutes',        45)
     ceiling_min  = getattr(route, 'ceiling_minutes',      60)  # extra minutes over direct
+    dmrt_offset  = getattr(route, 'acceptable_offset_minutes', 30)
     mrt_enabled  = bool(getattr(route, 'mrt_enabled', False))
     mrt_minutes  = getattr(route, 'mrt_minutes', None)
     try:
         mrt_minutes = float(mrt_minutes) if mrt_minutes is not None else None
     except (TypeError, ValueError):
         mrt_minutes = None
+    try:
+        dmrt_offset = float(dmrt_offset)
+    except (TypeError, ValueError):
+        dmrt_offset = 30.0
+    base_mrt = mrt_minutes if (mrt_minutes is not None and mrt_minutes > 0) else floor_min
 
     caps_enabled = getattr(route, 'ride_caps_enabled', True)
     soft_caps    = getattr(route, 'soft_ride_caps', False)
@@ -3299,7 +3290,16 @@ def validate_permanent_student(new_stop, route, insert_position, delta_time_minu
                 return (False, new_student_ride_time,
                         f"Hard MRT exceeded: AM {new_student_ride_time:.1f}, PM {pm_ride:.1f} > {mrt_minutes:.1f} min")
         else:
-            morning_cap = compute_student_tmax(new_student, school_node, graph, k, floor_min, ceiling_min)
+            morning_cap = compute_student_tmax(
+                new_student,
+                school_node,
+                graph,
+                k,
+                floor_min,
+                ceiling_min,
+                base_mrt_minutes=base_mrt,
+                acceptable_offset_minutes=dmrt_offset,
+            )
             t_direct    = compute_direct_time(new_student, school_node, graph)
             am_violated = new_student_ride_time > morning_cap
 
@@ -3309,7 +3309,7 @@ def validate_permanent_student(new_stop, route, insert_position, delta_time_minu
                     return (False, new_student_ride_time,
                             f"AM ride cap exceeded: "
                             f"{new_student_ride_time:.1f}>{morning_cap:.1f} min "
-                            f"(direct={t_direct:.1f}, clamp({k}×, {floor_min}, +{ceiling_min}))")
+                            f"(direct={t_direct:.1f}, max({base_mrt:.1f}, direct+{dmrt_offset:.1f}))")
                 # Bidirectional leniency: only reject if PM is also too long
                 pm_ride    = calculate_afternoon_ride_time_potential(route, new_stop, insert_position, graph)
                 pm_violated = pm_ride > morning_cap
@@ -3359,13 +3359,16 @@ def validate_permanent_student(new_stop, route, insert_position, delta_time_minu
                         return (False, morning_ride_check,
                                 f"Insertion pushes {existing_student.id} over hard MRT")
                 else:
-                    t_d = compute_direct_time(existing_student, school_node, graph)
-                    if t_d == float('inf') or t_d <= 0:
-                        continue
-
-                    ex_floor   = getattr(existing_student, 'floor_minutes',   floor_min)
-                    ex_ceiling = getattr(existing_student, 'ceiling_minutes', ceiling_min)
-                    existing_cap = max(ex_floor, min(k * t_d, t_d + ex_ceiling))
+                    existing_cap = compute_student_tmax(
+                        existing_student,
+                        school_node,
+                        graph,
+                        k,
+                        floor_min,
+                        ceiling_min,
+                        base_mrt_minutes=base_mrt,
+                        acceptable_offset_minutes=dmrt_offset,
+                    )
 
                     if morning_ride_check > existing_cap:
                         if not bidir:

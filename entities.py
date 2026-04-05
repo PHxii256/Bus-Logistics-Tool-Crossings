@@ -119,23 +119,25 @@ class Route:
     """
     def __init__(self, bus, route_id=None, route_tmax=60,
                  ride_time_multiplier=2.5, floor_minutes=45, ceiling_minutes=30,
-                 bidirectional_check=True, mrt_enabled=False, mrt_minutes=None):
+                 bidirectional_check=True, mrt_enabled=False, mrt_minutes=None,
+                 acceptable_offset_minutes=30):
         """Initialize a Route.
         
         Args:
             bus: Bus object assigned to this route
             route_id: Optional unique identifier for the route
             route_tmax: Legacy flat Tmax (minutes); used as fallback only
-            ride_time_multiplier: Ratio cap k; cap = clamp(k*T_direct, floor, T_direct+ceiling)
-            floor_minutes: Minimum cap — ensures nearby students don't over-penalise fleet (default 45)
-            ceiling_minutes: Max EXTRA minutes allowed beyond direct route time (default 30)
-                             Absolute cap = T_direct + ceiling_minutes
+            ride_time_multiplier: Legacy ratio parameter (kept for compatibility).
+            floor_minutes: Legacy fallback for base_mrt when mrt is not provided.
+            ceiling_minutes: Legacy fallback for acceptable offset when explicit offset is not provided.
             bidirectional_check: If True, a student is only rejected for ride-time when BOTH
                                  the morning (home→school) AND afternoon (school→home) rides
                                  exceed their cap.  If False, only the morning ride is checked.
             mrt_enabled: If True, enforce a fixed hard cap (mrt_minutes) on both AM and PM rides,
                          overriding multiplier/floor/ceiling and bidirectional leniency.
             mrt_minutes: Fixed maximum ride time (minutes) when mrt_enabled is True.
+            acceptable_offset_minutes: DMRT acceptable offset above direct potential time.
+                                       DMRT cap is max(base_mrt, T_direct + acceptable_offset_minutes).
         """
         self.bus = bus
         self.stops = [] # List of Stop objects in order
@@ -143,13 +145,15 @@ class Route:
         self.total_time = 0  # Total travel time in minutes
         self.route_id = route_id
         self.route_tmax = route_tmax
-        # Per-student ride time constraint: T_max = clamp(k * T_direct, floor_minutes, ceiling_minutes)
+        # DMRT cap uses max(base_mrt, T_direct + acceptable_offset_minutes).
+        # Legacy fields are retained for backward compatibility with older configs.
         self.ride_time_multiplier = ride_time_multiplier
         self.floor_minutes        = floor_minutes
         self.ceiling_minutes      = ceiling_minutes
         self.bidirectional_check  = bidirectional_check
         self.mrt_enabled          = bool(mrt_enabled)
         self.mrt_minutes          = mrt_minutes
+        self.acceptable_offset_minutes = acceptable_offset_minutes
         self.detour_time_used = 0  # Track temporary detour time used today
         
     def get_revenue(self):

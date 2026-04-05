@@ -1220,9 +1220,16 @@ def _diagnose_unserved(unserved_students, sol, capacity, constraints):
 
     con     = constraints or {}
     enabled = bool(con.get("enabled", True))
-    k_mult  = float(con.get("ride_time_multiplier", 2.5))
     fl      = float(con.get("floor_minutes", 45))
-    ce      = float(con.get("ceiling_minutes", 60))
+    try:
+        dmrt_offset = float(con.get("acceptable_offset_minutes", 30))
+    except (TypeError, ValueError):
+        dmrt_offset = 30.0
+    mrt_raw = con.get("mrt", None)
+    try:
+        base_mrt = float(mrt_raw) if mrt_raw is not None else fl
+    except (TypeError, ValueError):
+        base_mrt = fl
 
     all_full = all(r.get_student_count() >= capacity for r in sol.routes)
 
@@ -1271,7 +1278,7 @@ def _diagnose_unserved(unserved_students, sol, capacity, constraints):
         if enabled:
             dt = getattr(s, "direct_time_to_school", None)
             if dt is not None and _math.isfinite(dt) and dt > 0:
-                cap = max(fl, min(k_mult * dt, dt + ce))
+                cap = max(base_mrt, dt + dmrt_offset)
                 if cap < 20:
                     reasons["ride_time_cap_too_tight"] = reasons.get("ride_time_cap_too_tight", 0) + 1
                     continue

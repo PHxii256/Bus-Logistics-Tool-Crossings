@@ -106,10 +106,15 @@ def load_mode1_input(data, G):
     constraints = meta.get('constraints', {})
     algo_config = meta.get('algorithm', {'method': 'alns', 'iterations': 60})
 
-    # Per-student ride-time constraints — tiered: clamp(k*T_direct, floor, ceiling)
+    # Per-student ride-time constraints:
+    #   DMRT cap = max(base_mrt, T_direct + acceptable_offset_minutes)
     ride_time_multiplier = constraints.get('ride_time_multiplier', 2.5)
     floor_minutes        = constraints.get('floor_minutes',        45)
     ceiling_minutes      = constraints.get('ceiling_minutes',      60)
+    try:
+        acceptable_offset_minutes = float(constraints.get('acceptable_offset_minutes', 30))
+    except (TypeError, ValueError):
+        acceptable_offset_minutes = 30.0
     bidirectional_check  = constraints.get('bidirectional_check',  True)
     mrt_enabled          = bool(constraints.get('mrt_enabled', constraints.get('mrt enabled', False)))
     mrt_minutes_raw      = constraints.get('mrt', None)
@@ -144,6 +149,7 @@ def load_mode1_input(data, G):
             bidirectional_check=bidirectional_check,
             mrt_enabled=mrt_enabled,
             mrt_minutes=mrt_minutes,
+            acceptable_offset_minutes=acceptable_offset_minutes,
         )
         # Flags used by validate_permanent_student for hard/soft cap behavior
         route.ride_caps_enabled = caps_enabled
@@ -238,6 +244,7 @@ def _reconstruct_routes(routes_json, buses_dict, G):
             bidirectional_check=route_data.get('bidirectional_check', True),
             mrt_enabled=route_data.get('mrt_enabled', route_data.get('mrt enabled', False)),
             mrt_minutes=route_data.get('mrt', None),
+            acceptable_offset_minutes=route_data.get('acceptable_offset_minutes', 30),
         )
         route.total_distance = route_data.get('total_distance_km', 0)
         route.total_time = route_data.get('total_time_minutes', 0)
@@ -362,6 +369,7 @@ def serialize_routes(routes, buses, school_coords, unserved_students=None, graph
             "ride_time_multiplier": getattr(route, 'ride_time_multiplier', 2.5),
             "floor_minutes":        getattr(route, 'floor_minutes',        45),
             "ceiling_minutes":      getattr(route, 'ceiling_minutes',      60),
+            "acceptable_offset_minutes": getattr(route, 'acceptable_offset_minutes', 30),
             "bidirectional_check":  getattr(route, 'bidirectional_check',  True),
             "mrt_enabled":          getattr(route, 'mrt_enabled',          False),
             "mrt":                  getattr(route, 'mrt_minutes',          None),
@@ -410,15 +418,15 @@ def print_input_summary(students, buses, routes, school_coords):
     
     print(f"\nRoutes: {len(routes)}")
     for route in routes:
-        k       = getattr(route, 'ride_time_multiplier', 2.5)
         floor_m = getattr(route, 'floor_minutes',        45)
-        ceil_m  = getattr(route, 'ceiling_minutes',      60)
+        dmrt_offset = getattr(route, 'acceptable_offset_minutes', 30)
         mrt_on  = bool(getattr(route, 'mrt_enabled', False))
         mrt_val = getattr(route, 'mrt_minutes', None)
         if mrt_on and mrt_val is not None:
             cap_desc = f"hard MRT={float(mrt_val):.1f} min (AM and PM)"
         else:
-            cap_desc = f"ride cap clamp({k}x, >={floor_m} min, <=direct+{ceil_m} min)"
+            base_mrt = mrt_val if (mrt_val is not None) else floor_m
+            cap_desc = f"DMRT cap max({float(base_mrt):.1f}, direct+{float(dmrt_offset):.1f}) min"
         print(f"  {route.route_id}: {len(route.stops)} stops, {cap_desc}, capacity={route.bus.capacity}")
     
     print(f"\n{'='*80}\n")
