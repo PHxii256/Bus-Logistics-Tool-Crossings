@@ -1,0 +1,120 @@
+{
+  "mode": "B",
+  "mode_name": "Weakly Constrained (Any Walking)",
+  "buses_used": 10,
+  "iterations_configured": 5000,
+  "log_interval_iterations": 10,
+  "operator_performance": {
+    "executed_iterations": 28,
+    "destroy": {
+      "random_removal": {
+        "count": 0,
+        "frequency_pct": 0.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "worst_cost_removal": {
+        "count": 6,
+        "frequency_pct": 21.43,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "shaw_related_removal": {
+        "count": 20,
+        "frequency_pct": 71.43,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "sequence_removal": {
+        "count": 0,
+        "frequency_pct": 0.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "route_merge_removal": {
+        "count": 2,
+        "frequency_pct": 7.14,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      }
+    },
+    "repair": {
+      "random_order_best_repair": {
+        "count": 14,
+        "frequency_pct": 50.0,
+        "avg_time_s": 4.973587,
+        "best_time_s": 2.963841,
+        "worst_time_s": 7.453059,
+        "total_time_s": 69.630221
+      },
+      "regret_repair": {
+        "count": 14,
+        "frequency_pct": 50.0,
+        "avg_time_s": 4.345839,
+        "best_time_s": 2.603629,
+        "worst_time_s": 8.83467,
+        "total_time_s": 60.84174
+      }
+    }
+  },
+  "matrix_precompute": {
+    "source": "computed_osrm",
+    "loaded_from_pkl": false,
+    "saved_to_pkl": true,
+    "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/cache/distance_matrix_6446e64c_0405-1149.pkl",
+    "load_time_s": 0.0001,
+    "compute_time_s": 1.3308,
+    "save_time_s": 0.3102,
+    "total_time_s": 7.4106,
+    "critical_nodes_count": 587,
+    "matrix_nodes_count": 587,
+    "cache_key_prefix": "5dd7286b1049",
+    "cache_entry_node_count": null,
+    "cache_loaded_finite_ratio": null,
+    "cache_loaded_inf_pairs": null,
+    "cache_loaded_finite_pairs": null,
+    "cache_guard_min_finite_ratio": 0.0001,
+    "cache_load_rejected": false,
+    "cache_load_reject_reason": null,
+    "cache_recomputed_after_reject": false,
+    "cache_context_seed": null,
+    "cache_context_student_count": 200
+  },
+  "synthetic_edges_timing": {
+    "source": "injection_pkl",
+    "prepare_time_s": 12.0694,
+    "pkl_load_time_s": 0.0107,
+    "generate_time_s": 0.0,
+    "auto_save_pkl_time_s": 0.0,
+    "pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/cache/crossings_3eab1f2e_0403-2023.pkl",
+    "cache_hash": "3eab1f2e"
+  },
+  "entries": [
+    {
+      "iteration": 10,
+      "temperature": 817.072807,
+      "objective_value": 49884.96,
+      "best_objective": 49884.96,
+      "students_served": 6,
+      "block_elapsed_seconds": 45.832
+    },
+    {
+      "iteration": 20,
+      "temperature": 667.607972,
+      "objective_value": 69879.99,
+      "best_objective": 69879.99,
+      "students_served": 8,
+      "block_elapsed_seconds": 48.936
+    }
+  ]
+}

@@ -911,14 +911,23 @@ class ALNSEngine:
             # Repair
             enforce_budget_deadline = (self.min_iterations_floor <= 0) or ((i + 1) >= self.min_iterations_floor)
             repair_deadline = deadline if enforce_budget_deadline else None
-            # Apply per-iteration repair cap only after we have a reasonably dense solution.
-            if self.max_repair_seconds_per_iteration is not None and served_ratio >= 0.80:
+            # Apply per-iteration repair cap from the start so one expensive
+            # sparse-phase regret pass cannot consume almost the full run budget.
+            if self.max_repair_seconds_per_iteration is not None:
                 iter_repair_deadline = time.time() + self.max_repair_seconds_per_iteration
-                repair_deadline = min(deadline, iter_repair_deadline) if deadline else iter_repair_deadline
+                repair_deadline = min(repair_deadline, iter_repair_deadline) if repair_deadline else iter_repair_deadline
 
-            # In sparse phase, bias toward regret repair to quickly build coverage.
+            # In sparse phase, mix faster random-order repair with regret to avoid
+            # pathological long first iterations on medium/large instances.
             if sparse_phase:
-                if total_students >= 500 and (i % 3) != 0:
+                if total_students >= 500:
+                    use_fast = (i % 3) != 0
+                elif total_students >= 150:
+                    use_fast = (i % 2) == 0
+                else:
+                    use_fast = False
+
+                if use_fast:
                     fast_idx = next((ix for ix, op in enumerate(self.repair_ops) if op.__name__ == "random_order_best_repair"), r_idx)
                     r_idx = fast_idx
                 else:
