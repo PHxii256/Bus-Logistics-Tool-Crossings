@@ -922,7 +922,7 @@ class ALNSEngine:
             if sparse_phase:
                 if total_students >= 500:
                     use_fast = (i % 3) != 0
-                elif total_students >= 150:
+                elif total_students >= 100:
                     use_fast = (i % 2) == 0
                 else:
                     use_fast = False
