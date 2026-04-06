@@ -1149,6 +1149,38 @@ def _student_walk_distance_m(G, student_coords, stop):
     return d, s_node
 
 
+def _student_direct_metrics(G, school_node, student):
+    """Return (direct_time_min, direct_distance_km) with safe fallbacks."""
+    if school_node is None:
+        return None, None
+
+    direct_time = compute_direct_time(student, school_node, G)
+    if not math.isfinite(direct_time):
+        direct_time = None
+
+    direct_distance_km = None
+    try:
+        s_node = _student_frontage_node_id(G, student.coords)
+        direct_distance_m = _MATRIX_CACHE_LENGTH.get((s_node, school_node), None)
+        if direct_distance_m is None:
+            direct_distance_m = _MATRIX_CACHE_LENGTH.get((school_node, s_node), None)
+
+        if direct_distance_m is not None and math.isfinite(direct_distance_m):
+            direct_distance_km = direct_distance_m / 1000.0
+        else:
+            school_data = G.nodes.get(school_node, {}) if G is not None else {}
+            school_lat = school_data.get("y")
+            school_lon = school_data.get("x")
+            if school_lat is not None and school_lon is not None:
+                school_coords = (school_lat, school_lon)
+                direct_distance_km = _haversine_distance_m(student.coords, school_coords) / 1000.0
+    except Exception:
+        # Keep direct distance as None if lookup/snap fails unexpectedly.
+        pass
+
+    return direct_time, direct_distance_km
+
+
 def _dir_cap_html(label, ride, direct, cap, k):
     """Compact per-direction ride-cap block with progress bar."""
     if direct is None or direct <= 0 or not math.isfinite(ride):
@@ -1319,6 +1351,7 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
                 k_eff = getattr(route, 'ride_time_multiplier', ride_k)
                 fl    = getattr(route, 'floor_minutes',        floor_min)
                 ce    = getattr(route, 'ceiling_minutes',      ceiling_min)
+                off   = getattr(route, 'acceptable_offset_minutes', ce)
                 mrt_on = bool(getattr(route, 'mrt_enabled', mrt_enabled))
                 mrt_val = getattr(route, 'mrt_minutes', mrt_minutes)
                 try:
@@ -1331,7 +1364,7 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
                         return mrt_val
                     if d is None or d <= 0:
                         return float('inf')
-                    return max(fl, min(k_eff * d, d + ce))
+                    return max(fl, d + off)
 
                 cap_html = (
                     _dir_cap_html('🟠 AM home→school', ride_time_am, direct_am, _cap(direct_am), k_eff) +
@@ -1397,9 +1430,8 @@ def _count_satisfied_per_route(sol, G, constraints):
     Students without a finite direct time are counted as satisfied.
     """
     con     = constraints or {}
-    k       = float(con.get('ride_time_multiplier', 2.5))
     fl      = float(con.get('floor_minutes',        45))
-    ce      = float(con.get('ceiling_minutes',      60))
+    offset  = float(con.get('acceptable_offset_minutes', con.get('ceiling_minutes', 60)))
     mrt_enabled = bool(con.get("mrt_enabled", con.get("mrt enabled", False)))
     mrt_raw = con.get("mrt", None)
     try:
@@ -1412,7 +1444,7 @@ def _count_satisfied_per_route(sol, G, constraints):
     def _cap(d):
         if d is None or d <= 0 or not math.isfinite(d):
             return float('inf')
-        return max(fl, min(k * d, d + ce))
+        return max(fl, d + offset)
 
     result = {}
     for route in sol.routes:
@@ -1489,9 +1521,8 @@ def _count_cap_violations(sol, G, constraints):
             "pm": None, "pm_checked": None, "pm_pct": None,
         }
 
-    k_mult = float(constraints.get("ride_time_multiplier", 2.5))
     floor_min = float(constraints.get("floor_minutes", 45))
-    ceiling_min = float(constraints.get("ceiling_minutes", 60))
+    offset_min = float(constraints.get("acceptable_offset_minutes", constraints.get("ceiling_minutes", 60)))
     mrt_enabled = bool(constraints.get("mrt_enabled", constraints.get("mrt enabled", False)))
     mrt_raw = constraints.get("mrt", None)
     try:
@@ -1559,7 +1590,7 @@ def _count_cap_violations(sol, G, constraints):
                     direct_time = compute_direct_time(student, school_node, G)
                     if direct_time is None or not math.isfinite(direct_time) or direct_time <= 0:
                         continue
-                    cap = max(floor_min, min(k_mult * direct_time, direct_time + ceiling_min))
+                    cap = max(floor_min, direct_time + offset_min)
 
                 if ride_am is not None:
                     am_checked += 1
@@ -2595,10 +2626,13 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
 
         # Build student list with ride time, direct potential, walk distance
         students_list = []
+        school_node_for_mode = None
         for route in sol.routes:
             # Pre-compute per-stop ride-time using matrix-cache summation
             # (safe against cleared caches; falls back to lazy A* on miss)
             school_node = route.stops[-1].node_id
+            if school_node_for_mode is None:
+                school_node_for_mode = school_node
             for stop in route.stops:
                 if stop.stop_type == "school":
                     continue
@@ -2647,15 +2681,8 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                         else str(student.school_stage)
                     )
 
-                    # Direct time home -> school (cached on student after first call)
-                    direct_time = compute_direct_time(student, school_node, G_unc)
-                    if not math.isfinite(direct_time):
-                        direct_time = None
-
-                    # Direct distance home -> school (from OSRM cache, in meters)
-                    s_node = _student_frontage_node_id(G_unc, student.coords)
-                    direct_distance_m = _MATRIX_CACHE_LENGTH.get((s_node, school_node), None)
-                    direct_distance_km = round(direct_distance_m / 1000.0, 2) if direct_distance_m is not None and math.isfinite(direct_distance_m) else None
+                    # Direct home -> school metrics used by ride-cap diagnostics.
+                    direct_time, direct_distance_km = _student_direct_metrics(G_unc, school_node, student)
 
                     # Walk distance home -> assigned stop
                     walk_dist, _ = _student_walk_distance_m(G_unc, student.coords, stop)
@@ -2671,11 +2698,25 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                         "ride_time_min": round(ride_time, 2) if ride_time is not None else None,
                         "ride_distance_km": ride_distance_km,
                         "direct_potential_min": round(direct_time, 2) if direct_time is not None else None,
-                        "direct_distance_km": direct_distance_km,
+                        "direct_distance_km": round(direct_distance_km, 2) if direct_distance_km is not None else None,
                         "walk_distance_m": round(walk_dist, 1),
                         "used_synthetic_crossing": bool(tiers_for_student),
                         "crossing_tier": primary_tier,
                     })
+
+        if school_node_for_mode is None:
+            try:
+                school_cfg = meta.get("school", {}) if isinstance(meta, dict) else {}
+                school_lat = school_cfg.get("latitude")
+                school_lon = school_cfg.get("longitude")
+                if school_lat is not None and school_lon is not None and G_unc is not None:
+                    school_node_for_mode = _eng.fast_nearest_node(
+                        G_unc,
+                        float(school_lon),
+                        float(school_lat),
+                    )
+            except Exception:
+                school_node_for_mode = None
         
         # Calculate aggregate ride time statistics from students
         valid_ride_times = [s["ride_time_min"] for s in students_list if s["ride_time_min"] is not None]
@@ -2704,6 +2745,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                 if hasattr(student.school_stage, "name")
                 else str(student.school_stage)
             )
+            direct_time, direct_distance_km = _student_direct_metrics(G_unc, school_node_for_mode, student)
             rejection_reason = (getattr(student, "failure_reason", None) or "").strip()
             if not rejection_reason:
                 rejection_reason = "unclassified_unserved"
@@ -2714,8 +2756,8 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                 "pickup_order": None,
                 "ride_time_min": None,
                 "ride_distance_km": None,
-                "direct_potential_min": None,
-                "direct_distance_km": None,
+                "direct_potential_min": round(direct_time, 2) if direct_time is not None else None,
+                "direct_distance_km": round(direct_distance_km, 2) if direct_distance_km is not None else None,
                 "walk_distance_m": None,
                 "used_synthetic_crossing": False,
                 "crossing_tier": "none",
@@ -2812,11 +2854,11 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         entry = modes_out.get(mode_key, {})
         return entry.get(field, default) if not entry.get("skipped") else default
 
-    t_con  = _mget("strictly_constrained",   "total_route_time_min", 0)
-    t_unc  = _mget("weakly_constrained", "total_route_time_min", 0)
-    t_d2d  = _mget("door_to_door",  "total_route_time_min", 0)
-    cx_con = _mget("strictly_constrained",   "unsafe_crossings", 0)
-    cx_unc = _mget("weakly_constrained", "unsafe_crossings", 0)
+    t_con  = _mget("strictly_constrained", "total_route_time_min", None)
+    t_unc  = _mget("weakly_constrained", "total_route_time_min", None)
+    t_d2d  = _mget("door_to_door", "total_route_time_min", None)
+    cx_con = _mget("strictly_constrained", "unsafe_crossings", None)
+    cx_unc = _mget("weakly_constrained", "unsafe_crossings", None)
 
     # Build per-mode debug breakdown
     _dbg_modes = {}
@@ -2926,12 +2968,18 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         "modes": modes_out,
         "comparison": {
             "efficiency_gain_vs_d2d_pct": (
-                round((t_d2d - t_con) / t_d2d * 100, 1) if t_d2d else None
+                round((t_d2d - t_con) / t_d2d * 100, 1)
+                if t_d2d not in (None, 0) and t_con is not None
+                else None
             ),
             "safety_cost_vs_weakly_constrained_pct": (
-                round((t_con - t_unc) / t_unc * 100, 1) if t_unc else None
+                round((t_con - t_unc) / t_unc * 100, 1)
+                if t_unc not in (None, 0) and t_con is not None
+                else None
             ),
-            "crossings_eliminated_vs_weakly_constrained": cx_unc - cx_con,
+            "crossings_eliminated_vs_weakly_constrained": (
+                cx_unc - cx_con if cx_unc is not None and cx_con is not None else None
+            ),
             "strictly_constrained_total_time_min":   t_con,
             "weakly_constrained_total_time_min": t_unc,
             "door_to_door_total_time_min":  t_d2d,
