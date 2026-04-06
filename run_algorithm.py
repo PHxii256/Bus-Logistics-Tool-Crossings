@@ -472,6 +472,10 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
         # (solution.graph == G_drive). This avoids Mode A candidate/matrix mismatches.
         node_id, _ = snap_address_to_edge(s.coords, G_drive)
         critical_nodes.add(node_id)
+        # Ride-cap checks call compute_direct_time(), which uses nearest drive node,
+        # not frontage. Include it so validators stay matrix-only.
+        nearest_node = _det_eng.fast_nearest_node(G_drive, s.coords[1], s.coords[0])
+        critical_nodes.add(nearest_node)
         student_frontages[s.id] = node_id
         if s.walk_radius > 0:
             walk_g = _get_walk_graph(G_drive)  # Uses configured walk graph when provided
@@ -902,16 +906,20 @@ def run_algorithm(data: dict, G, iterations: int = None,
     active = [r for r in best.routes if r.get_student_count() > 0]
     total_time = sum(r.total_time for r in active)
     total_dist = sum(r.total_distance for r in active)
+    op_perf = dict(getattr(engine, "operator_stats_summary", {}))
+    executed_iterations = int(op_perf.get("executed_iterations") or 0)
 
     stats = {
         "served": served, "total": total,
         "routes": len(active),
+        "buses_used": len(active),
         "total_time": round(total_time, 2),
         "total_dist": round(total_dist, 2),
         "objective": round(best.calculate_objective(), 2),
         "runtime": round(elapsed, 2),
+        "iterations": executed_iterations,
         "alns_iteration_log": list(getattr(engine, "iteration_log", [])),
-        "operator_performance": dict(getattr(engine, "operator_stats_summary", {})),
+        "operator_performance": op_perf,
         "alns_diagnostics": dict(getattr(engine, "run_diagnostics", {})),
         "insertion_debug": _alns.get_insertion_debug_stats(),
         "matrix_precompute": matrix_precompute,
@@ -943,7 +951,8 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
     -------
     tuple : (best_k, ServiceSolution, stats_dict, school_coords)
         ``best_k`` is the minimum fleet size found.
-        ``stats["buses_used"]`` is set to *best_k*.
+        ``stats["fleet_size_selected"]`` stores that selected fleet size,
+        while ``stats["buses_used"]`` remains the count of non-empty routes.
     """
     import copy as _copy
 
@@ -976,11 +985,17 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
     if base_budget_s is not None and min_iterations_floor > 0:
         min_budget_for_floor = float(min_iterations_floor) * floor_sec_per_iter
         base_budget_s = max(float(base_budget_s), min_budget_for_floor)
-    first_k_budget_scale = float(algo_cfg.get("fleet_search_first_k_budget_scale", 1.0))
-    followup_k_budget_scale = float(algo_cfg.get("fleet_search_followup_k_budget_scale", 0.8))
+    # Budget policy for per-k fleet search runs:
+    # default is "full" to inherit the configured ALNS time budget at each k.
+    # "scaled" keeps the legacy scaled/capped behavior.
+    fleet_search_budget_mode = str(algo_cfg.get("fleet_search_budget_mode", "full")).strip().lower()
+    use_scaled_fleet_budget = bool(algo_cfg.get("fleet_search_use_scaled_budget", False)) or (fleet_search_budget_mode == "scaled")
+
+    first_k_budget_scale = float(algo_cfg.get("fleet_search_first_k_budget_scale", 1.0)) if use_scaled_fleet_budget else 1.0
+    followup_k_budget_scale = float(algo_cfg.get("fleet_search_followup_k_budget_scale", 0.8)) if use_scaled_fleet_budget else 1.0
     trailing_early_stop_ratio = float(algo_cfg.get("fleet_search_trailing_early_stop_ratio", 0.9))
     trailing_min_gap = int(algo_cfg.get("fleet_search_trailing_min_served_gap", 1))
-    max_per_k_s_cfg = algo_cfg.get("fleet_search_max_per_k_seconds", None)
+    max_per_k_s_cfg = algo_cfg.get("fleet_search_max_per_k_seconds", None) if use_scaled_fleet_budget else None
     max_per_k_s = float(max_per_k_s_cfg) if max_per_k_s_cfg is not None else None
     rescue_enabled = bool(algo_cfg.get("fleet_search_spare_bus_rescue_enabled", True))
     rescue_min_extra_buses = int(algo_cfg.get("fleet_search_spare_bus_rescue_min_extra_buses", 1))
@@ -1004,25 +1019,28 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
     for k in range(k_min, k_max + 1):
         k_budget_s = None
         if base_budget_s is not None:
-            scale = first_k_budget_scale if k == k_min else followup_k_budget_scale
-            # If the previous k run barely executed any ALNS iterations, avoid
-            # starving this k with an aggressively downscaled follow-up budget.
-            if k > k_min and prev_executed_iters is not None and prev_executed_iters <= 3:
-                scale = max(scale, 0.9)
-            # If previous k ran out of time with unserved students, keep a higher
-            # follow-up budget to reduce local-optimum lock-in at larger k.
-            if (
-                k > k_min
-                and prev_stop_reason == "time_budget"
-                and prev_served is not None
-                and prev_total is not None
-                and prev_served < prev_total
-            ):
-                scale = max(scale, 0.85)
-            scale = max(0.05, float(scale))
-            k_budget_s = max(1.0, float(base_budget_s) * scale)
-            if max_per_k_s is not None:
-                k_budget_s = min(k_budget_s, max_per_k_s)
+            if use_scaled_fleet_budget:
+                scale = first_k_budget_scale if k == k_min else followup_k_budget_scale
+                # If the previous k run barely executed any ALNS iterations, avoid
+                # starving this k with an aggressively downscaled follow-up budget.
+                if k > k_min and prev_executed_iters is not None and prev_executed_iters <= 3:
+                    scale = max(scale, 0.9)
+                # If previous k ran out of time with unserved students, keep a higher
+                # follow-up budget to reduce local-optimum lock-in at larger k.
+                if (
+                    k > k_min
+                    and prev_stop_reason == "time_budget"
+                    and prev_served is not None
+                    and prev_total is not None
+                    and prev_served < prev_total
+                ):
+                    scale = max(scale, 0.85)
+                scale = max(0.05, float(scale))
+                k_budget_s = max(1.0, float(base_budget_s) * scale)
+                if max_per_k_s is not None:
+                    k_budget_s = min(k_budget_s, max_per_k_s)
+            else:
+                k_budget_s = max(1.0, float(base_budget_s))
 
         trial = _copy.deepcopy(data)
         trial["data"]["buses"] = trial["data"]["buses"][:k]
@@ -1152,6 +1170,8 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
 
         fleet_log.append({
             "k":                k,
+            "fleet_size_selected": k,
+            "active_buses_used": stats.get("buses_used", stats.get("routes")),
             "served":           served,
             "unserved":         total - served,
             "feasible":         served == total,
@@ -1189,12 +1209,16 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
                 )
                 break
 
-    best_stats["buses_used"]           = best_k
+    best_stats["fleet_size_selected"]  = best_k
+    if best_stats.get("buses_used") is None:
+        best_stats["buses_used"] = int(best_stats.get("routes", 0) or 0)
     best_stats["total_fleet_search_runtime"] = total_fleet_search_runtime
     best_stats["fleet_search_log"]     = fleet_log
     best_stats["fleet_search_summary"] = _summarise_fleet_search(fleet_log)
     best_stats["fleet_search_budget_policy"] = {
         "base_time_budget_seconds": base_budget_s,
+        "budget_mode": fleet_search_budget_mode,
+        "use_scaled_budget": use_scaled_fleet_budget,
         "min_iterations_floor": min_iterations_floor,
         "min_iterations_floor_seconds_per_iteration": floor_sec_per_iter,
         "first_k_budget_scale": first_k_budget_scale,

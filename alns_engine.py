@@ -397,6 +397,7 @@ _insertion_debug_stats = {
     "routes_checked": 0,
     "routes_bbox_pruned": 0,
     "candidates_considered": 0,
+    "matrix_pair_skips": 0,
     "valid_insertions": 0,
 }
 
@@ -405,6 +406,7 @@ def reset_insertion_debug_stats():
     _insertion_debug_stats["routes_checked"] = 0
     _insertion_debug_stats["routes_bbox_pruned"] = 0
     _insertion_debug_stats["candidates_considered"] = 0
+    _insertion_debug_stats["matrix_pair_skips"] = 0
     _insertion_debug_stats["valid_insertions"] = 0
 
 
@@ -496,6 +498,8 @@ def _get_insertions_for_route(student, route, graph, frontage_info, deadline=Non
                     coords = (graph.nodes[node_id]['y'], graph.nodes[node_id]['x'])
                     candidate_nodes.append((node_id, coords))
                     dist_map[node_id] = float(dist)
+                    if len(candidate_nodes) >= max_k:
+                        break
         
         # Bus-reachable fallback: if frontage is unreachable, find nearby reachable nodes
         # via bidirectional BFS (walking ignores one-way constraints)
@@ -583,9 +587,20 @@ def _get_insertions_for_route(student, route, graph, frontage_info, deadline=Non
     for pos in range(start_pos, end_pos):
         if deadline is not None and time.time() >= deadline:
             break
+        u_node = route.stops[pos - 1].node_id
+        v_node = route.stops[pos].node_id
         for cand_node_id, cand_coords in reachable_candidates:
             if deadline is not None and time.time() >= deadline:
                 break
+            # Skip candidates that would force cold graph routing in the ALNS
+            # hot loop. This keeps insertion checks matrix-only and predictable.
+            if (
+                (u_node, cand_node_id) not in _MATRIX_CACHE
+                or (cand_node_id, v_node) not in _MATRIX_CACHE
+                or (u_node, v_node) not in _MATRIX_CACHE
+            ):
+                _insertion_debug_stats["matrix_pair_skips"] += 1
+                continue
             # Check if an existing stop at this node can be reused
             existing_stop = next((s for s in route.stops if s.node_id == cand_node_id), None)
             eval_stop = existing_stop if existing_stop else Stop(cand_node_id, cand_coords[0], cand_coords[1])
@@ -595,6 +610,8 @@ def _get_insertions_for_route(student, route, graph, frontage_info, deadline=Non
             
             cost, is_valid, _ = res
             if not is_valid: continue
+            if cost is None:
+                continue
             
             valid, _, _ = validate_permanent_student(eval_stop, route, pos, cost, graph,
                                                      new_student=student)
@@ -765,6 +782,7 @@ class ALNSEngine:
             "stop_reason": None,
             "stop_iteration": 0,
             "stop_no_improve_iters": 0,
+            "destroy_skipped_iterations": 0,
             "merge_tail": {
                 "enabled": self.merge_tail_iterations > 0,
                 "ran": False,
@@ -898,15 +916,29 @@ class ALNSEngine:
             # This avoids repeatedly wiping out a sparse partial solution.
             n_remove = max(1, int(served_curr * random.uniform(frac_min, frac_max))) if served_curr > 0 else 0
 
-            # Construction phase: when still sparse, skip destroy and focus on insertion.
-            sparse_phase = served_curr < max(20, int(total_students * 0.25))
-            if n_remove <= 0 or sparse_phase:
-                d_elapsed = 0.0
+            # Construction phase: when still sparse, usually skip destroy and focus on insertion.
+            # If sparse progress stalls, allow a light destroy kick to escape local minima.
+            sparse_target_served = max(12, int(total_students * 0.15))
+            sparse_phase = served_curr < sparse_target_served
+            sparse_stall_patience = max(18, int(total_students * 0.12))
+            sparse_escape = sparse_phase and served_curr > 0 and no_improve_iters >= sparse_stall_patience
+
+            if sparse_escape and n_remove > 0:
+                n_remove = max(1, min(n_remove, max(1, int(served_curr * 0.2))))
+
+            destroy_executed = False
+            d_elapsed = 0.0
+            if n_remove <= 0 or (sparse_phase and not sparse_escape):
+                self.run_diagnostics["destroy_skipped_iterations"] = int(
+                    self.run_diagnostics.get("destroy_skipped_iterations", 0)
+                ) + 1
             else:
                 _td = time.perf_counter()
                 self.destroy_ops[d_idx](new_sol, n_remove)
                 d_elapsed = time.perf_counter() - _td
-            self._record_op_timing("destroy", self.destroy_ops[d_idx].__name__, d_elapsed)
+                destroy_executed = True
+            if destroy_executed:
+                self._record_op_timing("destroy", self.destroy_ops[d_idx].__name__, d_elapsed)
             
             # Repair
             enforce_budget_deadline = (self.min_iterations_floor <= 0) or ((i + 1) >= self.min_iterations_floor)
@@ -920,7 +952,10 @@ class ALNSEngine:
             # In sparse phase, mix faster random-order repair with regret to avoid
             # pathological long first iterations on medium/large instances.
             if sparse_phase:
-                if total_students >= 500:
+                if sparse_escape:
+                    # When sparse search stalls, prefer aggressive constructive repair.
+                    use_fast = True
+                elif total_students >= 500:
                     use_fast = (i % 3) != 0
                 elif total_students >= 100:
                     use_fast = (i % 2) == 0
@@ -935,7 +970,12 @@ class ALNSEngine:
                     r_idx = regret_idx
 
             _tr = time.perf_counter()
-            self.repair_ops[r_idx](new_sol, deadline=repair_deadline)
+            # During sparse-stall escape, run random-order repair without batch limits
+            # so the iteration can evaluate a broader unassigned set within deadline.
+            if sparse_escape and self.repair_ops[r_idx].__name__ == "random_order_best_repair":
+                random_order_best_repair(new_sol, deadline=repair_deadline, respect_batch_limit=False)
+            else:
+                self.repair_ops[r_idx](new_sol, deadline=repair_deadline)
             self._record_op_timing("repair", self.repair_ops[r_idx].__name__, time.perf_counter() - _tr)
             
             # Score calculation

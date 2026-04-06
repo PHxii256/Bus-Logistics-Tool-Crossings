@@ -7,7 +7,7 @@
     "longitude": 31.270319
   },
 
-  "n_students": 100,
+  "n_students": 200,
   "seed": 2000,
 
   "stage_distribution": {
@@ -25,7 +25,7 @@
   },
 
   "buses": {
-    "count": 10,
+    "count": 9,
     "capacity": 28
   },
 
@@ -47,7 +47,7 @@
     "daily_detour_budget_minutes": 10,
     "bidirectional_check": true,
     "mrt_enabled": true,
-    "mrt": 60,
+    "mrt": 90,
     "acceptable_offset_minutes": 30
   },
     
@@ -97,18 +97,18 @@
 "algorithm": {
     "iterations": 5000,
     "time_budget_seconds": 720,
-    "min_iterations_floor": 50,
-    "max_candidates_per_student": 3,
-    "minimize_buses": false,
-    "repair_max_unassigned_per_call": 32,
-    "regret_scan_limit": 12,
+    "min_iterations_floor": 200,
+    "max_candidates_per_student": 7,
+    "minimize_buses": true,
+    "repair_max_unassigned_per_call": 64,
+    "regret_scan_limit": 32,
     "max_repair_seconds_per_iteration": 2,
     "early_stop_patience": 80,
     "early_stop_min_improvement": 5,
     "early_stop_freeze_temp": 2,
     "early_stop_freeze_patience": 16,
     "fleet_search_followup_k_budget_scale": 0.6,
-    "fleet_search_max_per_k_seconds": 75
+    "fleet_search_max_per_k_seconds": 60
   },
 
   "annulus": {

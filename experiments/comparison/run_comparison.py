@@ -752,11 +752,12 @@ def _make_constrained(data):
 
 
 def _make_unconstrained(data):
-    """Mode B: all-safe walking, ride-time constraints from meta.json."""
-    d = copy.deepcopy(data)
-    for s in d["data"]["students"]:
-        s["walk_radius_override"] = 400
-    return d
+    """Mode B: all-safe walking, ride-time constraints from meta.json.
+
+    Keep per-stage walk limits from input (same as Mode A). Mode B should only
+    relax WALK SAFETY constraints, not inflate walk radii.
+    """
+    return copy.deepcopy(data)
 
 
 def _make_door_to_door(data):
@@ -1020,9 +1021,13 @@ def _compute_route_path(G, stops):
         # Passing initial_bearing (even 0.0 on first call) bypasses
         # the matrix-only shortcut so we always get an actual path.
         bearing_arg = last_bearing if last_bearing is not None else 0.0
-        seg, _ = find_shortest_path_with_turns(
+        seg_result = find_shortest_path_with_turns(
             G, u, v, weight='travel_time', initial_bearing=bearing_arg,
         )
+        if isinstance(seg_result, tuple) and len(seg_result) == 2:
+            seg, _ = seg_result
+        else:
+            seg = None
 
         if seg is None or len(seg) < 2:
             # Fallback: plain Dijkstra (at least draws *something*)
@@ -2649,7 +2654,14 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         buses_cfg = meta.get("buses", {})
         buses_available = buses_cfg.get("count")
         bus_capacity = buses_cfg.get("capacity")
+        fleet_size_selected = s.get("fleet_size_selected")
+        if fleet_size_selected is None:
+            fleet_size_selected = s.get("buses_used")
         buses_used = s.get("buses_used")
+        if buses_used is None:
+            buses_used = s.get("routes")
+        if buses_used is None:
+            buses_used = fleet_size_selected
         if buses_used is None and buses_available is not None:
             buses_used = buses_available
 
@@ -2681,6 +2693,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "buses_available":       buses_available,
             "bus_capacity":          bus_capacity,
             "buses_used":            buses_used,
+            "fleet_size_selected":   fleet_size_selected,
             "ride_cap_violations_am": s.get("cap_violations_am"),
             "ride_cap_checked_am":    s.get("cap_checked_am"),
             "ride_cap_violation_pct_am": s.get("cap_violation_pct_am"),
@@ -2703,7 +2716,8 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         # Attach fleet-search diagnostics if present
         if s.get("fleet_search_log"):
             mode_entry["fleet_search"] = {
-                "buses_used":    s.get("buses_used"),
+                "buses_used":    buses_used,
+                "fleet_size_selected": fleet_size_selected,
                 "summary":       s.get("fleet_search_summary"),
                 "search_log":    s["fleet_search_log"],
             }
@@ -2732,12 +2746,19 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             _syn = _s.get("synthetic_edges_timing") or {}
             _ops = _s.get("operator_performance") or {}
             
+            _executed_iterations = int(
+                _ops.get("executed_iterations")
+                or _s.get("iterations")
+                or (_s.get("alns_diagnostics") or {}).get("stop_iteration")
+                or 0
+            )
+
             _dbg_modes[_mk] = {
                 "mode_wall_time_s":        _wt,
                 "total_alns_solve_s":      _total_alns_t,
                 "successful_run_s":        _alns_t,
                 "actual_setup_overhead_s": round(_wt - _total_alns_t, 2),
-                "alns_iterations":         _s.get("iterations"),
+                "alns_iterations":         (_executed_iterations if _executed_iterations > 0 else None),
                 "operator_performance": _ops,
                 "matrix_precompute_total_s": _mx.get("total_time_s"),
                 "matrix_precompute_source": _mx.get("source"),
@@ -3224,9 +3245,11 @@ def run(input_path=None, output_path=None, iterations=None):
             stats_a["cap_checked_pm"] = cv["pm_checked"]
             stats_a["cap_violation_pct_pm"] = cv["pm_pct"]
         if force_k:
-            stats_a["buses_used"] = int(force_k)
+            stats_a["fleet_size_selected"] = int(force_k)
+        if "fleet_size_selected" not in stats_a:
+            stats_a["fleet_size_selected"] = len(data_a.get("data", {}).get("buses", []))
         if "buses_used" not in stats_a:
-            stats_a["buses_used"] = meta.get("buses", {}).get("count")
+            stats_a["buses_used"] = stats_a.get("routes", 0)
         sol_a, stats_a = _run_final_unserved_micro_pass(sol_a, stats_a, G_unc, algo_cfg=algo_cfg, mode_key="A")
         _apply_dwell_time_to_stats(sol_a, stats_a, dwell_time_seconds_per_stop)
         stats_a["synthetic_edges_timing"] = dict(synthetic_edges_timing)
@@ -3290,9 +3313,11 @@ def run(input_path=None, output_path=None, iterations=None):
             stats_b["cap_checked_pm"] = cv["pm_checked"]
             stats_b["cap_violation_pct_pm"] = cv["pm_pct"]
         if force_k:
-            stats_b["buses_used"] = int(force_k)
+            stats_b["fleet_size_selected"] = int(force_k)
+        if "fleet_size_selected" not in stats_b:
+            stats_b["fleet_size_selected"] = len(data_b.get("data", {}).get("buses", []))
         if "buses_used" not in stats_b:
-            stats_b["buses_used"] = meta.get("buses", {}).get("count")
+            stats_b["buses_used"] = stats_b.get("routes", 0)
         sol_b, stats_b = _run_final_unserved_micro_pass(sol_b, stats_b, G_unc, algo_cfg=algo_cfg, mode_key="B")
         _apply_dwell_time_to_stats(sol_b, stats_b, dwell_time_seconds_per_stop)
         stats_b["synthetic_edges_timing"] = dict(synthetic_edges_timing)
@@ -3350,9 +3375,11 @@ def run(input_path=None, output_path=None, iterations=None):
             stats_c["cap_checked_pm"] = cv["pm_checked"]
             stats_c["cap_violation_pct_pm"] = cv["pm_pct"]
         if force_k:
-            stats_c["buses_used"] = int(force_k)
+            stats_c["fleet_size_selected"] = int(force_k)
+        if "fleet_size_selected" not in stats_c:
+            stats_c["fleet_size_selected"] = len(data_c.get("data", {}).get("buses", []))
         if "buses_used" not in stats_c:
-            stats_c["buses_used"] = meta.get("buses", {}).get("count")
+            stats_c["buses_used"] = stats_c.get("routes", 0)
         sol_c, stats_c = _run_final_unserved_micro_pass(sol_c, stats_c, G_unc, algo_cfg=algo_cfg, mode_key="C")
         _apply_dwell_time_to_stats(sol_c, stats_c, dwell_time_seconds_per_stop)
         stats_c["synthetic_edges_timing"] = dict(synthetic_edges_timing)
