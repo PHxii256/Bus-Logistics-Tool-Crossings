@@ -492,7 +492,14 @@ def _get_insertions_for_route(student, route, graph, frontage_info, deadline=Non
             cand_cfg = _alns_candidate_cfg if _alns_candidate_cfg else None
             walk_g = _get_walk_graph(graph)  # Use walk graph with crossings if available
             safe_nodes = find_safe_nodes_within_radius(
-                student.coords, graph, 500, student.walk_radius, candidate_cfg=cand_cfg, walk_graph=walk_g
+                student.coords,
+                graph,
+                500,
+                student.walk_radius,
+                candidate_cfg=cand_cfg,
+                walk_graph=walk_g,
+                student_stage=getattr(student, "school_stage", None),
+                student_disabled=bool(getattr(student, "physically_mentally_disabled", False)),
             )
             for node_id, dist in safe_nodes:  # already sorted by scoring function
                 if node_id != frontage_node_id:

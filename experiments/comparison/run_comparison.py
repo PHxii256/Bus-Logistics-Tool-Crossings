@@ -316,6 +316,7 @@ def _inject_crossings_into_walk_graph(walk_graph, payload):
                 "length_m": float(crossing.get("length_m", 0.0)),
                 "crossing_type": crossing.get("crossing_type", "real_to_real"),
                 "road_name": crossing.get("road_name", "?"),
+                "road_class": crossing.get("road_class"),
                 "node_a": crossing.get("node_a"),
                 "node_b": crossing.get("node_b"),
             })
@@ -348,6 +349,7 @@ def _inject_crossings_into_walk_graph(walk_graph, payload):
             crossing_rule="injected_crossings",
             crossing_subtype=edge.get("crossing_type", "real_to_real"),
             road_name=edge.get("road_name", "?"),
+            road_class=edge.get("road_class"),
             injected_crossing=True,
         )
         added_edges += 1
@@ -390,6 +392,7 @@ def _build_crossings_injection_payload_from_walk_graph(walk_graph, synth_cfg=Non
             "length_m": float(data.get("length", 0.0) or 0.0),
             "crossing_type": data.get("crossing_subtype", "real_to_real"),
             "road_name": data.get("road_name", "?"),
+            "road_class": data.get("road_class"),
         })
 
     crossings = []
@@ -405,6 +408,7 @@ def _build_crossings_injection_payload_from_walk_graph(walk_graph, synth_cfg=Non
                     "length_m": float(c.get("length_m", 0.0) or 0.0),
                     "crossing_type": c.get("crossing_type", "real_to_real"),
                     "road_name": c.get("road_name", "?"),
+                    "road_class": c.get("road_class"),
                     "node_a": c.get("node_a"),
                     "node_b": c.get("node_b"),
                 })
@@ -424,6 +428,7 @@ def _build_crossings_injection_payload_from_walk_graph(walk_graph, synth_cfg=Non
                 "length_m": e.get("length_m", 0.0),
                 "crossing_type": e.get("crossing_type", "real_to_real"),
                 "road_name": e.get("road_name", "?"),
+                "road_class": e.get("road_class"),
                 "node_a": e["node_a"],
                 "node_b": e["node_b"],
             })
@@ -479,6 +484,7 @@ def _generate_dataset(meta):
         seed=meta["seed"],
         school=meta["school"],
         stage_dist=meta["stage_distribution"],
+        disabled_percentage=meta.get("disabled_percentage", 0.0),
         annulus=meta.get("annulus") or {},
         graph_bbox=graph_bbox,
         graph_boundary_mode=graph_cfg.get("boundary_mode") if isinstance(graph_cfg, dict) else None,
@@ -1179,6 +1185,11 @@ def _student_direct_metrics(G, school_node, student):
         pass
 
     return direct_time, direct_distance_km
+
+
+def _is_student_disabled(student):
+    """Return True when student is marked physically/mentally disabled."""
+    return bool(getattr(student, "physically_mentally_disabled", False))
 
 
 def _dir_cap_html(label, ride, direct, cap, k):
@@ -2522,6 +2533,22 @@ def _compute_mode_paper_metrics(mode_entry, constraints_cfg):
 
     welfare_violation_rate = (welfare_violations / welfare_checked) if welfare_checked > 0 else None
 
+    walk_vals = []
+    for s in mode_entry.get("students", []) or []:
+        wd = s.get("walk_distance_m") if isinstance(s, dict) else None
+        if wd is None:
+            continue
+        try:
+            wd = float(wd)
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(wd):
+            walk_vals.append(wd)
+
+    mean_walk = float((mode_entry.get("walk_stats") or {}).get("avg_walk_dist_m", 0) or 0)
+    if mean_walk <= 0.0 and any(w > 0.0 for w in walk_vals):
+        mean_walk = sum(walk_vals) / len(walk_vals)
+
     return {
         "ServiceRate": round(service_rate, 6),
         "ActiveRoutes": int(mode_entry.get("routes_created", 0) or 0),
@@ -2532,7 +2559,7 @@ def _compute_mode_paper_metrics(mode_entry, constraints_cfg):
         "RideRatioStd": round(ride_ratio_std, 6) if ride_ratio_std is not None else None,
         "WelfareViolationRate": round(welfare_violation_rate, 6) if welfare_violation_rate is not None else None,
         "RideRatioMax": round(max(ratios), 6) if ratios else None,
-        "MeanWalkDist": float((mode_entry.get("walk_stats") or {}).get("avg_walk_dist_m", 0) or 0),
+        "MeanWalkDist": float(mean_walk),
         "CrossingTierShare": mode_entry.get("crossing_tier_share_by_stage", {}),
         "SyntheticCrossingsUsed": int(mode_entry.get("synthetic_crossings_used", 0) or 0),
     }
@@ -2693,6 +2720,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                     students_list.append({
                         "id": student.id,
                         "stage": stage_name,
+                        "physically_mentally_disabled": _is_student_disabled(student),
                         "route_id": route.route_id,
                         "pickup_order": pickup_order,
                         "ride_time_min": round(ride_time, 2) if ride_time is not None else None,
@@ -2752,6 +2780,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             unserved_students.append({
                 "id": student.id,
                 "stage": stage_name,
+                "physically_mentally_disabled": _is_student_disabled(student),
                 "route_id": None,
                 "pickup_order": None,
                 "ride_time_min": None,
@@ -2947,6 +2976,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                 k: v for k, v in meta.get("stage_distribution", {}).items()
                 if k != "_comment"
             },
+            "disabled_percentage": meta.get("disabled_percentage", 0.0),
             "constraints": {
                 "enabled": meta.get("constraints", {}).get("enabled", True),
                 "ride_time_multiplier": meta.get("constraints", {}).get("ride_time_multiplier"),
@@ -3825,11 +3855,11 @@ def run(input_path=None, output_path=None, iterations=None):
         json.dump(_sanitise_floats(metrics), f, indent=2, ensure_ascii=False)
     print(f"  Metrics  : {metrics_path}")
 
-    # Keep a repository-level ledger of paper metrics across runs.
+    # Keep a run-local ledger of paper metrics alongside output artifacts.
     try:
         from experiments.evaluation_json_builder import append_from_output
 
-        evaluation_path = os.path.join(_ROOT, "evaluation.json")
+        evaluation_path = os.path.join(os.path.dirname(metrics_path), "evaluation.json")
         eval_summary = append_from_output(metrics_path, evaluation_path)
         print(f"  Evaluation: {eval_summary.get('evaluation_json')}")
     except Exception as e:

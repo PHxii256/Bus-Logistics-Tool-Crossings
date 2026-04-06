@@ -20,7 +20,8 @@ def calc_max_walk_distance(school_stage):
 
 class Student:  
     def __init__(self, id, lat, lon, age, school_stage, fee,
-                 assignment="permanent", valid_from=None, valid_until=None):
+                 assignment="permanent", valid_from=None, valid_until=None,
+                 physically_mentally_disabled=False):
         self.id = id
         self.coords = (lat, lon)          # home location
         self.age = age
@@ -35,6 +36,8 @@ class Student:
         # Date range for temporary assignments (ISO strings or None)
         self.valid_from = valid_from
         self.valid_until = valid_until
+        # Additional accessibility flag used by stage-specific crossing policies.
+        self.physically_mentally_disabled = bool(physically_mentally_disabled)
         # Cached direct travel time (minutes) from home node to school node
         # Computed once during precompute phase; used for per-student Tmax constraint
         self.direct_time_to_school   = None  # home → school  (morning)

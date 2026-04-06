@@ -485,6 +485,8 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
                 500,
                 s.walk_radius,
                 walk_graph=walk_g,
+                student_stage=getattr(s, "school_stage", None),
+                student_disabled=bool(getattr(s, "physically_mentally_disabled", False)),
             )
             for safe_node_id, _ in safe_nodes[:max_candidates]:
                 critical_nodes.add(safe_node_id)

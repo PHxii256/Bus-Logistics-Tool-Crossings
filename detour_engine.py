@@ -58,6 +58,18 @@ _STUDENT_NODE_CACHE = {}
 
 _MAJOR_HIGHWAYS = {"motorway", "trunk", "primary", "secondary"}
 
+_DEFAULT_STAGE_CROSSING_POLICY = {
+    "HIGH": {"secondary", "tertiary"},
+    "MIDDLE": {"tertiary"},
+    "ELEMENTARY": set(),
+    "KG": set(),
+    "DISABLED": set(),
+    "UNKNOWN": set(),
+}
+_SYNTHETIC_STAGE_CROSSING_POLICY = {
+    key: set(values) for key, values in _DEFAULT_STAGE_CROSSING_POLICY.items()
+}
+
 
 def _is_valid_coordinate(value):
     """Check if coordinate is valid (not None and not NaN)."""
@@ -79,6 +91,74 @@ def _normalize_highway(hw):
         hw = hw[0] if hw else ""
     hw = str(hw or "").lower()
     return hw[:-5] if hw.endswith("_link") else hw
+
+
+def _normalize_crossing_road_class(value):
+    """Normalize a crossing road class token (e.g. secondary_link -> secondary)."""
+    return _normalize_highway(value)
+
+
+def _normalize_stage_crossing_policy(raw_policy):
+    """Return canonical stage->allowed crossing classes mapping."""
+    policy = {key: set(values) for key, values in _DEFAULT_STAGE_CROSSING_POLICY.items()}
+    if not isinstance(raw_policy, dict):
+        return policy
+
+    for raw_key, raw_classes in raw_policy.items():
+        key = str(raw_key or "").strip().upper()
+        if "DISABLED" in key:
+            key = "DISABLED"
+        if key not in policy:
+            continue
+
+        if raw_classes is None:
+            policy[key] = set()
+            continue
+        if not isinstance(raw_classes, (list, tuple, set)):
+            continue
+
+        normalized = set()
+        for cls in raw_classes:
+            token = _normalize_crossing_road_class(cls)
+            if token:
+                normalized.add(token)
+        policy[key] = normalized
+    return policy
+
+
+def _resolve_stage_crossing_policy_key(student_stage, student_disabled=False):
+    """Map student attributes to crossing policy key."""
+    if bool(student_disabled):
+        return "DISABLED"
+    if hasattr(student_stage, "name"):
+        stage_key = str(student_stage.name).strip().upper()
+    else:
+        stage_key = str(student_stage or "").strip().upper()
+    if stage_key in _SYNTHETIC_STAGE_CROSSING_POLICY:
+        return stage_key
+    return "UNKNOWN"
+
+
+def _allowed_synthetic_crossing_classes(student_stage, student_disabled=False):
+    """Return allowed crossing road classes for the given student."""
+    policy_key = _resolve_stage_crossing_policy_key(student_stage, student_disabled)
+    return _SYNTHETIC_STAGE_CROSSING_POLICY.get(policy_key, set())
+
+
+def _edge_allows_student_crossing(edge_data, student_stage, student_disabled=False):
+    """Return whether a synthetic crossing edge is allowed for this student."""
+    if not bool(edge_data.get("synthetic_crossing", False)):
+        return True
+
+    allowed_classes = _allowed_synthetic_crossing_classes(student_stage, student_disabled)
+    if not allowed_classes:
+        return False
+
+    road_class = _normalize_crossing_road_class(edge_data.get("road_class"))
+    if not road_class:
+        # Unknown synthetic crossing class: default deny for safety.
+        return False
+    return road_class in allowed_classes
 
 
 def _normalize_road_name(name):
@@ -1442,6 +1522,7 @@ def set_walk_graph(walk_graph, synthetic_cfg=None, drive_graph=None):
     global _DRIVE_NODE_FILTERED_SIG_CACHE
     global _SYNTHETIC_DIAGNOSTICS
     global _SYNTHETIC_REJECTED_UNSAFE
+    global _SYNTHETIC_STAGE_CROSSING_POLICY
     _WALK_GRAPH = walk_graph
     _WALK_DIST_CACHE.clear()
     _WALK_NODE_MAP_CACHE.clear()
@@ -1478,6 +1559,11 @@ def set_walk_graph(walk_graph, synthetic_cfg=None, drive_graph=None):
     }
     cfg = synthetic_cfg or {}
     _SYNTHETIC_CFG = dict(cfg)
+    stage_policy_cfg = (
+        cfg.get("allowed_crossing_road_classes_by_stage")
+        or cfg.get("stage_based_crossing_policy")
+    )
+    _SYNTHETIC_STAGE_CROSSING_POLICY = _normalize_stage_crossing_policy(stage_policy_cfg)
     strategy = str(cfg.get('strategy', 'per_drive_node')).lower()
 
     if _WALK_GRAPH is not None and cfg.get("enabled") and strategy == 'drive_node_crossings':
@@ -2279,7 +2365,8 @@ def _candidate_points(graph, node) -> int:
 _safe_nodes_cache = {}
 
 def find_safe_nodes_within_radius(coords, graph, radius_meters, walk_distance_limit,
-                                   candidate_cfg=None, walk_graph=None):
+                                   candidate_cfg=None, walk_graph=None,
+                                   student_stage=None, student_disabled=False):
     """Find all nodes reachable by walking within *walk_distance_limit* metres.
 
     Walking semantics
@@ -2323,7 +2410,8 @@ def find_safe_nodes_within_radius(coords, graph, radius_meters, walk_distance_li
     lat, lon = coords
     # Include walk_graph identity in cache key to avoid stale results
     walk_graph_id = id(walk_graph) if walk_graph is not None else 0
-    cache_key = (lat, lon, walk_distance_limit, walk_graph_id)
+    stage_key = _resolve_stage_crossing_policy_key(student_stage, student_disabled)
+    cache_key = (lat, lon, walk_distance_limit, walk_graph_id, stage_key, bool(student_disabled))
     if cache_key in _safe_nodes_cache:
         all_reachable = _safe_nodes_cache[cache_key]
         # Apply scoring/truncation on the cached full result if config given
@@ -2336,7 +2424,12 @@ def find_safe_nodes_within_radius(coords, graph, radius_meters, walk_distance_li
     # If walk_graph provided, do BFS on walk graph and map results to drive nodes
     if walk_graph is not None:
         safe_nodes = _bfs_walk_graph_to_drive_nodes(
-            coords, graph, walk_graph, walk_distance_limit
+            coords,
+            graph,
+            walk_graph,
+            walk_distance_limit,
+            student_stage=student_stage,
+            student_disabled=student_disabled,
         )
     else:
         # Legacy mode: BFS directly on drive graph
@@ -2399,7 +2492,14 @@ def _bfs_on_drive_graph(coords, graph, walk_distance_limit):
     return safe_nodes
 
 
-def _bfs_walk_graph_to_drive_nodes(coords, drive_graph, walk_graph, walk_distance_limit):
+def _bfs_walk_graph_to_drive_nodes(
+    coords,
+    drive_graph,
+    walk_graph,
+    walk_distance_limit,
+    student_stage=None,
+    student_disabled=False,
+):
     """BFS on walk graph, mapping reachable walk nodes to drive nodes.
 
     This enables students to use synthetic crossings (on walk graph) to reach
@@ -2487,14 +2587,38 @@ def _bfs_walk_graph_to_drive_nodes(coords, drive_graph, walk_graph, walk_distanc
                 else:
                     drive_node_without_crossing.add(drive_node)
 
-        # Helper to check if edge is synthetic crossing
-        def _is_synthetic_edge(edge_data_dict):
+        def _iter_edge_variants(edge_data_dict):
+            if isinstance(edge_data_dict, dict) and 'length' in edge_data_dict:
+                yield edge_data_dict
+                return
             if isinstance(edge_data_dict, dict):
-                return edge_data_dict.get('synthetic_crossing', False)
-            for key, data in edge_data_dict.items():
-                if data.get('synthetic_crossing', False):
-                    return True
-            return False
+                for data in edge_data_dict.values():
+                    if isinstance(data, dict):
+                        yield data
+
+        def _edge_traversal_info(edge_data_dict):
+            """Return (is_traversable, edge_length, crossed_synthetic)."""
+            best_length = float('inf')
+            crossed_synthetic = False
+            found = False
+            for data in _iter_edge_variants(edge_data_dict):
+                if not data.get('is_safe_to_cross', True):
+                    continue
+                if not _edge_allows_student_crossing(
+                    data,
+                    student_stage=student_stage,
+                    student_disabled=student_disabled,
+                ):
+                    continue
+                edge_length = float(data.get('length', 0.0) or 0.0)
+                is_crossing = bool(data.get('synthetic_crossing', False))
+                if edge_length < best_length:
+                    best_length = edge_length
+                    crossed_synthetic = is_crossing
+                found = True
+            if not found:
+                return False, float('inf'), False
+            return True, best_length, crossed_synthetic
 
         # Walk along edges (bidirectional for pedestrians)
         # Handle both directed and undirected graphs
@@ -2502,18 +2626,7 @@ def _bfs_walk_graph_to_drive_nodes(coords, drive_graph, walk_graph, walk_distanc
         neighbors_iter = walk_graph.successors(current_walk_node) if is_directed else walk_graph.neighbors(current_walk_node)
         for neighbor in neighbors_iter:
             edge_data = walk_graph[current_walk_node][neighbor]
-            is_safe = False
-            edge_length = float('inf')
-            is_crossing_edge = _is_synthetic_edge(edge_data)
-
-            if isinstance(edge_data, dict) and 'length' in edge_data:
-                is_safe = edge_data.get('is_safe_to_cross', True)
-                edge_length = edge_data.get('length', 0)
-            else:
-                for key, data in edge_data.items():
-                    if data.get('is_safe_to_cross', True):
-                        is_safe = True
-                        edge_length = min(edge_length, data.get('length', 0))
+            is_safe, edge_length, is_crossing_edge = _edge_traversal_info(edge_data)
             if is_safe:
                 new_dist = dist_so_far + edge_length
                 if new_dist <= walk_distance_limit:
@@ -2524,18 +2637,7 @@ def _bfs_walk_graph_to_drive_nodes(coords, drive_graph, walk_graph, walk_distanc
         if is_directed:
             for predecessor in walk_graph.predecessors(current_walk_node):
                 edge_data = walk_graph[predecessor][current_walk_node]
-                is_safe = False
-                edge_length = float('inf')
-                is_crossing_edge = _is_synthetic_edge(edge_data)
-
-                if isinstance(edge_data, dict) and 'length' in edge_data:
-                    is_safe = edge_data.get('is_safe_to_cross', True)
-                    edge_length = edge_data.get('length', 0)
-                else:
-                    for key, data in edge_data.items():
-                        if data.get('is_safe_to_cross', True):
-                            is_safe = True
-                            edge_length = min(edge_length, data.get('length', 0))
+                is_safe, edge_length, is_crossing_edge = _edge_traversal_info(edge_data)
                 if is_safe:
                     new_dist = dist_so_far + edge_length
                     if new_dist <= walk_distance_limit:
@@ -3041,7 +3143,13 @@ def calculate_afternoon_ride_time_potential(route, new_stop, insert_position, gr
             # Check 2: Path from student to stop is safe (details in find_safe_nodes_within_radius)
             walk_g = _get_walk_graph(graph)  # Use walk graph with crossings if available
             safe_nodes = find_safe_nodes_within_radius(
-                student.coords, graph, 500, student.walk_radius, walk_graph=walk_g
+                student.coords,
+                graph,
+                500,
+                student.walk_radius,
+                walk_graph=walk_g,
+                student_stage=getattr(student, "school_stage", None),
+                student_disabled=bool(getattr(student, "physically_mentally_disabled", False)),
             )
             safe_node_ids = [n[0] for n in safe_nodes]
             
@@ -3492,7 +3600,15 @@ def cheapest_insertion(new_student, existing_routes, graph, detour_type='tempora
     # 2. Find other candidate nodes within walking distance (only if walk_limit > 0)
     if walk_limit > 0:
         walk_g = _get_walk_graph(graph)  # Use walk graph with crossings if available
-        safe_nodes = find_safe_nodes_within_radius(new_student.coords, graph, 500, walk_limit, walk_graph=walk_g)
+        safe_nodes = find_safe_nodes_within_radius(
+            new_student.coords,
+            graph,
+            500,
+            walk_limit,
+            walk_graph=walk_g,
+            student_stage=getattr(new_student, "school_stage", None),
+            student_disabled=bool(getattr(new_student, "physically_mentally_disabled", False)),
+        )
         for node_id, dist in sorted(safe_nodes, key=lambda x: x[1]):
             if node_id not in candidate_node_ids:
                 candidate_node_ids.append(node_id)

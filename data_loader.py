@@ -63,7 +63,8 @@ def _create_students(student_data_list):
             fee=data.get('fee', 100.0),
             assignment=data.get('assignment', 'permanent'),
             valid_from=data.get('valid_from'),
-            valid_until=data.get('valid_until')
+            valid_until=data.get('valid_until'),
+            physically_mentally_disabled=data.get('physically_mentally_disabled', False),
         )
         if 'walk_radius_override' in data:
             student.walk_radius = data['walk_radius_override']
@@ -267,7 +268,8 @@ def _reconstruct_routes(routes_json, buses_dict, G):
                     fee=s_data.get('fee', 0),
                     assignment=s_data.get('assignment', 'permanent'),
                     valid_from=s_data.get('valid_from'),
-                    valid_until=s_data.get('valid_until')
+                    valid_until=s_data.get('valid_until'),
+                    physically_mentally_disabled=s_data.get('physically_mentally_disabled', False),
                 )
                 stop.add_student(student)
                 all_students.append(student)
@@ -344,6 +346,7 @@ def serialize_routes(routes, buses, school_coords, unserved_students=None, graph
                     "home_latitude": s.coords[0],
                     "home_longitude": s.coords[1],
                     "school_stage": s.school_stage.name,
+                    "physically_mentally_disabled": bool(getattr(s, 'physically_mentally_disabled', False)),
                     "age": s.age,
                     "fee": s.fee,
                     "assignment": s.assignment,
@@ -385,6 +388,7 @@ def serialize_routes(routes, buses, school_coords, unserved_students=None, graph
                 "home_latitude": s.coords[0],
                 "home_longitude": s.coords[1],
                 "school_stage": s.school_stage.name,
+                "physically_mentally_disabled": bool(getattr(s, 'physically_mentally_disabled', False)),
                 "age": s.age,
                 "fee": s.fee,
                 "reason": s.failure_reason or "No valid insertion found"

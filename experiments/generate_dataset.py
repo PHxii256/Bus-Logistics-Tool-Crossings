@@ -224,6 +224,7 @@ def generate_dataset(
     bus_capacity: int = 60,
     constraints: Optional[dict] = None,
     iterations: int = 200,
+    disabled_percentage: float = 0.0,
     G: Optional[nx.MultiDiGraph] = None,
 ) -> dict:
     """Generate a synthetic student dataset as a dict (same format as experiment JSONs).
@@ -244,6 +245,7 @@ def generate_dataset(
     bus_capacity : int
     constraints : dict – ride_time_multiplier, floor_minutes, ceiling_minutes, etc.
     iterations : int – ALNS iterations (stored in meta)
+    disabled_percentage : float – percent of students flagged physically/mentally disabled
     G : networkx.Graph – optional pre-built graph (avoids re-download)
 
     Returns
@@ -267,9 +269,13 @@ def generate_dataset(
     sigma_km = annulus.get("sigma_km", 1.0)
     min_km   = annulus.get("min_km",   0.4)
     max_km_config   = annulus.get("max_km",   5.0)
+    disabled_pct = max(0.0, min(100.0, float(disabled_percentage or 0.0)))
+    disabled_count = int(round((n_students * disabled_pct) / 100.0))
+    disabled_student_idx = set(random.sample(range(n_students), disabled_count)) if disabled_count > 0 else set()
 
     center_lat, center_lon = school["latitude"], school["longitude"]
     print(f"Generating {n_students} students around {school.get('name', 'School')}...")
+    print(f"  Accessibility profile: {disabled_count}/{n_students} physically/mentally disabled ({disabled_pct:.2f}%)")
 
     boundary_mode = str(graph_boundary_mode or "bbox").strip().lower()
     boundary_points = None
@@ -513,6 +519,7 @@ def generate_dataset(
                 "longitude": s_lon,
                 "age": age,
                 "school_stage": stage,
+                "physically_mentally_disabled": i in disabled_student_idx,
                 "fee": 100.0,
             })
             break
@@ -530,6 +537,8 @@ def generate_dataset(
             "mode": "generate_routes",
             "city": "Cairo",
             "description": f"Synthetic dataset - {n_students} students, seed {seed}",
+            "disabled_percentage": disabled_pct,
+            "disabled_students": disabled_count,
             "constraints": constraints,
             "algorithm": {"method": "alns", "iterations": iterations},
         },
@@ -555,6 +564,7 @@ def main():
     parser.add_argument('--sigma_km', type=float, default=1.0)
     parser.add_argument('--min_km', type=float, default=0.4)
     parser.add_argument('--max_km', type=float, default=5.0)
+    parser.add_argument('--disabled_percentage', type=float, default=0.0)
     args = parser.parse_args()
 
     data = generate_dataset(
@@ -562,6 +572,7 @@ def main():
         seed=args.seed,
         annulus={"peak_km": args.peak_km, "sigma_km": args.sigma_km,
                  "min_km": args.min_km, "max_km": args.max_km},
+        disabled_percentage=args.disabled_percentage,
     )
 
     with open(args.output, 'w') as f:

@@ -5,6 +5,7 @@
     "latitude": 29.964406,
     "longitude": 31.270319
   },
+
   "n_students": 200,
   "seed": 2000,
   "stage_distribution": {
@@ -13,16 +14,20 @@
     "MIDDLE": 0.25,
     "HIGH": 0.25
   },
+
+  "disabled_percentage": 12.5,
   "stage_walk_limits": {
     "KG": 0,
     "ELEMENTARY": 0,
     "MIDDLE": 250,
     "HIGH": 500
   },
+
   "buses": {
     "count": 9,
     "capacity": 28
   },
+
   "graph": {
     "bbox": [
       29.753694770217,
@@ -37,6 +42,7 @@
       "enabled": true
     }
   },
+
   "constraints": {
     "enabled": true,
     "ride_time_multiplier": 2,
@@ -45,9 +51,10 @@
     "daily_detour_budget_minutes": 10,
     "bidirectional_check": true,
     "mrt_enabled": true,
-    "mrt": 90,
+    "mrt": 60,
     "acceptable_offset_minutes": 30
   },
+
   "walk_graph": {
     "enabled": true,
     "coverage_mode": "bbox_strict",
@@ -57,9 +64,17 @@
       "enabled": true
     }
   },
+
   "synthetic_crossings": {
     "enabled": true,
     "strategy": "drive_node_crossings",
+    "allowed_crossing_road_classes_by_stage": {
+      "HIGH": ["secondary", "tertiary"],
+      "MIDDLE": ["tertiary"],
+      "ELEMENTARY": [],
+      "KG": [],
+      "DISABLED": []
+    },
     "min_dist_m": 0.0,
     "max_dist_m": 60.0,
     "min_opposite_bearing_deg": 70.0,
@@ -78,15 +93,18 @@
       "enabled": true
     }
   },
+
   "crossings_injection": {
     "enabled": true,
     "pkl_path": "cache/crossings_3eab1f2e_0403-2023.pkl",
     "strict_validation": false
   },
+
   "distance_matrix_cache": {
     "enabled": false,
     "pkl_path": ""
   },
+
   "algorithm": {
     "iterations": 5000,
     "time_budget_seconds": 720,
@@ -103,6 +121,7 @@
     "fleet_search_followup_k_budget_scale": 0.6,
     "fleet_search_max_per_k_seconds": 60
   },
+
   "annulus": {
     "peak_km": 5.0,
     "sigma_km": 10.0,
@@ -118,6 +137,7 @@
     "max_attempts_per_student": 12000,
     "attempts_log_every": 25000
   },
+
   "output": "comparison_map.html",
   "debug": {
     "run_mode_a": false,
