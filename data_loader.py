@@ -123,7 +123,6 @@ def load_mode1_input(data, G):
     except (TypeError, ValueError):
         mrt_minutes = None
     caps_enabled         = constraints.get('enabled',              True)
-    soft_ride_caps       = constraints.get('soft_ride_caps',       False)
     # Legacy flat cap — kept as fallback (= ceiling)
     route_tmax = constraints.get('route_tmax', ceiling_minutes)
     if mrt_enabled and mrt_minutes is not None and mrt_minutes > 0:
@@ -151,9 +150,8 @@ def load_mode1_input(data, G):
             mrt_minutes=mrt_minutes,
             acceptable_offset_minutes=acceptable_offset_minutes,
         )
-        # Flags used by validate_permanent_student for hard/soft cap behavior
+        # Flag used by validate_permanent_student for cap enforcement behavior
         route.ride_caps_enabled = caps_enabled
-        route.soft_ride_caps    = soft_ride_caps
         
         node_lat = school_node_lat
         node_lon = school_node_lon

@@ -3262,10 +3262,9 @@ def validate_permanent_student(new_stop, route, insert_position, delta_time_minu
     base_mrt = mrt_minutes if (mrt_enabled and mrt_minutes is not None and mrt_minutes > 0) else floor_min
 
     caps_enabled = getattr(route, 'ride_caps_enabled', True)
-    soft_caps    = getattr(route, 'soft_ride_caps', False)
 
-    if soft_caps or not caps_enabled:
-        # Skip all ride-time checks; caps are soft or disabled.
+    if not caps_enabled:
+        # Skip all ride-time checks when caps are disabled.
         new_student_ride_time = calculate_student_ride_time_potential(
             route, new_stop, insert_position, graph
         )

@@ -1483,8 +1483,7 @@ def _count_cap_violations(sol, G, constraints):
             "pm": None, "pm_checked": None, "pm_pct": None,
         }
     enabled = bool(constraints.get("enabled", True))
-    soft = bool(constraints.get("soft_ride_caps", False))
-    if not enabled and not soft:
+    if not enabled:
         return {
             "am": None, "am_checked": None, "am_pct": None,
             "pm": None, "pm_checked": None, "pm_pct": None,
@@ -2342,6 +2341,171 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
 # ────────────────────────────────────────────────────────────────────
 _WALK_SPEED_M_PER_MIN = 80.0  # comfortable pedestrian (≈ 4.8 km/h)
 
+_CROSSING_TIER_RANK = {
+    "none": 0,
+    "tertiary": 1,
+    "secondary": 2,
+    "primary_plus": 3,
+    "unknown": 4,
+}
+
+
+def _get_synthetic_edge_attrs(walk_graph, u, v):
+    """Return attrs for a synthetic crossing edge (u, v), if present."""
+    if walk_graph is None:
+        return {}
+
+    edge_data = walk_graph.get_edge_data(u, v)
+    if edge_data is None:
+        edge_data = walk_graph.get_edge_data(v, u)
+    if edge_data is None:
+        return {}
+
+    if isinstance(edge_data, dict) and "synthetic_crossing" in edge_data:
+        return edge_data if edge_data.get("synthetic_crossing", False) else {}
+
+    if isinstance(edge_data, dict):
+        for _, data in edge_data.items():
+            if data.get("synthetic_crossing", False):
+                return data
+
+    return {}
+
+
+def _road_class_to_tier(road_class):
+    """Map OSM road class to paper crossing tier labels."""
+    hw = str(road_class or "").strip().lower()
+    if not hw:
+        return "unknown"
+    if hw.endswith("_link"):
+        hw = hw[:-5]
+    if hw == "tertiary":
+        return "tertiary"
+    if hw == "secondary":
+        return "secondary"
+    if hw in {"primary", "trunk", "motorway"}:
+        return "primary_plus"
+    return "unknown"
+
+
+def _pick_student_crossing_tier(tiers):
+    """Pick a single representative tier for a student (highest risk tier wins)."""
+    if not tiers:
+        return "none"
+    return max(tiers, key=lambda t: _CROSSING_TIER_RANK.get(t, -1))
+
+
+def _build_crossing_tier_share(students_list):
+    """Build crossing tier shares overall and per stage."""
+    tiers = ["none", "tertiary", "secondary", "primary_plus", "unknown"]
+    stage_stats = {}
+    overall_counts = {k: 0 for k in tiers}
+
+    for rec in students_list:
+        stage = str(rec.get("stage", "UNKNOWN"))
+        tier = str(rec.get("crossing_tier", "none"))
+        if tier not in overall_counts:
+            tier = "unknown"
+
+        st = stage_stats.setdefault(stage, {"served": 0, "counts": {k: 0 for k in tiers}})
+        st["served"] += 1
+        st["counts"][tier] += 1
+        overall_counts[tier] += 1
+
+    out_stage = {}
+    for stage, st in stage_stats.items():
+        served = max(1, int(st["served"]))
+        out_stage[stage] = {
+            "served": int(st["served"]),
+            "counts": dict(st["counts"]),
+            "share": {k: round(st["counts"][k] / served, 4) for k in tiers},
+        }
+
+    total_served = max(1, len(students_list))
+    out_overall = {
+        "served": len(students_list),
+        "counts": dict(overall_counts),
+        "share": {k: round(overall_counts[k] / total_served, 4) for k in tiers},
+    }
+    return out_stage, out_overall
+
+
+def _compute_mode_paper_metrics(mode_entry, constraints_cfg):
+    """Compute paper metric bundle from one mode entry."""
+    served = int(mode_entry.get("students_served", 0) or 0)
+    unserved = int(mode_entry.get("students_unserved", 0) or 0)
+    total = served + unserved
+    service_rate = (served / total) if total > 0 else 0.0
+
+    routes = mode_entry.get("routes") or []
+    bus_capacity = mode_entry.get("bus_capacity")
+    fleet_util = None
+    if routes and bus_capacity:
+        try:
+            cap = float(bus_capacity)
+            if cap > 0:
+                fleet_util = sum(float(r.get("students_count", 0)) / cap for r in routes) / len(routes)
+        except (TypeError, ValueError):
+            fleet_util = None
+
+    ratios = []
+    welfare_checked = 0
+    welfare_violations = 0
+
+    floor_min = float((constraints_cfg or {}).get("floor_minutes", 45) or 45)
+    tau_add = float((constraints_cfg or {}).get("acceptable_offset_minutes", (constraints_cfg or {}).get("ceiling_minutes", 30)) or 30)
+    mrt_enabled = bool((constraints_cfg or {}).get("mrt_enabled", (constraints_cfg or {}).get("mrt enabled", False)))
+    mrt_raw = (constraints_cfg or {}).get("mrt", None)
+    try:
+        mrt_minutes = float(mrt_raw) if mrt_raw is not None else None
+    except (TypeError, ValueError):
+        mrt_minutes = None
+
+    for s in mode_entry.get("students", []) or []:
+        ride = s.get("ride_time_min")
+        direct = s.get("direct_potential_min")
+        if ride is None or direct is None:
+            continue
+        try:
+            ride = float(ride)
+            direct = float(direct)
+        except (TypeError, ValueError):
+            continue
+        if direct <= 0:
+            continue
+
+        ratios.append(ride / direct)
+        welfare_checked += 1
+        if mrt_enabled and mrt_minutes is not None and mrt_minutes > 0:
+            cap = mrt_minutes
+        else:
+            cap = max(floor_min, direct + tau_add)
+        if ride > cap:
+            welfare_violations += 1
+
+    ride_ratio_mean = (sum(ratios) / len(ratios)) if ratios else None
+    ride_ratio_std = None
+    if ratios:
+        mu = ride_ratio_mean
+        ride_ratio_std = (sum((x - mu) ** 2 for x in ratios) / len(ratios)) ** 0.5
+
+    welfare_violation_rate = (welfare_violations / welfare_checked) if welfare_checked > 0 else None
+
+    return {
+        "ServiceRate": round(service_rate, 6),
+        "ActiveRoutes": int(mode_entry.get("routes_created", 0) or 0),
+        "TotalRouteTime": float(mode_entry.get("total_route_time_min", 0) or 0),
+        "AvgRouteTime": float(mode_entry.get("avg_route_time_min", 0) or 0),
+        "FleetUtilization": round(fleet_util, 6) if fleet_util is not None else None,
+        "RideRatioMean": round(ride_ratio_mean, 6) if ride_ratio_mean is not None else None,
+        "RideRatioStd": round(ride_ratio_std, 6) if ride_ratio_std is not None else None,
+        "WelfareViolationRate": round(welfare_violation_rate, 6) if welfare_violation_rate is not None else None,
+        "RideRatioMax": round(max(ratios), 6) if ratios else None,
+        "MeanWalkDist": float((mode_entry.get("walk_stats") or {}).get("avg_walk_dist_m", 0) or 0),
+        "CrossingTierShare": mode_entry.get("crossing_tier_share_by_stage", {}),
+        "SyntheticCrossingsUsed": int(mode_entry.get("synthetic_crossings_used", 0) or 0),
+    }
+
 
 def _compute_walk_stats(sol, G, stage_walk):
     """Return walk-distance statistics for one solution.
@@ -2384,7 +2548,8 @@ def _compute_walk_stats(sol, G, stage_walk):
 
 def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                    sol_a, sol_b, sol_c, G_unc, iters, total_wall=None,
-                   step_times=None, mode_wall_times=None):
+                   step_times=None, mode_wall_times=None,
+                   crossing_usage_by_mode=None, walk_graph=None):
     """Assemble the full metrics dict that will be written to metrics.json."""
     matrix_cache_cfg = (
         meta.get("distance_matrix_cache")
@@ -2415,6 +2580,19 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         sw = stage_walk if mode_key != "door_to_door" else {k: 0 for k in stage_walk}
         walk = _compute_walk_stats(sol, G_unc, sw)
         
+        # Build synthetic-crossing usage map for this mode.
+        mode_crossing_usage = (crossing_usage_by_mode or {}).get(mk, {}) or {}
+        student_crossing_tiers = {}
+        for edge_key, usage_data in mode_crossing_usage.items():
+            if not isinstance(edge_key, (list, tuple)) or len(edge_key) != 2:
+                continue
+            u, v = edge_key
+            edge_attrs = _get_synthetic_edge_attrs(walk_graph, u, v)
+            tier = _road_class_to_tier(edge_attrs.get("road_class"))
+            for sid in (usage_data or {}).get("students", []) or []:
+                sid = str(sid)
+                student_crossing_tiers.setdefault(sid, set()).add(tier)
+
         # Build student list with ride time, direct potential, walk distance
         students_list = []
         for route in sol.routes:
@@ -2481,6 +2659,9 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
 
                     # Walk distance home -> assigned stop
                     walk_dist, _ = _student_walk_distance_m(G_unc, student.coords, stop)
+                    sid = str(student.id)
+                    tiers_for_student = student_crossing_tiers.get(sid, set())
+                    primary_tier = _pick_student_crossing_tier(tiers_for_student)
 
                     students_list.append({
                         "id": student.id,
@@ -2492,6 +2673,8 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                         "direct_potential_min": round(direct_time, 2) if direct_time is not None else None,
                         "direct_distance_km": direct_distance_km,
                         "walk_distance_m": round(walk_dist, 1),
+                        "used_synthetic_crossing": bool(tiers_for_student),
+                        "crossing_tier": primary_tier,
                     })
         
         # Calculate aggregate ride time statistics from students
@@ -2534,6 +2717,8 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                 "direct_potential_min": None,
                 "direct_distance_km": None,
                 "walk_distance_m": None,
+                "used_synthetic_crossing": False,
+                "crossing_tier": "none",
                 "walk_limit_m": float(stage_walk.get(stage_name, 0)),
                 "rejection_reason": rejection_reason,
             })
@@ -2552,10 +2737,14 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         if mode_wall_s is None:
             mode_wall_s = s.get("mode_wall_time")
 
+        crossing_students_used = sum(1 for rec in students_list if rec.get("used_synthetic_crossing"))
+        crossing_tier_share_by_stage, crossing_tier_share_overall = _build_crossing_tier_share(students_list)
+
         mode_entry = {
             "routes_created":       n_routes,
             "students_served":      s["served"],
             "students_unserved":    s["total"] - s["served"],
+            "service_rate_pct":     round((s["served"] / max(1, s["total"])) * 100.0, 2),
             "total_route_time_min": round(s["total_time"], 2),
             "base_route_time_min": round(s.get("base_total_time", s["total_time"]), 2),
             "total_dwell_time_min": round(s.get("total_dwell_time_min", 0.0), 2),
@@ -2567,6 +2756,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "objective_value":      objective_final,
             "alns_runtime_seconds": round(s["runtime"],     2),
             "mode_wall_time_seconds": round(mode_wall_s, 2) if mode_wall_s is not None else None,
+            "executed_iterations": int((s.get("operator_performance") or {}).get("executed_iterations") or 0),
             "operator_performance": s.get("operator_performance"),
             "alns_diagnostics": s.get("alns_diagnostics"),
             "insertion_debug": s.get("insertion_debug"),
@@ -2580,6 +2770,10 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "buses_available":       buses_available,
             "bus_capacity":          bus_capacity,
             "buses_used":            buses_used,
+            "synthetic_crossings_used": len(mode_crossing_usage),
+            "students_using_synthetic_crossings": crossing_students_used,
+            "crossing_tier_share_by_stage": crossing_tier_share_by_stage,
+            "crossing_tier_share_overall": crossing_tier_share_overall,
             "ride_cap_violations_am": s.get("cap_violations_am"),
             "ride_cap_checked_am":    s.get("cap_checked_am"),
             "ride_cap_violation_pct_am": s.get("cap_violation_pct_am"),
@@ -2587,6 +2781,11 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "ride_cap_checked_pm":    s.get("cap_checked_pm"),
             "ride_cap_violation_pct_pm": s.get("cap_violation_pct_pm"),
         }
+
+        mode_entry["paper_metrics"] = _compute_mode_paper_metrics(
+            mode_entry,
+            (meta or {}).get("constraints", {}),
+        )
 
         # Calculate total walking time across all students
         if walk and "avg_walk_time_min" in walk:
@@ -2691,7 +2890,6 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "minimize_buses":   meta.get("algorithm", {}).get("minimize_buses", False),
             "force_fleet_size": meta.get("algorithm", {}).get("force_fleet_size"),
             "constraints_enabled": meta.get("constraints", {}).get("enabled", True),
-            "soft_ride_caps": meta.get("constraints", {}).get("soft_ride_caps", False),
             "time_budget_seconds": meta.get("algorithm", {}).get("time_budget_seconds"),
             "max_candidates_per_student": meta.get("algorithm", {}).get("max_candidates_per_student"),
             "merge_tail_iterations": meta.get("algorithm", {}).get("merge_tail_iterations", 30),
@@ -2709,10 +2907,10 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             },
             "constraints": {
                 "enabled": meta.get("constraints", {}).get("enabled", True),
-                "soft_ride_caps": meta.get("constraints", {}).get("soft_ride_caps", False),
                 "ride_time_multiplier": meta.get("constraints", {}).get("ride_time_multiplier"),
                 "floor_minutes": meta.get("constraints", {}).get("floor_minutes"),
                 "ceiling_minutes": meta.get("constraints", {}).get("ceiling_minutes"),
+                "acceptable_offset_minutes": meta.get("constraints", {}).get("acceptable_offset_minutes"),
                 "bidirectional_check": meta.get("constraints", {}).get("bidirectional_check"),
                 "mrt_enabled": meta.get("constraints", {}).get("mrt_enabled", meta.get("constraints", {}).get("mrt enabled", False)),
                 "mrt": meta.get("constraints", {}).get("mrt"),
@@ -3075,6 +3273,7 @@ def run(input_path=None, output_path=None, iterations=None):
     # safety constraint.
     _saved_walk_graph = _eng._WALK_GRAPH
     _ride_caps_on = meta.get("constraints", {}).get("enabled", True)
+    crossing_usage_by_mode = {"A": {}, "B": {}, "C": {}}
     sol_a, stats_a, school_a, cands_a, cand_dist_a = None, None, None, {}, {}
     
     if run_mode_a:
@@ -3127,6 +3326,12 @@ def run(input_path=None, output_path=None, iterations=None):
         # Snapshot candidate data before caches are cleared for next mode
         cands_a    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
         cand_dist_a = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
+        try:
+            from detour_engine import get_crossing_usage_from_solution as _get_mode_usage
+            if _eng._WALK_GRAPH is not None:
+                crossing_usage_by_mode["A"] = _get_mode_usage(sol_a, G_unc, _eng._WALK_GRAPH)
+        except Exception as e:
+            print(f"  Warning: failed to compute crossing usage for Mode A: {e}")
         _mode_wall_times["A"] = round(_wtime.time() - _t_a, 2)
         print(f"  [A] {stats_a['served']}/{stats_a['total']} served | "
               f"routes={stats_a['routes']} | time={stats_a['total_time']:.1f} min | "
@@ -3192,6 +3397,12 @@ def run(input_path=None, output_path=None, iterations=None):
         stats_b["synthetic_edges_timing"] = dict(synthetic_edges_timing)
         cands_b    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
         cand_dist_b = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
+        try:
+            from detour_engine import get_crossing_usage_from_solution as _get_mode_usage
+            if _eng._WALK_GRAPH is not None:
+                crossing_usage_by_mode["B"] = _get_mode_usage(sol_b, G_unc, _eng._WALK_GRAPH)
+        except Exception as e:
+            print(f"  Warning: failed to compute crossing usage for Mode B: {e}")
         _mode_wall_times["B"] = round(_wtime.time() - _t_b, 2)
         print(f"  [B] {stats_b['served']}/{stats_b['total']} served | "
               f"routes={stats_b['routes']} | time={stats_b['total_time']:.1f} min | "
@@ -3252,6 +3463,12 @@ def run(input_path=None, output_path=None, iterations=None):
         stats_c["synthetic_edges_timing"] = dict(synthetic_edges_timing)
         cands_c    = {sid: list(v) for sid, v in _alns._student_candidate_cache.items()}
         cand_dist_c = {sid: dict(v) for sid, v in _alns._student_candidate_dist.items()}
+        try:
+            from detour_engine import get_crossing_usage_from_solution as _get_mode_usage
+            if _eng._WALK_GRAPH is not None:
+                crossing_usage_by_mode["C"] = _get_mode_usage(sol_c, G_unc, _eng._WALK_GRAPH)
+        except Exception as e:
+            print(f"  Warning: failed to compute crossing usage for Mode C: {e}")
         _mode_wall_times["C"] = round(_wtime.time() - _t_c, 2)
         print(f"  [C] {stats_c['served']}/{stats_c['total']} served | "
               f"routes={stats_c['routes']} | time={stats_c['total_time']:.1f} min | "
@@ -3552,11 +3769,23 @@ def run(input_path=None, output_path=None, iterations=None):
         total_wall=_total_wall,
         step_times=_step_times,
         mode_wall_times=_mode_wall_times,
+        crossing_usage_by_mode=crossing_usage_by_mode,
+        walk_graph=(_eng._WALK_GRAPH or _eng._get_walk_graph(G_unc)),
     )
     metrics_path = os.path.join(os.path.dirname(output), "output.json")
     with open(metrics_path, "w", encoding="utf-8") as f:
         json.dump(_sanitise_floats(metrics), f, indent=2, ensure_ascii=False)
     print(f"  Metrics  : {metrics_path}")
+
+    # Keep a repository-level ledger of paper metrics across runs.
+    try:
+        from experiments.evaluation_json_builder import append_from_output
+
+        evaluation_path = os.path.join(_ROOT, "evaluation.json")
+        eval_summary = append_from_output(metrics_path, evaluation_path)
+        print(f"  Evaluation: {eval_summary.get('evaluation_json')}")
+    except Exception as e:
+        print(f"  Warning: failed to update evaluation.json: {e}")
 
     # ── ALNS iteration logs (every 10 iterations) ──
     logs_dir = os.path.dirname(output)
