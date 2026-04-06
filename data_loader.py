@@ -425,7 +425,7 @@ def print_input_summary(students, buses, routes, school_coords):
         if mrt_on and mrt_val is not None:
             cap_desc = f"hard MRT={float(mrt_val):.1f} min (AM and PM)"
         else:
-            base_mrt = mrt_val if (mrt_val is not None) else floor_m
+            base_mrt = floor_m
             cap_desc = f"DMRT cap max({float(base_mrt):.1f}, direct+{float(dmrt_offset):.1f}) min"
         print(f"  {route.route_id}: {len(route.stops)} stops, {cap_desc}, capacity={route.bus.capacity}")
     

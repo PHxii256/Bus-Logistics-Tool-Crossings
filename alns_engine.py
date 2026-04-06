@@ -14,6 +14,7 @@ from detour_engine import (
     calculate_route_time_from_matrix,
     calculate_route_distance_from_matrix,
     calculate_walk_penalty,
+    walk_distance_on_roads,
     get_walk_absolute_max
 )
 from entities import Stop
@@ -583,6 +584,8 @@ def _get_insertions_for_route(student, route, graph, frontage_info, deadline=Non
     # to be incorrectly marked as completely un-routable.
     reachable_candidates = candidate_nodes
     _insertion_debug_stats["candidates_considered"] += len(reachable_candidates)
+    hard_walk_limit_m = float(getattr(student, "walk_radius", 0) or 0)
+    strict_walk_cache = {}
         
     for pos in range(start_pos, end_pos):
         if deadline is not None and time.time() >= deadline:
@@ -592,6 +595,15 @@ def _get_insertions_for_route(student, route, graph, frontage_info, deadline=Non
         for cand_node_id, cand_coords in reachable_candidates:
             if deadline is not None and time.time() >= deadline:
                 break
+            # Hard feasibility check: only allow insertions whose network walk
+            # distance from student frontage node to stop node is within limit.
+            if cand_node_id not in strict_walk_cache:
+                strict_walk_cache[cand_node_id] = walk_distance_on_roads(
+                    graph, frontage_node_id, cand_node_id
+                )
+            strict_walk_m = strict_walk_cache[cand_node_id]
+            if not np.isfinite(strict_walk_m) or strict_walk_m > hard_walk_limit_m:
+                continue
             # Skip candidates that would force cold graph routing in the ALNS
             # hot loop. This keeps insertion checks matrix-only and predictable.
             if (

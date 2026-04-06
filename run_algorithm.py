@@ -1249,11 +1249,13 @@ def _diagnose_unserved(unserved_students, sol, capacity, constraints):
         dmrt_offset = float(con.get("acceptable_offset_minutes", 30))
     except (TypeError, ValueError):
         dmrt_offset = 30.0
+    mrt_enabled = bool(con.get("mrt_enabled", con.get("mrt enabled", False)))
     mrt_raw = con.get("mrt", None)
     try:
-        base_mrt = float(mrt_raw) if mrt_raw is not None else fl
+        mrt_minutes = float(mrt_raw) if mrt_raw is not None else None
     except (TypeError, ValueError):
-        base_mrt = fl
+        mrt_minutes = None
+    base_mrt = mrt_minutes if (mrt_enabled and mrt_minutes is not None and mrt_minutes > 0) else fl
 
     all_full = all(r.get_student_count() >= capacity for r in sol.routes)
 
@@ -1295,7 +1297,10 @@ def _diagnose_unserved(unserved_students, sol, capacity, constraints):
             return "zero_walk_radius_diagnostic_error"
 
     for s in unserved_students:
+        # Reset stale value from any previous attempt before classifying.
+        s.failure_reason = ""
         if all_full:
+            s.failure_reason = "all_routes_at_capacity"
             reasons["all_routes_at_capacity"] = reasons.get("all_routes_at_capacity", 0) + 1
             continue
 
@@ -1304,14 +1309,17 @@ def _diagnose_unserved(unserved_students, sol, capacity, constraints):
             if dt is not None and _math.isfinite(dt) and dt > 0:
                 cap = max(base_mrt, dt + dmrt_offset)
                 if cap < 20:
+                    s.failure_reason = "ride_time_cap_too_tight"
                     reasons["ride_time_cap_too_tight"] = reasons.get("ride_time_cap_too_tight", 0) + 1
                     continue
 
         if getattr(s, "walk_radius", 0) == 0:
             z_reason = _diagnose_zero_walk_student(s)
+            s.failure_reason = z_reason
             reasons[z_reason] = reasons.get(z_reason, 0) + 1
             continue
 
+        s.failure_reason = "search_budget_exhausted"
         reasons["search_budget_exhausted"] = reasons.get("search_budget_exhausted", 0) + 1
 
     return {k: v for k, v in reasons.items() if v > 0}

@@ -752,12 +752,11 @@ def _make_constrained(data):
 
 
 def _make_unconstrained(data):
-    """Mode B: all-safe walking, ride-time constraints from meta.json.
-
-    Keep per-stage walk limits from input (same as Mode A). Mode B should only
-    relax WALK SAFETY constraints, not inflate walk radii.
-    """
-    return copy.deepcopy(data)
+    """Mode B: all-safe walking, ride-time constraints from meta.json."""
+    d = copy.deepcopy(data)
+    for s in d["data"]["students"]:
+        s["walk_radius_override"] = 400
+    return d
 
 
 def _make_door_to_door(data):
@@ -1021,13 +1020,9 @@ def _compute_route_path(G, stops):
         # Passing initial_bearing (even 0.0 on first call) bypasses
         # the matrix-only shortcut so we always get an actual path.
         bearing_arg = last_bearing if last_bearing is not None else 0.0
-        seg_result = find_shortest_path_with_turns(
+        seg, _ = find_shortest_path_with_turns(
             G, u, v, weight='travel_time', initial_bearing=bearing_arg,
         )
-        if isinstance(seg_result, tuple) and len(seg_result) == 2:
-            seg, _ = seg_result
-        else:
-            seg = None
 
         if seg is None or len(seg) < 2:
             # Fallback: plain Dijkstra (at least draws *something*)
@@ -1160,10 +1155,6 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
     ride_k       = float(con.get("ride_time_multiplier", 2.5))
     floor_min    = float(con.get("floor_minutes",        45))
     ceiling_min  = float(con.get("ceiling_minutes",      60))
-    try:
-        dmrt_offset_default = float(con.get("acceptable_offset_minutes", 30))
-    except (TypeError, ValueError):
-        dmrt_offset_default = 30.0
     mrt_enabled  = bool(con.get("mrt_enabled", con.get("mrt enabled", False)))
     mrt_raw      = con.get("mrt", None)
     try:
@@ -1295,25 +1286,19 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
                 k_eff = getattr(route, 'ride_time_multiplier', ride_k)
                 fl    = getattr(route, 'floor_minutes',        floor_min)
                 ce    = getattr(route, 'ceiling_minutes',      ceiling_min)
-                dmrt_offset = getattr(route, 'acceptable_offset_minutes', dmrt_offset_default)
                 mrt_on = bool(getattr(route, 'mrt_enabled', mrt_enabled))
                 mrt_val = getattr(route, 'mrt_minutes', mrt_minutes)
                 try:
                     mrt_val = float(mrt_val) if mrt_val is not None else None
                 except (TypeError, ValueError):
                     mrt_val = None
-                try:
-                    dmrt_offset = float(dmrt_offset)
-                except (TypeError, ValueError):
-                    dmrt_offset = dmrt_offset_default
-                base_dmrt = mrt_val if (mrt_val is not None and mrt_val > 0) else fl
 
                 def _cap(d):
                     if mrt_on and mrt_val is not None and mrt_val > 0:
                         return mrt_val
-                    if d is None or d <= 0 or not math.isfinite(d):
+                    if d is None or d <= 0:
                         return float('inf')
-                    return max(base_dmrt, d + dmrt_offset)
+                    return max(fl, min(k_eff * d, d + ce))
 
                 cap_html = (
                     _dir_cap_html('🟠 AM home→school', ride_time_am, direct_am, _cap(direct_am), k_eff) +
@@ -1379,11 +1364,9 @@ def _count_satisfied_per_route(sol, G, constraints):
     Students without a finite direct time are counted as satisfied.
     """
     con     = constraints or {}
+    k       = float(con.get('ride_time_multiplier', 2.5))
     fl      = float(con.get('floor_minutes',        45))
-    try:
-        dmrt_offset = float(con.get('acceptable_offset_minutes', 30))
-    except (TypeError, ValueError):
-        dmrt_offset = 30.0
+    ce      = float(con.get('ceiling_minutes',      60))
     mrt_enabled = bool(con.get("mrt_enabled", con.get("mrt enabled", False)))
     mrt_raw = con.get("mrt", None)
     try:
@@ -1396,8 +1379,7 @@ def _count_satisfied_per_route(sol, G, constraints):
     def _cap(d):
         if d is None or d <= 0 or not math.isfinite(d):
             return float('inf')
-        base_dmrt = mrt_minutes if (mrt_minutes is not None and mrt_minutes > 0) else fl
-        return max(base_dmrt, d + dmrt_offset)
+        return max(fl, min(k * d, d + ce))
 
     result = {}
     for route in sol.routes:
@@ -1475,11 +1457,9 @@ def _count_cap_violations(sol, G, constraints):
             "pm": None, "pm_checked": None, "pm_pct": None,
         }
 
+    k_mult = float(constraints.get("ride_time_multiplier", 2.5))
     floor_min = float(constraints.get("floor_minutes", 45))
-    try:
-        dmrt_offset = float(constraints.get("acceptable_offset_minutes", 30))
-    except (TypeError, ValueError):
-        dmrt_offset = 30.0
+    ceiling_min = float(constraints.get("ceiling_minutes", 60))
     mrt_enabled = bool(constraints.get("mrt_enabled", constraints.get("mrt enabled", False)))
     mrt_raw = constraints.get("mrt", None)
     try:
@@ -1547,8 +1527,7 @@ def _count_cap_violations(sol, G, constraints):
                     direct_time = compute_direct_time(student, school_node, G)
                     if direct_time is None or not math.isfinite(direct_time) or direct_time <= 0:
                         continue
-                    base_dmrt = mrt_minutes if (mrt_minutes is not None and mrt_minutes > 0) else floor_min
-                    cap = max(base_dmrt, direct_time + dmrt_offset)
+                    cap = max(floor_min, min(k_mult * direct_time, direct_time + ceiling_min))
 
                 if ride_am is not None:
                     am_checked += 1
@@ -1665,29 +1644,6 @@ def _add_unserved_layer(m, sol, mode_key):
     """Add a FeatureGroup with X-pin markers for every unserved student in *sol*."""
     show = mode_key in ("A", "B")
     fg = FeatureGroup(name=f"{_MODE_NAMES[mode_key]} – Unserved Students", show=show)
-
-    # Resolve school node once so we can show direct home->school distance when available.
-    school_node = None
-    for route in sol.routes:
-        for stop in route.stops:
-            if getattr(stop, "stop_type", None) == "school":
-                school_node = getattr(stop, "node_id", None)
-                break
-        if school_node is not None:
-            break
-
-    def _is_missing(v):
-        return v is None or (isinstance(v, str) and v.strip() == "")
-
-    def _fmt(v):
-        if isinstance(v, bool):
-            return "true" if v else "false"
-        if isinstance(v, (int, float)):
-            return f"{v:.2f}" if isinstance(v, float) else str(v)
-        if hasattr(v, "name"):
-            return str(v.name)
-        return str(v)
-
     for student in sol.students:
         if getattr(student, 'is_served', False):
             continue
@@ -1696,56 +1652,13 @@ def _add_unserved_layer(m, sol, mode_key):
             if hasattr(student.school_stage, 'name')
             else str(student.school_stage)
         )
-
-        details = [
-            ("Student", student.id),
-            ("Stage", stage_name),
-            ("Home", f"{student.coords[0]:.5f}, {student.coords[1]:.5f}"),
-            ("Mode", _MODE_NAMES[mode_key]),
-            ("walk_limit_m", getattr(student, "walk_radius", None)),
-            ("direct_from_school_min", getattr(student, "direct_time_from_school", None)),
-            ("rejection_reason", getattr(student, "failure_reason", None)),
-        ]
-
-        # Add computed direct distance if we can resolve both home and school nodes.
-        graph = getattr(sol, "graph", None)
-        if graph is not None and school_node is not None:
-            try:
-                direct_t = compute_direct_time(student, school_node, graph)
-                if direct_t is not None and math.isfinite(direct_t):
-                    details.append(("direct_potential_min", round(direct_t, 2)))
-
-                home_node = _eng.fast_nearest_node(graph, student.coords[1], student.coords[0])
-                d_m = _MATRIX_CACHE_LENGTH.get((home_node, school_node))
-                if d_m is None:
-                    d_m = _MATRIX_CACHE_LENGTH.get((school_node, home_node))
-                if d_m is not None and math.isfinite(d_m):
-                    details.append(("direct_distance_km", d_m / 1000.0))
-            except Exception:
-                pass
-
-        # Show every additional non-null attribute on the Student object.
-        excluded = {
-            "id", "coords", "school_stage", "assigned_stop", "is_served",
-            "walk_radius", "direct_time_to_school", "direct_time_from_school", "failure_reason",
-        }
-        for attr_name in sorted(vars(student).keys()):
-            if attr_name in excluded:
-                continue
-            attr_val = getattr(student, attr_name, None)
-            if not _is_missing(attr_val):
-                details.append((attr_name, attr_val))
-
-        detail_lines = [
-            f"<b>{k}:</b> {_fmt(v)}"
-            for k, v in details
-            if not _is_missing(v)
-        ]
-
         popup_html = (
-            f'<div style="width:300px;font-size:12px;">'
-            f'<b style="color:#c0392b;">&#x2716; Unserved Student</b><br>'
-            f'{"<br>".join(detail_lines)}'
+            f'<div style="width:220px;font-size:12px;">'
+            f'<b style="color:#c0392b;">&#x2716; Unserved</b><br>'
+            f'<b>Student: {student.id}</b><br>'
+            f'Stage: {stage_name}<br>'
+            f'Home: {student.coords[0]:.5f}, {student.coords[1]:.5f}<br>'
+            f'Mode: {_MODE_NAMES[mode_key]}'
             f'</div>'
         )
         folium.Marker(
@@ -2478,35 +2391,12 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         sw = stage_walk if mode_key != "door_to_door" else {k: 0 for k in stage_walk}
         walk = _compute_walk_stats(sol, G_unc, sw)
         
-        # Resolve school node once so served and unserved students use a common reference.
-        school_node_for_mode = None
-        if sol.routes:
-            for _route in sol.routes:
-                if not _route.stops:
-                    continue
-                school_stop = next((st for st in _route.stops if st.stop_type == "school"), None)
-                if school_stop is not None:
-                    school_node_for_mode = school_stop.node_id
-                    break
-                school_node_for_mode = _route.stops[-1].node_id
-                break
-        if school_node_for_mode is None:
-            school_cfg = meta.get("school", {}) if isinstance(meta, dict) else {}
-            try:
-                school_node_for_mode = _eng.fast_nearest_node(
-                    G_unc,
-                    float(school_cfg.get("longitude")),
-                    float(school_cfg.get("latitude")),
-                )
-            except Exception:
-                school_node_for_mode = None
-
         # Build student list with ride time, direct potential, walk distance
         students_list = []
         for route in sol.routes:
             # Pre-compute per-stop ride-time using matrix-cache summation
             # (safe against cleared caches; falls back to lazy A* on miss)
-            school_node = school_node_for_mode if school_node_for_mode is not None else route.stops[-1].node_id
+            school_node = route.stops[-1].node_id
             for stop in route.stops:
                 if stop.stop_type == "school":
                     continue
@@ -2581,55 +2471,6 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                         "direct_distance_km": direct_distance_km,
                         "walk_distance_m": round(walk_dist, 1),
                     })
-
-        # Build unserved student list with matching metrics schema where possible.
-        unserved_students_list = []
-        for student in sol.students:
-            if student.is_served:
-                continue
-
-            stage_name = (
-                student.school_stage.name
-                if hasattr(student.school_stage, "name")
-                else str(student.school_stage)
-            )
-
-            direct_time = None
-            direct_distance_km = None
-            home_node = None
-
-            if school_node_for_mode is not None:
-                dt = compute_direct_time(student, school_node_for_mode, G_unc)
-                if math.isfinite(dt):
-                    direct_time = round(dt, 2)
-
-                try:
-                    home_node = _eng.fast_nearest_node(G_unc, student.coords[1], student.coords[0])
-                except Exception:
-                    home_node = None
-
-                if home_node is not None:
-                    dd = _MATRIX_CACHE_LENGTH.get((home_node, school_node_for_mode), None)
-                    if dd is not None and math.isfinite(dd):
-                        direct_distance_km = round(dd / 1000.0, 2)
-
-            walk_limit_m = getattr(student, "walk_radius", None)
-            if walk_limit_m is None and isinstance(stage_walk, dict):
-                walk_limit_m = stage_walk.get(stage_name)
-
-            unserved_students_list.append({
-                "id": student.id,
-                "stage": stage_name,
-                "route_id": None,
-                "pickup_order": None,
-                "ride_time_min": None,
-                "ride_distance_km": None,
-                "direct_potential_min": direct_time,
-                "direct_distance_km": direct_distance_km,
-                "walk_distance_m": None,
-                "walk_limit_m": float(walk_limit_m) if walk_limit_m is not None else None,
-                "rejection_reason": (student.failure_reason or None),
-            })
         
         # Calculate aggregate ride time statistics from students
         valid_ride_times = [s["ride_time_min"] for s in students_list if s["ride_time_min"] is not None]
@@ -2654,14 +2495,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         buses_cfg = meta.get("buses", {})
         buses_available = buses_cfg.get("count")
         bus_capacity = buses_cfg.get("capacity")
-        fleet_size_selected = s.get("fleet_size_selected")
-        if fleet_size_selected is None:
-            fleet_size_selected = s.get("buses_used")
         buses_used = s.get("buses_used")
-        if buses_used is None:
-            buses_used = s.get("routes")
-        if buses_used is None:
-            buses_used = fleet_size_selected
         if buses_used is None and buses_available is not None:
             buses_used = buses_available
 
@@ -2689,11 +2523,9 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "walk_stats":           walk,
             "routes":               routes_list,
             "students":             students_list,
-            "unserved_students":    unserved_students_list,
             "buses_available":       buses_available,
             "bus_capacity":          bus_capacity,
             "buses_used":            buses_used,
-            "fleet_size_selected":   fleet_size_selected,
             "ride_cap_violations_am": s.get("cap_violations_am"),
             "ride_cap_checked_am":    s.get("cap_checked_am"),
             "ride_cap_violation_pct_am": s.get("cap_violation_pct_am"),
@@ -2716,8 +2548,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         # Attach fleet-search diagnostics if present
         if s.get("fleet_search_log"):
             mode_entry["fleet_search"] = {
-                "buses_used":    buses_used,
-                "fleet_size_selected": fleet_size_selected,
+                "buses_used":    s.get("buses_used"),
                 "summary":       s.get("fleet_search_summary"),
                 "search_log":    s["fleet_search_log"],
             }
@@ -2746,19 +2577,12 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             _syn = _s.get("synthetic_edges_timing") or {}
             _ops = _s.get("operator_performance") or {}
             
-            _executed_iterations = int(
-                _ops.get("executed_iterations")
-                or _s.get("iterations")
-                or (_s.get("alns_diagnostics") or {}).get("stop_iteration")
-                or 0
-            )
-
             _dbg_modes[_mk] = {
                 "mode_wall_time_s":        _wt,
                 "total_alns_solve_s":      _total_alns_t,
                 "successful_run_s":        _alns_t,
                 "actual_setup_overhead_s": round(_wt - _total_alns_t, 2),
-                "alns_iterations":         (_executed_iterations if _executed_iterations > 0 else None),
+                "alns_iterations":         _s.get("iterations"),
                 "operator_performance": _ops,
                 "matrix_precompute_total_s": _mx.get("total_time_s"),
                 "matrix_precompute_source": _mx.get("source"),
@@ -2835,7 +2659,6 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                 "ride_time_multiplier": meta.get("constraints", {}).get("ride_time_multiplier"),
                 "floor_minutes": meta.get("constraints", {}).get("floor_minutes"),
                 "ceiling_minutes": meta.get("constraints", {}).get("ceiling_minutes"),
-                "acceptable_offset_minutes": meta.get("constraints", {}).get("acceptable_offset_minutes", 30),
                 "bidirectional_check": meta.get("constraints", {}).get("bidirectional_check"),
                 "mrt_enabled": meta.get("constraints", {}).get("mrt_enabled", meta.get("constraints", {}).get("mrt enabled", False)),
                 "mrt": meta.get("constraints", {}).get("mrt"),
@@ -2953,13 +2776,9 @@ def run(input_path=None, output_path=None, iterations=None):
     # Filter out _comment and other non-stage keys
     stage_walk = {k: v for k, v in raw_walk.items()
                   if k in ("KG", "ELEMENTARY", "MIDDLE", "HIGH")}
-    
-    mrt_enabled = meta.get("constraints", {}).get("mrt_enabled", False)
-    mrt_enabled = meta.get("constraints", {}).get("mrt_enabled", False)
 
-    mrt_status_terminal = f" {'(MRT)' if mrt_enabled else '(DMRT)'}"
     print("=" * 60)
-    print(f"  THREE-MODE ROUTING COMPARISON{mrt_status_terminal}")
+    print("  THREE-MODE ROUTING COMPARISON  (input.json)")
     print("=" * 60)
     print(f"  Students : {meta['n_students']}")
     print(f"  Seed     : {meta['seed']}")
@@ -3245,11 +3064,9 @@ def run(input_path=None, output_path=None, iterations=None):
             stats_a["cap_checked_pm"] = cv["pm_checked"]
             stats_a["cap_violation_pct_pm"] = cv["pm_pct"]
         if force_k:
-            stats_a["fleet_size_selected"] = int(force_k)
-        if "fleet_size_selected" not in stats_a:
-            stats_a["fleet_size_selected"] = len(data_a.get("data", {}).get("buses", []))
+            stats_a["buses_used"] = int(force_k)
         if "buses_used" not in stats_a:
-            stats_a["buses_used"] = stats_a.get("routes", 0)
+            stats_a["buses_used"] = meta.get("buses", {}).get("count")
         sol_a, stats_a = _run_final_unserved_micro_pass(sol_a, stats_a, G_unc, algo_cfg=algo_cfg, mode_key="A")
         _apply_dwell_time_to_stats(sol_a, stats_a, dwell_time_seconds_per_stop)
         stats_a["synthetic_edges_timing"] = dict(synthetic_edges_timing)
@@ -3313,11 +3130,9 @@ def run(input_path=None, output_path=None, iterations=None):
             stats_b["cap_checked_pm"] = cv["pm_checked"]
             stats_b["cap_violation_pct_pm"] = cv["pm_pct"]
         if force_k:
-            stats_b["fleet_size_selected"] = int(force_k)
-        if "fleet_size_selected" not in stats_b:
-            stats_b["fleet_size_selected"] = len(data_b.get("data", {}).get("buses", []))
+            stats_b["buses_used"] = int(force_k)
         if "buses_used" not in stats_b:
-            stats_b["buses_used"] = stats_b.get("routes", 0)
+            stats_b["buses_used"] = meta.get("buses", {}).get("count")
         sol_b, stats_b = _run_final_unserved_micro_pass(sol_b, stats_b, G_unc, algo_cfg=algo_cfg, mode_key="B")
         _apply_dwell_time_to_stats(sol_b, stats_b, dwell_time_seconds_per_stop)
         stats_b["synthetic_edges_timing"] = dict(synthetic_edges_timing)
@@ -3375,11 +3190,9 @@ def run(input_path=None, output_path=None, iterations=None):
             stats_c["cap_checked_pm"] = cv["pm_checked"]
             stats_c["cap_violation_pct_pm"] = cv["pm_pct"]
         if force_k:
-            stats_c["fleet_size_selected"] = int(force_k)
-        if "fleet_size_selected" not in stats_c:
-            stats_c["fleet_size_selected"] = len(data_c.get("data", {}).get("buses", []))
+            stats_c["buses_used"] = int(force_k)
         if "buses_used" not in stats_c:
-            stats_c["buses_used"] = stats_c.get("routes", 0)
+            stats_c["buses_used"] = meta.get("buses", {}).get("count")
         sol_c, stats_c = _run_final_unserved_micro_pass(sol_c, stats_c, G_unc, algo_cfg=algo_cfg, mode_key="C")
         _apply_dwell_time_to_stats(sol_c, stats_c, dwell_time_seconds_per_stop)
         stats_c["synthetic_edges_timing"] = dict(synthetic_edges_timing)

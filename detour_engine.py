@@ -3258,7 +3258,8 @@ def validate_permanent_student(new_stop, route, insert_position, delta_time_minu
         dmrt_offset = float(dmrt_offset)
     except (TypeError, ValueError):
         dmrt_offset = 30.0
-    base_mrt = mrt_minutes if (mrt_minutes is not None and mrt_minutes > 0) else floor_min
+    # DMRT should only use fixed MRT minutes when hard MRT mode is enabled.
+    base_mrt = mrt_minutes if (mrt_enabled and mrt_minutes is not None and mrt_minutes > 0) else floor_min
 
     caps_enabled = getattr(route, 'ride_caps_enabled', True)
     soft_caps    = getattr(route, 'soft_ride_caps', False)

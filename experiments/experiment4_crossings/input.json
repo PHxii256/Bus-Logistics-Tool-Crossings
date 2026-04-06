@@ -25,7 +25,7 @@
   },
 
   "buses": {
-    "count": 9,
+    "count": 10,
     "capacity": 28
   },
 
@@ -46,9 +46,8 @@
     "ceiling_minutes": 60,
     "daily_detour_budget_minutes": 10,
     "bidirectional_check": true,
-    "mrt_enabled": true,
-    "mrt": 90,
-    "acceptable_offset_minutes": 30
+    "mrt_enabled": false,
+    "mrt": 120
   },
     
   "walk_graph": {
@@ -84,7 +83,7 @@
   },
 
   "crossings_injection": {
-    "enabled": true,
+    "enabled": false,
     "pkl_path": "cache/crossings_3eab1f2e_0403-2023.pkl",
     "strict_validation": false
   },
@@ -95,31 +94,25 @@
   },
 
 "algorithm": {
-    "iterations": 5000,
-    "time_budget_seconds": 720,
-    "min_iterations_floor": 200,
-    "max_candidates_per_student": 7,
+    "iterations": 10000,
+    "time_budget_seconds": 60,
+    "max_candidates_per_student": 3,
     "minimize_buses": true,
-    "repair_max_unassigned_per_call": 64,
-    "regret_scan_limit": 32,
-    "max_repair_seconds_per_iteration": 2,
-    "early_stop_patience": 80,
-    "early_stop_min_improvement": 5,
-    "early_stop_freeze_temp": 2,
-    "early_stop_freeze_patience": 16,
-    "fleet_search_followup_k_budget_scale": 0.6,
-    "fleet_search_max_per_k_seconds": 60
+    "early_stop_patience": 100,
+    "early_stop_min_improvement": 10,
+    "early_stop_freeze_temp": 1,
+    "early_stop_freeze_patience": 20
   },
 
   "annulus": {
     "peak_km": 5.0,
-    "sigma_km": 2.0,
+    "sigma_km": 50.0,
     "min_km": 1.0,
-    "max_km": 12,
+    "max_km": 120,
     "dynamic_max_km": false,
-    "auto_from_bbox_circle": false,
-    "auto_peak_km": false,
-    "auto_sigma_km": false,
+    "auto_from_bbox_circle": true,
+    "auto_peak_km": true,
+    "auto_sigma_km": true,
     "peak_ratio": 0.25,
     "sigma_ratio": 0.18,
     "bbox_radius_scale": 1.0,
@@ -131,8 +124,8 @@
 
   "debug": {
     "run_mode_a": false,
-    "run_mode_b": true,
-    "run_mode_c": false,
+    "run_mode_b": false,
+    "run_mode_c": true,
     "run_build_map": true,
     "visualize_walk_graph": {
       "enabled": false,
