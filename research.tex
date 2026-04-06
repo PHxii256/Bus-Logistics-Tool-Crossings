@@ -801,8 +801,8 @@ All experiments were conducted on [TO FILL: CPU model, RAM, OS].
 The software environment used Python [TO FILL] and OSMnx [TO FILL] 
 \cite{c8}. Each instance size was evaluated across [TO FILL] random 
 seeds to account for stochastic variability in both student 
-placement and ALNS search. Results are reported as mean $\pm$ 
-standard deviation across seeds.
+placement and ALNS search.
+
 
 \subsubsection{ALNS Hyperparameters}
 
@@ -813,10 +813,10 @@ one additional student always dominates the activation of one
 additional route in the objective, consistent with the 
 service-maximization priority of the model. The DMRT parameters 
 $\tau_{\min}$ and $\tau_{add}$ were selected to reflect the two 
-design objectives of Eq.~\ref{eq:dmrt}: $\tau_{\min} = 30$ 
+design objectives of Eq.~\ref{eq:dmrt}: $\tau_{\min} = 60$ 
 minutes provides a practical operational floor that prevents 
 over-restriction of students living close to school, while 
-$\tau_{add} = $ [TO FILL] minutes defines the maximum acceptable 
+$\tau_{add} = 30$ minutes defines the maximum acceptable 
 detour above a student's direct travel time. All remaining ALNS 
 parameters were tuned empirically on a held-out instance and kept 
 fixed across all reported experiments.
@@ -829,29 +829,33 @@ fixed across all reported experiments.
 \toprule
 \textbf{Parameter} & \textbf{Value} & \textbf{Description} \\
 \midrule
-Initial temperature $T_0$ & [TO FILL] & Controls initial SA 
+Initial temperature $T_0$ & 1000 & Controls initial SA 
 acceptance probability \\
-Cooling rate $\gamma$ & [TO FILL] & Geometric temperature decay 
+Cooling rate $\gamma$ & 0.98 & Geometric temperature decay 
 per iteration \\
-Early-stop patience & [TO FILL] & Max stagnation iterations 
+Early-stop patience & 80 & Max stagnation iterations 
 before stopping \\
-Iteration floor $I_{floor}$ & [TO FILL] & Minimum iterations 
+Iteration floor $I_{floor}$ & 200 & Minimum iterations 
 before stopping criteria activate \\
-Freeze threshold $T_{freeze}$ & [TO FILL] & Temperature below 
+Freeze threshold $T_{freeze}$ & 2.0 & Temperature below 
 which freeze patience applies \\
-Freeze patience $P_{freeze}$ & [TO FILL] & Stagnation limit 
+Freeze patience $P_{freeze}$ & 16 & Stagnation limit 
 under frozen temperature \\
-Operator scores $(\sigma_1,\sigma_2,\sigma_3)$ & [TO FILL] & 
+Minimum improvement threshold $\epsilon$ & $10^{-6}$ & Objective gain required to count as an improvement \\
+Max repair seconds per iteration & 2.0 s & Per-iteration repair-time cap under budgeted search \\
+Merge-tail iterations & 30 & Post-loop merge-focused ALNS iterations \\
+Minimum early-stop iterations & 200 & Earliest iteration index where early-stop checks may trigger \\
+Operator scores $(\sigma_1,\sigma_2,\sigma_3)$ & (30,15,5) & 
 Reward for new best, improving, and accepted solutions \\
 Weights $(w_s, w_r)$ & (10000, 5000) & Student-served and 
 route-activation objective weights \\
-Top-$K$ candidates & [TO FILL] & Max candidate stops 
-retained per student \\
-DMRT floor $\tau_{\min}$ & 30 min & Minimum ride time 
+Top-$K$ candidates & 7 & Max candidate stops 
+retained per student including home doorstep stop \\
+DMRT floor $\tau_{\min}$ & 60 min & Minimum ride time 
 cap for any student \\
-DMRT offset $\tau_{add}$ & [TO FILL] & Additive detour 
+DMRT offset $\tau_{add}$ & 30 min & Additive detour 
 allowance above $T^{direct}_s$ \\
-Seeds per instance & [TO FILL] & Number of random seeds 
+Seeds per instance & 3 & Number of random seeds 
 per instance size \\
 \bottomrule
 \end{tabular}
@@ -934,25 +938,26 @@ at least one residential road node in their vicinity. Road
 network data was obtained from OpenStreetMap via
 OSMnx \cite{c8}.
 
-The annulus distribution was parameterized with a peak distance 
-of $\mu_d = $ [TO FILL] km, standard deviation $\sigma_d = $ 
-[TO FILL] km, and bounds $[d_{min}, d_{max}] = $ [TO FILL] km. 
+The annulus distribution was parameterized in ratio form with 
+$\text{peak\_ratio}=0.25$, $\text{sigma\_ratio}=0.18$, and 
+$\text{bbox\_radius\_scale}=1.0$, with bounds 
+$[d_{min}, d_{max}] = [1.0, 12.0]$ km. 
 School stage was assigned according to [TO FILL: uniform 
 distribution or school-specific demographics]. A disability flag 
 was applied at a rate of 4\% per student. 
 Table~\ref{tab:instances} summarizes the instance scales 
 evaluated. The total number of synthetic crossing edges injected 
-into the pedestrian graph was [TO FILL].
+into the pedestrian graph was 4353.
 
 \begin{table}[t]
 \caption{SYNTHETIC INSTANCE SUMMARY}
 \label{tab:instances}
 \centering
-\begin{tabular}{p{1.0cm}p{1.2cm}p{1.4cm}p{1.2cm}p{1.4cm}}
+\begin{tabular}{p{0.6cm}p{1.4cm}p{1.4cm}p{1.5cm}p{1.4cm}}
 \toprule
 \textbf{ID} & \textbf{Students $|S|$} & 
 \textbf{Candidates $|P|$} & 
-\textbf{Capacity $C$} & 
+\textbf{Fleet Count |$F$|}& 
 \textbf{Min Fleet $\lceil|S|/C\rceil$} \\
 \midrule
 I-1 & [TO FILL] & [TO FILL] & [TO FILL] & [TO FILL] \\
@@ -1006,12 +1011,7 @@ mean ratio and its variance across students.
 \!\left(\frac{T_s^{assigned}}{T_s^{direct}}
 \right)_{\!s \in S^{served}}
 \end{equation}
-\begin{equation}
-\text{WelfareViolationRate} = \frac{1}{|S^{served}|} 
-\sum_{s \in S^{served}} 
-\mathbf{1}\!\left\{T_s^{assigned} > 
-T_s^{direct} + \tau_{add}\right\}
-\end{equation}
+
 \begin{equation}
 \text{RideRatioMax} = \max_{s \in S^{served}} 
 \frac{T_s^{assigned}}{T_s^{direct}}
