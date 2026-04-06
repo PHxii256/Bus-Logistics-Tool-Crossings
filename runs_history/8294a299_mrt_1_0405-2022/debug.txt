@@ -1,0 +1,27 @@
+[DEBUG] Building metrics for mode B: sol has 10 routes
+[DEBUG] Calculated ride_time=59.805 for stop_idx=1, stops_count=9
+[DEBUG] Calculated ride_time=48.87166666666666 for stop_idx=2, stops_count=8
+[DEBUG] Calculated ride_time=42.541666666666664 for stop_idx=3, stops_count=7
+[DEBUG] Calculated ride_time=31.48833333333333 for stop_idx=4, stops_count=6
+[DEBUG] Calculated ride_time=30.206666666666663 for stop_idx=5, stops_count=5
+[DEBUG] Calculated ride_time=27.251666666666665 for stop_idx=6, stops_count=4
+[DEBUG] Calculated ride_time=24.064999999999998 for stop_idx=7, stops_count=3
+[DEBUG] Calculated ride_time=13.618333333333334 for stop_idx=8, stops_count=2
+[DEBUG] Calculated ride_time=54.894999999999996 for stop_idx=1, stops_count=10
+[DEBUG] Calculated ride_time=47.42333333333333 for stop_idx=2, stops_count=9
+[DEBUG] Calculated ride_time=45.870000000000005 for stop_idx=3, stops_count=8
+[DEBUG] Calculated ride_time=38.461666666666666 for stop_idx=4, stops_count=7
+[DEBUG] Calculated ride_time=35.370000000000005 for stop_idx=5, stops_count=6
+[DEBUG] Calculated ride_time=28.663333333333334 for stop_idx=6, stops_count=5
+[DEBUG] Calculated ride_time=23.36 for stop_idx=7, stops_count=4
+[DEBUG] Calculated ride_time=21.373333333333335 for stop_idx=8, stops_count=3
+[DEBUG] Calculated ride_time=8.736666666666668 for stop_idx=9, stops_count=2
+[DEBUG] Calculated ride_time=54.975 for stop_idx=1, stops_count=8
+[DEBUG] Calculated ride_time=51.5 for stop_idx=2, stops_count=7
+[DEBUG] Calculated ride_time=43.445 for stop_idx=3, stops_count=6
+[DEBUG] Calculated ride_time=37.355000000000004 for stop_idx=4, stops_count=5
+[DEBUG] Calculated ride_time=28.255000000000003 for stop_idx=5, stops_count=4
+[DEBUG] Calculated ride_time=18.311666666666667 for stop_idx=6, stops_count=3
+[DEBUG] Calculated ride_time=8.476666666666667 for stop_idx=7, stops_count=2
+[DEBUG] Calculated ride_time=23.97 for stop_idx=1, stops_count=3
+[DEBUG] Calculated ride_time=11.195 for stop_idx=2, stops_count=2

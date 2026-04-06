@@ -753,10 +753,7 @@ def _make_constrained(data):
 
 def _make_unconstrained(data):
     """Mode B: all-safe walking, ride-time constraints from meta.json."""
-    d = copy.deepcopy(data)
-    for s in d["data"]["students"]:
-        s["walk_radius_override"] = 400
-    return d
+    return copy.deepcopy(data)
 
 
 def _make_door_to_door(data):
@@ -1120,6 +1117,38 @@ def _compute_pm_ride_time(route, stop, G):
     return total
 
 
+def _haversine_distance_m(a, b):
+    """Great-circle distance in meters between two (lat, lon) points."""
+    lat1, lon1 = a
+    lat2, lon2 = b
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    p1 = math.radians(lat1)
+    p2 = math.radians(lat2)
+    x = math.sin(dlat / 2.0) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlon / 2.0) ** 2
+    return 6_371_000.0 * 2.0 * math.asin(math.sqrt(max(0.0, min(1.0, x))))
+
+
+def _student_frontage_node_id(G, coords):
+    """Return the student's frontage node; fall back to nearest node if snap fails."""
+    try:
+        node_id, _ = _eng.snap_address_to_edge(coords, G)
+        if node_id in G:
+            return node_id
+    except Exception:
+        pass
+    return _eng.fast_nearest_node(G, coords[1], coords[0])
+
+
+def _student_walk_distance_m(G, student_coords, stop):
+    """Walk distance from student frontage to stop node, with robust fallback."""
+    s_node = _student_frontage_node_id(G, student_coords)
+    d = walk_distance_on_roads(G, s_node, stop.node_id)
+    if d is None or not math.isfinite(d) or d < 0:
+        d = _haversine_distance_m(student_coords, stop.coords)
+    return d, s_node
+
+
 def _dir_cap_html(label, ride, direct, cap, k):
     """Compact per-direction ride-cap block with progress bar."""
     if direct is None or direct <= 0 or not math.isfinite(ride):
@@ -1221,17 +1250,21 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
 
             # ── Walk paths + student home markers ──
             for student in stop.students:
-                s_node = _eng.fast_nearest_node(G, student.coords[1], student.coords[0])
+                s_node = _student_frontage_node_id(G, student.coords)
                 wp = walk_path_on_roads(G, s_node, stop.node_id)
                 if len(wp) >= 2:
                     wcoords = _build_walk_coords(G, wp)
                     walk_dist = walk_distance_on_roads(G, s_node, stop.node_id)
+                    if walk_dist is None or not math.isfinite(walk_dist) or walk_dist < 0:
+                        walk_dist = _haversine_distance_m(student.coords, stop.coords)
                     folium.PolyLine(
                         wcoords, color=c, weight=2, opacity=0.6, dash_array="6,4",
                         tooltip=f"{student.id} walk: {walk_dist:.0f} m",
                     ).add_to(fg_walks)
 
                 walk_m = walk_distance_on_roads(G, s_node, stop.node_id)
+                if walk_m is None or not math.isfinite(walk_m) or walk_m < 0:
+                    walk_m = _haversine_distance_m(student.coords, stop.coords)
 
                 # ── AM ride time: this stop → school (matrix-cache safe) ──
                 stop_idx = next((i for i, s in enumerate(route.stops) if s is stop), -1)
@@ -2323,16 +2356,7 @@ def _compute_walk_stats(sol, G, stage_walk):
             if stop.stop_type == "school":
                 continue
             for student in stop.students:
-                s_node = _eng.fast_nearest_node(G, student.coords[1], student.coords[0])
-                d = walk_distance_on_roads(G, s_node, stop.node_id)
-                if d <= 0:          # fallback: straight-line
-                    dlat = math.radians(stop.coords[0] - student.coords[0])
-                    dlon = math.radians(stop.coords[1] - student.coords[1])
-                    a = (math.sin(dlat / 2) ** 2
-                         + math.cos(math.radians(student.coords[0]))
-                         * math.cos(math.radians(stop.coords[0]))
-                         * math.sin(dlon / 2) ** 2)
-                    d = 6_371_000 * 2 * math.asin(math.sqrt(a))
+                d, _ = _student_walk_distance_m(G, student.coords, stop)
                 dists.append(d)
                 # utilisation = fraction of walk budget actually used
                 stage_name = (
@@ -2451,14 +2475,12 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                         direct_time = None
 
                     # Direct distance home -> school (from OSRM cache, in meters)
-                    s_node = _eng.fast_nearest_node(G_unc, student.coords[1], student.coords[0])
+                    s_node = _student_frontage_node_id(G_unc, student.coords)
                     direct_distance_m = _MATRIX_CACHE_LENGTH.get((s_node, school_node), None)
                     direct_distance_km = round(direct_distance_m / 1000.0, 2) if direct_distance_m is not None and math.isfinite(direct_distance_m) else None
 
                     # Walk distance home -> assigned stop
-                    walk_dist = walk_distance_on_roads(G_unc, s_node, stop.node_id)
-                    if walk_dist <= 0 or not math.isfinite(walk_dist):
-                        walk_dist = 0.0
+                    walk_dist, _ = _student_walk_distance_m(G_unc, student.coords, stop)
 
                     students_list.append({
                         "id": student.id,
@@ -2488,6 +2510,33 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                 "total_time_min": round(route.total_time, 2),
                 "total_distance_km": round(route.total_distance, 2),
             })
+
+        # Build unserved student diagnostics (stable schema even when reasons are missing)
+        unserved_students = []
+        for student in sol.students:
+            if getattr(student, "is_served", False):
+                continue
+            stage_name = (
+                student.school_stage.name
+                if hasattr(student.school_stage, "name")
+                else str(student.school_stage)
+            )
+            rejection_reason = (getattr(student, "failure_reason", None) or "").strip()
+            if not rejection_reason:
+                rejection_reason = "unclassified_unserved"
+            unserved_students.append({
+                "id": student.id,
+                "stage": stage_name,
+                "route_id": None,
+                "pickup_order": None,
+                "ride_time_min": None,
+                "ride_distance_km": None,
+                "direct_potential_min": None,
+                "direct_distance_km": None,
+                "walk_distance_m": None,
+                "walk_limit_m": float(stage_walk.get(stage_name, 0)),
+                "rejection_reason": rejection_reason,
+            })
         
         # Get final objective value (after ALNS optimization)
         objective_final = round(sol.calculate_objective(), 2) if sol else None
@@ -2498,6 +2547,10 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         buses_used = s.get("buses_used")
         if buses_used is None and buses_available is not None:
             buses_used = buses_available
+
+        mode_wall_s = (mode_wall_times or {}).get(mk)
+        if mode_wall_s is None:
+            mode_wall_s = s.get("mode_wall_time")
 
         mode_entry = {
             "routes_created":       n_routes,
@@ -2513,7 +2566,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "max_ride_time_min":    max_ride_time,
             "objective_value":      objective_final,
             "alns_runtime_seconds": round(s["runtime"],     2),
-            "mode_wall_time_seconds": s.get("mode_wall_time"),
+            "mode_wall_time_seconds": round(mode_wall_s, 2) if mode_wall_s is not None else None,
             "operator_performance": s.get("operator_performance"),
             "alns_diagnostics": s.get("alns_diagnostics"),
             "insertion_debug": s.get("insertion_debug"),
@@ -2523,6 +2576,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "walk_stats":           walk,
             "routes":               routes_list,
             "students":             students_list,
+            "unserved_students":    unserved_students,
             "buses_available":       buses_available,
             "bus_capacity":          bus_capacity,
             "buses_used":            buses_used,

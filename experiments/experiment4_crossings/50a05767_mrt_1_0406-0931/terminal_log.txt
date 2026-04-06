@@ -1,0 +1,145 @@
+Experiment 4 – Crossings
+  Config hash  : 50a05767
+  MRT Status   : mrt
+  Run folder   : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/50a05767_mrt_1_0406-0931
+  Input config : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/input_mrt90_tmp.json
+  Output map   : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/50a05767_mrt_1_0406-0931/comparison_map.html
+
+  Matrix cache pkl: /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/cache/distance_matrix_dd9c8512_0406-0931.pkl
+  Matrix cache cfg: enabled=False, force_disable=False, isolate_per_run=False, min_finite_ratio=0.0001
+============================================================
+  THREE-MODE ROUTING COMPARISON  (input.json)
+============================================================
+  Students : 200
+  Seed     : 2000
+  Stages   : {'KG': 0.25, 'ELEMENTARY': 0.25, 'MIDDLE': 0.25, 'HIGH': 0.25}
+  Walk lim : {'KG': 0, 'ELEMENTARY': 0, 'MIDDLE': 250, 'HIGH': 500}
+  Iters    : 5000
+  Dwell    : 30s per pickup stop
+  BuildMap : ON
+  Running  : Weakly Constrained
+  Skipping : Strictly Constrained, Door-to-Door (debug flags)
+
+  Random seed: 2000 (ALNS deterministic)
+[1/7] Generating dataset …
+Generating 200 students around Victory College School...
+Downloading graph from configured boundary polygon...
+  Graph bbox: N=30.2014, S=29.7537, E=31.4668, W=31.2148
+  Max distance to bbox corner: 32.43 km
+  Annulus max_km: static=12.00 km (dynamic_max_km=false)
+Fetching restricted landuse zones...
+  Loaded 18 restricted-zone polygons.
+Found 22448 nodes on restricted highways.
+Building residential reachability index...
+  Residential context nodes (<= 200m): 235854
+Placement stats: 0 restricted-zone rejections, 13 no-residential rejections, 185 outside-boundary rejections, 93 forbidden-highway rejections, total_attempts=491.
+  Stage breakdown: {'HIGH': 54, 'MIDDLE': 49, 'KG': 53, 'ELEMENTARY': 44}
+
+[2/7] Building STRICTLY CONSTRAINED graph …
+Loading cached road network (pickle): cache/graph_a32bd635.pkl
+Applying road speed config...
+Adding edge bearings for turn-penalty calculations...
+Graph ready: 103442 nodes, 267432 edges
+
+  Pre-building BallTree …  [snap] BallTree built for 103,442 nodes
+ 0.7s
+[3/7] Building WEAKLY CONSTRAINED graph …
+Loading cached road network (pickle): cache/graph_a32bd635.pkl
+Applying road speed config...
+Adding edge bearings for turn-penalty calculations...
+Graph ready: 103442 nodes, 267432 edges
+
+[3b/7] Building WALK graph...
+  Walk graph coverage mode: bbox_strict (exact graph bbox rectangle)
+Loading cached walking network (pickle): cache/walk_graph_19d1e787_0403-1540.pkl
+Walk graph ready: 141281 nodes, 397388 edges
+
+  [Crossings Injection] Loading: /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/cache/crossings_3eab1f2e_0403-2023.pkl
+  [Crossings Injection] Injected 4353 edges, added 4353 new walk edges
+
+--------------------------------------------------
+MODE A: SKIPPED (debug.run_mode_a=false)
+--------------------------------------------------
+  [Mode B] Restored walk graph WITH synthetic crossings
+
+--------------------------------------------------
+MODE B: Weakly Constrained (all safe, same walk radius)
+--------------------------------------------------
+  Pre-building BallTree …  [snap] BallTree built for 103,442 nodes
+ 0.1s
+  [FleetSearch] minimize_buses=True — searching minimum fleet for Mode B
+
+[FleetSearch] 200 students, capacity 28, searching k=8..9
+[Optimization] Preparing distance matrix...
+Asking local OSRM to calculate matrix for 1239 nodes...
+OSRM Matrix calculation complete! Cache populated.
+[Optimization] Saved matrix cache to: /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/cache/distance_matrix_dd9c8512_0406-0931.pkl
+Starting ALNS Optimization (time budget: 720.0s, max 5000 iterations)...
+Initial State: ServiceSolution(served=0/200, objective=0.00)
+Iteration 10: Best Obj = 1909355.13, Temp = 817.1, Last 10 iter: 14.26s
+Iteration 20: Best Obj = 1959437.49, Temp = 667.6, Last 10 iter: 7.17s
+Iteration 30: Best Obj = 1959461.56, Temp = 545.5, Last 10 iter: 6.71s
+Iteration 40: Best Obj = 1959476.97, Temp = 445.7, Last 10 iter: 8.00s
+Iteration 50: Best Obj = 1959476.97, Temp = 364.2, Last 10 iter: 10.38s
+Iteration 60: Best Obj = 1959493.40, Temp = 297.6, Last 10 iter: 10.00s
+Iteration 70: Best Obj = 1959493.40, Temp = 243.1, Last 10 iter: 6.47s
+Iteration 80: Best Obj = 1959493.40, Temp = 198.6, Last 10 iter: 9.03s
+Iteration 90: Best Obj = 1959493.40, Temp = 162.3, Last 10 iter: 8.25s
+Iteration 100: Best Obj = 1959493.40, Temp = 132.6, Last 10 iter: 4.77s
+Iteration 110: Best Obj = 1959493.40, Temp = 108.4, Last 10 iter: 3.95s
+Iteration 120: Best Obj = 1959493.40, Temp = 88.5, Last 10 iter: 5.93s
+Iteration 130: Best Obj = 1959493.40, Temp = 72.3, Last 10 iter: 6.55s
+Iteration 140: Best Obj = 1959493.40, Temp = 59.1, Last 10 iter: 8.61s
+Iteration 150: Best Obj = 1959493.40, Temp = 48.3, Last 10 iter: 10.89s
+Iteration 160: Best Obj = 1959493.40, Temp = 39.5, Last 10 iter: 8.59s
+Iteration 170: Best Obj = 1959493.40, Temp = 32.2, Last 10 iter: 10.37s
+Iteration 180: Best Obj = 1959493.40, Temp = 26.3, Last 10 iter: 8.50s
+Iteration 190: Best Obj = 1959493.40, Temp = 21.5, Last 10 iter: 6.82s
+  Early stop: Theoretical Optimum hit! Polished for 140 iterations with no further objective improvement.
+Optimization Complete.
+Total Time: 165.83s
+Final State: ServiceSolution(served=200/200, objective=1959493.40)
+  Fleet 8: 200/200 served  [—]
+  → All students served with 8 bus(es) — minimum found.
+  [B] 200/200 served | routes=8 | time=594.5 min | 153.4s
+
+--------------------------------------------------
+MODE C: SKIPPED (debug.run_mode_c=false)
+--------------------------------------------------
+
+--------------------------------------------------
+BUILDING COMPARISON MAP
+--------------------------------------------------
+  Dangerous-road segments: 1177
+  Unclassified-road segments: 173
+  Intended bbox: N=30.2014, S=29.7537, E=31.4668, W=31.2148
+  Actual extent: N=30.2000, S=29.7673, E=31.4636, W=31.2156
+  Drawing Mode B …
+  Synthetic crossings (markers): 4353
+  Injected crossings (edges): 4353
+  Crossing usage – Mode B: 1 crossings with student usage
+  Crossing BFS stats:
+    Students checked: 199
+    Candidates enabled by crossings: 504
+    Students benefiting from crossings: 53
+
+  Map saved: /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/50a05767_mrt_1_0406-0931/comparison_map.html  (23906 KB)
+  Metrics  : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/50a05767_mrt_1_0406-0931/output.json
+  ALNS log : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/50a05767_mrt_1_0406-0931/alns_log_mode_b.json
+
+============================================================
+  COMPARISON SUMMARY (MRT)
+============================================================
+Mode                           Routes     Time     Dist   Served  Crossings  Wall(s)
+------------------------------------------------------------------------------------
+Weakly Constrained (Any Walking)      8    594.5    328.1 200/  200          0    165.9
+Strictly Constrained (Safe Walking)                                            — SKIPPED —
+Door-to-Door (No Walking)                                                 — SKIPPED —
+
+Wall-clock per mode:  B=165.9s
+Total wall-clock:     598.0s
+
+Stage distribution used: {'KG': 0.25, 'ELEMENTARY': 0.25, 'MIDDLE': 0.25, 'HIGH': 0.25}
+Walk limits used: {'KG': 0, 'ELEMENTARY': 0, 'MIDDLE': 250, 'HIGH': 500}
+
+Open '/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/50a05767_mrt_1_0406-0931/comparison_map.html' in a browser to explore.
