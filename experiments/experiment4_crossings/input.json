@@ -7,7 +7,7 @@
   },
 
   "n_students": 200,
-  "seed": 2000,
+  "seed": 67,
   "stage_distribution": {
     "KG": 0.25,
     "ELEMENTARY": 0.25,
@@ -51,7 +51,7 @@
     "daily_detour_budget_minutes": 10,
     "bidirectional_check": true,
     "mrt_enabled": true,
-    "mrt": 60,
+    "mrt": 90,
     "acceptable_offset_minutes": 30
   },
 
