@@ -2472,6 +2472,99 @@ def _build_crossing_tier_share(students_list):
     return out_stage, out_overall
 
 
+def _normalize_stage_for_crossing(stage_value):
+    """Normalize stage names used in crossing-eligibility checks."""
+    token = str(stage_value or "").strip().upper()
+    if "MIDDLE" in token:
+        return "MIDDLE"
+    if token in {"HIGH", "HIGHSCHOOL", "HIGH_SCHOOL", "SECONDARY"}:
+        return "HIGH"
+    if "HIGH" in token:
+        return "HIGH"
+    return token
+
+
+def _is_crossing_allowed_student(stage_value, disabled_value):
+    """Return whether a student is policy-eligible to use synthetic crossings.
+
+    Current paper policy: middle/high students may cross, disabled students may not.
+    """
+    if bool(disabled_value):
+        return False
+    stage = _normalize_stage_for_crossing(stage_value)
+    return stage in {"MIDDLE", "HIGH"}
+
+
+def _count_allowed_crossing_students(students_list, unserved_students):
+    """Count eligible students among served + unserved payloads."""
+    total_allowed = 0
+    for rec in (students_list or []):
+        if not isinstance(rec, dict):
+            continue
+        if _is_crossing_allowed_student(
+            rec.get("stage"),
+            rec.get("physically_mentally_disabled"),
+        ):
+            total_allowed += 1
+    for rec in (unserved_students or []):
+        if not isinstance(rec, dict):
+            continue
+        if _is_crossing_allowed_student(
+            rec.get("stage"),
+            rec.get("physically_mentally_disabled"),
+        ):
+            total_allowed += 1
+    return total_allowed
+
+
+def _ratio_pct(numerator, denominator):
+    """Return percentage numerator/denominator in [0, 100], or None when undefined."""
+    try:
+        den = float(denominator)
+        num = float(numerator)
+    except (TypeError, ValueError):
+        return None
+    if den <= 0:
+        return None
+    bounded_num = max(0.0, min(num, den))
+    return round((100.0 * bounded_num) / den, 6)
+
+
+def _crossing_bfs_stats_delta(start_stats, end_stats):
+    """Compute end-start deltas for crossing BFS counters."""
+    delta = {}
+    keys = set((start_stats or {}).keys()) | set((end_stats or {}).keys())
+    for key in keys:
+        try:
+            start_val = int((start_stats or {}).get(key, 0) or 0)
+            end_val = int((end_stats or {}).get(key, 0) or 0)
+        except (TypeError, ValueError):
+            start_val = 0
+            end_val = 0
+        delta[key] = max(0, end_val - start_val)
+    return delta
+
+
+def _allowed_mean_walking_dist(students_list):
+    """Mean walk distance among students with positive walk allowance."""
+    allowed_walk_vals = []
+    for rec in (students_list or []):
+        if not isinstance(rec, dict):
+            continue
+        walk_limit = rec.get("walk_limit_m")
+        walk_dist = rec.get("walk_distance_m")
+        try:
+            walk_limit = float(walk_limit)
+            walk_dist = float(walk_dist)
+        except (TypeError, ValueError):
+            continue
+        if walk_limit > 0 and math.isfinite(walk_dist):
+            allowed_walk_vals.append(walk_dist)
+    if not allowed_walk_vals:
+        return None
+    return float(sum(allowed_walk_vals) / len(allowed_walk_vals))
+
+
 def _compute_mode_paper_metrics(mode_entry, constraints_cfg):
     """Compute paper metric bundle from one mode entry."""
     served = int(mode_entry.get("students_served", 0) or 0)
@@ -2549,6 +2642,40 @@ def _compute_mode_paper_metrics(mode_entry, constraints_cfg):
     if mean_walk <= 0.0 and any(w > 0.0 for w in walk_vals):
         mean_walk = sum(walk_vals) / len(walk_vals)
 
+    allowed_mean_walk = mode_entry.get("allowed_mean_walk_dist_m")
+    if allowed_mean_walk is None:
+        allowed_mean_walk = _allowed_mean_walking_dist(mode_entry.get("students") or [])
+
+    allowed_crossing_students = int(mode_entry.get("allowed_crossing_students", 0) or 0)
+    if allowed_crossing_students <= 0:
+        allowed_crossing_students = _count_allowed_crossing_students(
+            mode_entry.get("students") or [],
+            mode_entry.get("unserved_students") or [],
+        )
+
+    students_used_allowed = mode_entry.get("students_using_synthetic_crossings_allowed")
+    if students_used_allowed is None:
+        students_used_allowed = sum(
+            1
+            for rec in (mode_entry.get("students") or [])
+            if isinstance(rec, dict)
+            and bool(rec.get("used_synthetic_crossing"))
+            and _is_crossing_allowed_student(
+                rec.get("stage"),
+                rec.get("physically_mentally_disabled"),
+            )
+        )
+    students_used_allowed = int(students_used_allowed or 0)
+
+    crossing_bfs_stats = mode_entry.get("crossing_bfs_stats") or {}
+    students_considered_allowed = mode_entry.get("students_considered_synthetic_crossings_allowed")
+    if students_considered_allowed is None:
+        students_considered_allowed = crossing_bfs_stats.get("allowed_students_explored_crossing", 0)
+    students_considered_allowed = int(students_considered_allowed or 0)
+
+    used_crossing_pct = _ratio_pct(students_used_allowed, allowed_crossing_students)
+    considered_crossing_pct = _ratio_pct(students_considered_allowed, allowed_crossing_students)
+
     return {
         "ServiceRate": round(service_rate, 6),
         "ActiveRoutes": int(mode_entry.get("routes_created", 0) or 0),
@@ -2560,8 +2687,11 @@ def _compute_mode_paper_metrics(mode_entry, constraints_cfg):
         "WelfareViolationRate": round(welfare_violation_rate, 6) if welfare_violation_rate is not None else None,
         "RideRatioMax": round(max(ratios), 6) if ratios else None,
         "MeanWalkDist": float(mean_walk),
+        "AllowedMeanWalkingDist": round(allowed_mean_walk, 6) if allowed_mean_walk is not None else None,
         "CrossingTierShare": mode_entry.get("crossing_tier_share_by_stage", {}),
         "SyntheticCrossingsUsed": int(mode_entry.get("synthetic_crossings_used", 0) or 0),
+        "UsedCrossing": used_crossing_pct,
+        "ConsideredCrossing": considered_crossing_pct,
     }
 
 
@@ -2728,6 +2858,7 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                         "direct_potential_min": round(direct_time, 2) if direct_time is not None else None,
                         "direct_distance_km": round(direct_distance_km, 2) if direct_distance_km is not None else None,
                         "walk_distance_m": round(walk_dist, 1),
+                        "walk_limit_m": float(stage_walk.get(stage_name, 0)),
                         "used_synthetic_crossing": bool(tiers_for_student),
                         "crossing_tier": primary_tier,
                     })
@@ -2809,6 +2940,24 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             mode_wall_s = s.get("mode_wall_time")
 
         crossing_students_used = sum(1 for rec in students_list if rec.get("used_synthetic_crossing"))
+        crossing_students_used_allowed = sum(
+            1
+            for rec in students_list
+            if rec.get("used_synthetic_crossing")
+            and _is_crossing_allowed_student(
+                rec.get("stage"),
+                rec.get("physically_mentally_disabled"),
+            )
+        )
+        crossing_bfs_stats = dict(s.get("crossing_bfs_stats") or {})
+        crossing_students_considered_allowed = int(
+            crossing_bfs_stats.get("allowed_students_explored_crossing", 0) or 0
+        )
+        allowed_crossing_students = _count_allowed_crossing_students(
+            students_list,
+            unserved_students,
+        )
+        allowed_mean_walk_dist_m = _allowed_mean_walking_dist(students_list)
         crossing_tier_share_by_stage, crossing_tier_share_overall = _build_crossing_tier_share(students_list)
 
         mode_entry = {
@@ -2843,6 +2992,11 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
             "buses_used":            buses_used,
             "synthetic_crossings_used": len(mode_crossing_usage),
             "students_using_synthetic_crossings": crossing_students_used,
+            "students_using_synthetic_crossings_allowed": crossing_students_used_allowed,
+            "students_considered_synthetic_crossings_allowed": crossing_students_considered_allowed,
+            "allowed_crossing_students": allowed_crossing_students,
+            "allowed_mean_walk_dist_m": allowed_mean_walk_dist_m,
+            "crossing_bfs_stats": crossing_bfs_stats,
             "crossing_tier_share_by_stage": crossing_tier_share_by_stage,
             "crossing_tier_share_overall": crossing_tier_share_overall,
             "ride_cap_violations_am": s.get("cap_violations_am"),
@@ -3352,6 +3506,7 @@ def run(input_path=None, output_path=None, iterations=None):
     _saved_walk_graph = _eng._WALK_GRAPH
     _ride_caps_on = meta.get("constraints", {}).get("enabled", True)
     crossing_usage_by_mode = {"A": {}, "B": {}, "C": {}}
+    crossing_stats_baseline = get_crossing_bfs_stats()
     sol_a, stats_a, school_a, cands_a, cand_dist_a = None, None, None, {}, {}
     
     if run_mode_a:
@@ -3411,6 +3566,12 @@ def run(input_path=None, output_path=None, iterations=None):
         except Exception as e:
             print(f"  Warning: failed to compute crossing usage for Mode A: {e}")
         _mode_wall_times["A"] = round(_wtime.time() - _t_a, 2)
+        _crossing_stats_after = get_crossing_bfs_stats()
+        stats_a["crossing_bfs_stats"] = _crossing_bfs_stats_delta(
+            crossing_stats_baseline,
+            _crossing_stats_after,
+        )
+        crossing_stats_baseline = _crossing_stats_after
         print(f"  [A] {stats_a['served']}/{stats_a['total']} served | "
               f"routes={stats_a['routes']} | time={stats_a['total_time']:.1f} min | "
               f"{stats_a['runtime']:.1f}s")
@@ -3482,6 +3643,12 @@ def run(input_path=None, output_path=None, iterations=None):
         except Exception as e:
             print(f"  Warning: failed to compute crossing usage for Mode B: {e}")
         _mode_wall_times["B"] = round(_wtime.time() - _t_b, 2)
+        _crossing_stats_after = get_crossing_bfs_stats()
+        stats_b["crossing_bfs_stats"] = _crossing_bfs_stats_delta(
+            crossing_stats_baseline,
+            _crossing_stats_after,
+        )
+        crossing_stats_baseline = _crossing_stats_after
         print(f"  [B] {stats_b['served']}/{stats_b['total']} served | "
               f"routes={stats_b['routes']} | time={stats_b['total_time']:.1f} min | "
               f"{stats_b['runtime']:.1f}s")
@@ -3548,6 +3715,12 @@ def run(input_path=None, output_path=None, iterations=None):
         except Exception as e:
             print(f"  Warning: failed to compute crossing usage for Mode C: {e}")
         _mode_wall_times["C"] = round(_wtime.time() - _t_c, 2)
+        _crossing_stats_after = get_crossing_bfs_stats()
+        stats_c["crossing_bfs_stats"] = _crossing_bfs_stats_delta(
+            crossing_stats_baseline,
+            _crossing_stats_after,
+        )
+        crossing_stats_baseline = _crossing_stats_after
         print(f"  [C] {stats_c['served']}/{stats_c['total']} served | "
               f"routes={stats_c['routes']} | time={stats_c['total_time']:.1f} min | "
               f"{stats_c['runtime']:.1f}s")
@@ -3792,6 +3965,9 @@ def run(input_path=None, output_path=None, iterations=None):
             print(f"    Students checked: {crossing_stats['students_checked']}")
             print(f"    Candidates enabled by crossings: {crossing_stats['candidates_via_crossing']}")
             print(f"    Students benefiting from crossings: {crossing_stats['students_with_crossing_benefit']}")
+            print(f"    Students exploring crossing edges: {crossing_stats.get('students_explored_crossing', 0)}")
+            print(f"    Eligible students checked: {crossing_stats.get('allowed_students_checked', 0)}")
+            print(f"    Eligible students exploring crossings: {crossing_stats.get('allowed_students_explored_crossing', 0)}")
 
         # Fill in empty FeatureGroups for any skipped modes so the layer control doesn't crash
         for _mk in ("A", "B", "C"):

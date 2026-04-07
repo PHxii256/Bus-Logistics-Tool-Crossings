@@ -4,12 +4,12 @@
   "default_speed_kph": 30,
 
   "road_types": {
-    "primary":        { "speed_multiplier": 0.6, "safe_to_cross": false },
-    "trunk":          { "speed_multiplier": 0.6, "safe_to_cross": false },
-    "secondary":      { "speed_multiplier": 0.4, "safe_to_cross": false },
-    "tertiary":       { "speed_multiplier": 0.4, "safe_to_cross": false },
-    "residential":    { "speed_multiplier": 0.2, "safe_to_cross": true  },
-    "living_street":  { "speed_multiplier": 0.2, "safe_to_cross": true  },
-    "default":        { "speed_multiplier": 0.2, "safe_to_cross": true  }
+    "primary":        { "speed_multiplier": 0.4, "safe_to_cross": false },
+    "trunk":          { "speed_multiplier": 0.4, "safe_to_cross": false },
+    "secondary":      { "speed_multiplier": 0.2, "safe_to_cross": false },
+    "tertiary":       { "speed_multiplier": 0.2, "safe_to_cross": false },
+    "residential":    { "speed_multiplier": 0.1, "safe_to_cross": true  },
+    "living_street":  { "speed_multiplier": 0.1, "safe_to_cross": true  },
+    "default":        { "speed_multiplier": 0.1, "safe_to_cross": true  }
   }
 }

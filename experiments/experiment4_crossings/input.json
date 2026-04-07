@@ -131,8 +131,8 @@
     "auto_from_bbox_circle": false,
     "auto_peak_km": false,
     "auto_sigma_km": false,
-    "peak_ratio": 0.25,
-    "sigma_ratio": 0.18,
+    "peak_ratio": 0.3,
+    "sigma_ratio": 0.3,
     "bbox_radius_scale": 1.0,
     "max_attempts_per_student": 12000,
     "attempts_log_every": 25000

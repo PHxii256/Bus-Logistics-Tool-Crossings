@@ -37,6 +37,9 @@ _CROSSING_BFS_STATS = {
     "students_checked": 0,
     "candidates_via_crossing": 0,  # drive nodes only reachable via synthetic crossing
     "students_with_crossing_benefit": 0,  # students who got extra candidates via crossings
+    "students_explored_crossing": 0,  # students whose BFS traversed >=1 synthetic crossing edge
+    "allowed_students_checked": 0,  # policy-eligible students checked by BFS
+    "allowed_students_explored_crossing": 0,  # eligible students whose BFS traversed crossings
 }
 # Cache: (student_node, stop_node) -> walk_distance_meters
 _WALK_DIST_CACHE = {}
@@ -1533,6 +1536,9 @@ def set_walk_graph(walk_graph, synthetic_cfg=None, drive_graph=None):
         "students_checked": 0,
         "candidates_via_crossing": 0,
         "students_with_crossing_benefit": 0,
+        "students_explored_crossing": 0,
+        "allowed_students_checked": 0,
+        "allowed_students_explored_crossing": 0,
     }
     _WALK_SPATIAL_INDEX = None
     _WALK_SPATIAL_INDEX_META = None
@@ -2509,6 +2515,9 @@ def _bfs_walk_graph_to_drive_nodes(
     """
     global _CROSSING_BFS_STATS
     lat, lon = coords
+    crossing_allowed_for_student = bool(
+        _allowed_synthetic_crossing_classes(student_stage, student_disabled)
+    )
 
     # Find starting walk node - map from nearest drive node
     drive_start = fast_nearest_node(drive_graph, lon, lat)
@@ -2547,6 +2556,7 @@ def _bfs_walk_graph_to_drive_nodes(
     drive_node_min_dist = {}  # drive_node -> dist
     drive_node_via_crossing = set()  # drive nodes reached ONLY via synthetic crossing
     drive_node_without_crossing = set()  # drive nodes reachable without synthetic crossing
+    explored_crossing = False
 
     while queue:
         current_walk_node, dist_so_far, crossed_synthetic = queue.pop(0)
@@ -2631,6 +2641,8 @@ def _bfs_walk_graph_to_drive_nodes(
                 new_dist = dist_so_far + edge_length
                 if new_dist <= walk_distance_limit:
                     new_crossed = crossed_synthetic or is_crossing_edge
+                    if is_crossing_edge:
+                        explored_crossing = True
                     queue.append((neighbor, new_dist, new_crossed))
 
         # Also check predecessors (for directed graphs only)
@@ -2642,6 +2654,8 @@ def _bfs_walk_graph_to_drive_nodes(
                     new_dist = dist_so_far + edge_length
                     if new_dist <= walk_distance_limit:
                         new_crossed = crossed_synthetic or is_crossing_edge
+                        if is_crossing_edge:
+                            explored_crossing = True
                         queue.append((predecessor, new_dist, new_crossed))
 
     # Calculate crossing-only candidates (nodes reachable ONLY via crossing)
@@ -2652,6 +2666,12 @@ def _bfs_walk_graph_to_drive_nodes(
     _CROSSING_BFS_STATS["candidates_via_crossing"] += len(crossing_only_nodes)
     if crossing_only_nodes:
         _CROSSING_BFS_STATS["students_with_crossing_benefit"] += 1
+    if explored_crossing:
+        _CROSSING_BFS_STATS["students_explored_crossing"] += 1
+    if crossing_allowed_for_student:
+        _CROSSING_BFS_STATS["allowed_students_checked"] += 1
+        if explored_crossing:
+            _CROSSING_BFS_STATS["allowed_students_explored_crossing"] += 1
 
     # Convert to list of (node, dist) tuples
     return [(node, dist) for node, dist in drive_node_min_dist.items()]
@@ -2669,6 +2689,9 @@ def reset_crossing_bfs_stats():
         "students_checked": 0,
         "candidates_via_crossing": 0,
         "students_with_crossing_benefit": 0,
+        "students_explored_crossing": 0,
+        "allowed_students_checked": 0,
+        "allowed_students_explored_crossing": 0,
     }
 
 

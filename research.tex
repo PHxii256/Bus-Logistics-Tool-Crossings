@@ -972,7 +972,15 @@ I-1 & 200 & 7& 9& 8\\
 Let $S^{served}$ denote the set of served students, $R^{act}$ 
 the set of active routes, $Q_r$ the bus capacity on route $r$, 
 $L_r$ the assigned student load on route $r$, and $p_s$ the 
-stop assigned to student $s$.
+stop assigned to student $s$. Let $S^{allow}$ denote students
+eligible to cross under the policy (middle/high school and not
+disabled), $S^{usedX}$ denote students who actually use at least one
+synthetic crossing in their final assigned walk path, and
+$S^{consX}$ denote students whose candidate-generation BFS traverses
+at least one synthetic crossing edge. Let $W_s$ denote the maximum
+allowed walking distance for student $s$, $S^{walk+}=\{s\in S^{served}:W_s>0\}$,
+and $d_{walk}(s,p_s)$ denote the assigned walking distance from $s$
+to stop $p_s$.
 
 \subsubsection{Service and Coverage}
 \begin{equation}
@@ -1016,6 +1024,40 @@ mean ratio and its variance across students.
 \frac{T_s^{assigned}}{T_s^{direct}}
 \end{equation}
 
+\subsubsection{Stop Selection Metrics}
+
+To evaluate stop-assignment behavior under walking and crossing
+constraints, we report one walking metric and two crossing metrics.
+The term $\frac{1}{|S^{walk+}|}$ is the averaging factor, where
+$|S^{walk+}|$ is the number of served students with a positive
+walking allowance ($W_s>0$). Likewise, $|S^{usedX}|$ and
+$|S^{consX}|$ denote the cardinalities of the sets of students who
+used crossings in final assignments and considered crossings during
+BFS exploration, respectively.
+
+\begin{equation}
+\text{AllowedMeanWalkingDist} =
+\frac{1}{|S^{walk+}|}
+\sum_{s\in S^{walk+}} d_{walk}(s,p_s)
+\end{equation}
+
+The crossing metrics are normalized by the policy-eligible population
+$|S^{allow}|$:
+
+\begin{equation}
+\text{UsedCrossing} = 100 \cdot 
+\frac{|S^{usedX} \cap S^{allow}|}{|S^{allow}|}
+\end{equation}
+
+\begin{equation}
+\text{ConsideredCrossing} = 100 \cdot 
+\frac{|S^{consX} \cap S^{allow}|}{|S^{allow}|}
+\end{equation}
+
+UsedCrossing captures realized crossing behavior in final assignments,
+while ConsideredCrossing captures exploration-time crossing behavior
+during bounded pedestrian BFS.
+
 \subsubsection{Computational Performance}
 
 Let $M$ denote the set of comparison modes and $\mathcal{I}_n$ the set
@@ -1029,13 +1071,23 @@ of runs at instance size $n=|S|$.
 \text{ExecutedIterations}(m) = I^{exec}_m, \quad m \in M
 \end{equation}
 
+For per-run reporting (as in Table~\ref{tab:eval_i1}), we use the
+terminal stop reason directly:
+
 \begin{equation}
-\text{StopReasonShare}(r,n) =
-\frac{\sum\limits_{i \in \mathcal{I}_n} \mathbf{1}\{\rho_i = r\}}
+\text{StopReason}(i,m)=\rho_{i,m},\quad i\in\mathcal{I}_n,\; m\in M
+\end{equation}
+
+For aggregated analysis by instance size, we report the share of a
+reason $r$ for each mode $m$:
+
+\begin{equation}
+\text{StopReasonShare}(r,m,n) =
+\frac{\sum\limits_{i \in \mathcal{I}_n} \mathbf{1}\{\rho_{i,m} = r\}}
 {|\mathcal{I}_n|}
 \end{equation}
 
-where $\rho_i$ is the terminal ALNS stop reason for run $i$
+where $\rho_{i,m}$ is the terminal ALNS stop reason for run $i$ in mode $m$
 (e.g., early-stop, freeze, time-budget). Runtime and iteration
 counts are reported per mode and summarized by instance size.
 

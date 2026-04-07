@@ -40,6 +40,70 @@ def _safe_int(v: Any, default: int = 0) -> int:
         return default
 
 
+def _normalize_stage_for_crossing(stage_value: Any) -> str:
+    token = str(stage_value or "").strip().upper()
+    if "MIDDLE" in token:
+        return "MIDDLE"
+    if token in {"HIGH", "HIGHSCHOOL", "HIGH_SCHOOL", "SECONDARY"}:
+        return "HIGH"
+    if "HIGH" in token:
+        return "HIGH"
+    return token
+
+
+def _is_crossing_allowed_student(stage_value: Any, disabled_value: Any) -> bool:
+    if bool(disabled_value):
+        return False
+    stage = _normalize_stage_for_crossing(stage_value)
+    return stage in {"MIDDLE", "HIGH"}
+
+
+def _count_allowed_crossing_students(mode_data: Dict[str, Any]) -> int:
+    total_allowed = 0
+    for rec in (mode_data.get("students") or []):
+        if not isinstance(rec, dict):
+            continue
+        if _is_crossing_allowed_student(
+            rec.get("stage"),
+            rec.get("physically_mentally_disabled"),
+        ):
+            total_allowed += 1
+    for rec in (mode_data.get("unserved_students") or []):
+        if not isinstance(rec, dict):
+            continue
+        if _is_crossing_allowed_student(
+            rec.get("stage"),
+            rec.get("physically_mentally_disabled"),
+        ):
+            total_allowed += 1
+    return total_allowed
+
+
+def _ratio_pct(numerator: Any, denominator: Any) -> float | None:
+    num = _safe_float(numerator, None)
+    den = _safe_float(denominator, None)
+    if num is None or den is None or den <= 0:
+        return None
+    bounded_num = max(0.0, min(num, den))
+    return float((100.0 * bounded_num) / den)
+
+
+def _allowed_mean_walking_dist(mode_data: Dict[str, Any]) -> float | None:
+    vals: List[float] = []
+    for rec in (mode_data.get("students") or []):
+        if not isinstance(rec, dict):
+            continue
+        walk_limit = _safe_float(rec.get("walk_limit_m"), None)
+        walk_dist = _safe_float(rec.get("walk_distance_m"), None)
+        if walk_limit is None or walk_dist is None:
+            continue
+        if walk_limit > 0:
+            vals.append(walk_dist)
+    if not vals:
+        return None
+    return float(sum(vals) / len(vals))
+
+
 def _normalize_mode_key(mode_key: str) -> str:
     key = str(mode_key or "").strip().lower()
     return _MODE_ALIASES.get(key, key or "unknown")
@@ -149,6 +213,10 @@ def _derive_paper_metrics(mode_data: Dict[str, Any], constraints: Dict[str, Any]
         # Guard against stale/zero walk_stats when student payload has valid walks.
         mean_walk = float(sum(vals) / len(vals))
 
+    allowed_mean_walk = _safe_float(mode_data.get("allowed_mean_walk_dist_m"), None)
+    if allowed_mean_walk is None:
+        allowed_mean_walk = _allowed_mean_walking_dist(mode_data)
+
     fleet_util = _safe_float(mode_data.get("fleet_utilization_ratio"), None)
     if fleet_util is None:
         fleet_util = _fleet_utilization(mode_data)
@@ -165,6 +233,30 @@ def _derive_paper_metrics(mode_data: Dict[str, Any], constraints: Dict[str, Any]
 
     wvr, n_wvr_checked = _welfare_violation_rate(mode_data, constraints)
 
+    allowed_crossing_students = _safe_int(mode_data.get("allowed_crossing_students"), 0)
+    if allowed_crossing_students <= 0:
+        allowed_crossing_students = _count_allowed_crossing_students(mode_data)
+
+    students_used_allowed = mode_data.get("students_using_synthetic_crossings_allowed")
+    if students_used_allowed is None:
+        students_used_allowed = sum(
+            1
+            for rec in (mode_data.get("students") or [])
+            if isinstance(rec, dict)
+            and bool(rec.get("used_synthetic_crossing"))
+            and _is_crossing_allowed_student(
+                rec.get("stage"),
+                rec.get("physically_mentally_disabled"),
+            )
+        )
+    students_used_allowed = _safe_int(students_used_allowed, 0)
+
+    crossing_bfs_stats = mode_data.get("crossing_bfs_stats") or {}
+    students_considered_allowed = mode_data.get("students_considered_synthetic_crossings_allowed")
+    if students_considered_allowed is None:
+        students_considered_allowed = (crossing_bfs_stats or {}).get("allowed_students_explored_crossing", 0)
+    students_considered_allowed = _safe_int(students_considered_allowed, 0)
+
     return {
         "ServiceRate": service_rate,
         "ActiveRoutes": active_routes,
@@ -176,8 +268,11 @@ def _derive_paper_metrics(mode_data: Dict[str, Any], constraints: Dict[str, Any]
         "WelfareViolationRate": wvr,
         "RideRatioMax": rr_max,
         "MeanWalkDist": mean_walk,
+        "AllowedMeanWalkingDist": allowed_mean_walk,
         "CrossingTierShare": mode_data.get("crossing_tier_share_by_stage", {}),
         "SyntheticCrossingsUsed": _safe_int(mode_data.get("synthetic_crossings_used"), 0),
+        "UsedCrossing": _ratio_pct(students_used_allowed, allowed_crossing_students),
+        "ConsideredCrossing": _ratio_pct(students_considered_allowed, allowed_crossing_students),
         "_n_ratio_samples": len(ratios),
         "_n_missing_ratio_fields": missing_ratio_fields,
         "_n_welfare_checked": n_wvr_checked,
