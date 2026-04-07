@@ -17,6 +17,7 @@
 \usepackage{fourier} 
 \usepackage{array}
 \usepackage{makecell}
+\usepackage{multirow}
 \usepackage{placeins}
 \usepackage{booktabs}
 \setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
@@ -119,9 +120,9 @@ data, and crossing permissions are assigned based on road class and
 student school stage as a proxy for age \cite{c4}. For example, 
 residential streets are considered safe to cross in most instances, 
 while tertiary roads are restricted for younger students. Crossing is 
-prohibited entirely for students with physical disabilities \cite{c7}. 
+prohibited entirely for students with moderate to severe disabilities \cite{c7}. 
 MWD constraints are similarly differentiated by school stage and 
-physical ability rather than applying a uniform threshold \cite{c1}.
+ presence of disability rather than applying a uniform threshold \cite{c1}.
 
 The proposed formulation uses real-world road network data from
 OpenStreetMap (OSM) and is solved using Adaptive Large
@@ -180,7 +181,7 @@ outsourcing, while Bowerman et al. \cite{c14} addressed stop
 selection within a multi-objective urban routing framework. 
 Nevertheless, safety constraints in existing formulations are 
 predominantly modeled as uniform walking thresholds and do not 
-differentiate by student age, physical ability, or road class. The 
+differentiate by student age,  presence of disability, or road class. The 
 MWD constraint, where it appears, is almost universally a single 
 fixed value applied across all students regardless of their 
 demographic characteristics \cite{c3}.
@@ -289,7 +290,7 @@ students while a high cap creates disproportionate burdens for nearby
 students, as illustrated in Figs.~\ref{fig:dmrt_corridor_60} 
 and~\ref{fig:dmrt_corridor}. Second, stop selection processes 
 rarely differentiate by student characteristics such as age or 
-physical ability, and do not account for the absence of formal 
+ disability, and do not account for the absence of formal 
 crossing infrastructure. Third, no existing formulation has been 
 designed specifically for an urban 
 developing country context using real road network data and informal crossing behavior. This paper 
@@ -345,7 +346,7 @@ objective) \cite{c3}. Hard constraints include:
 \item \textbf{School-Stage Dependent Street Crossing:} For each 
 student $s$, the pedestrian exploration graph is filtered by street 
 crossing safety permissions defined for their school stage and 
-physical ability \cite{c7}.
+ presence of disability \cite{c7}.
 
 \item \textbf{School-Stage Dependent Walking Distance (MWD):} A 
 stop $p$ is a feasible candidate for student $s$ only if pedestrian 
@@ -798,9 +799,8 @@ Compute walking penalty $\phi_s$ for $s \rightarrow p$\;
 \subsection{Experimental Setup}
 
 All experiments were conducted on [TO FILL: CPU model, RAM, OS]. 
-The software environment used Python [TO FILL] and OSMnx [TO FILL] 
-\cite{c8}. Each instance size was evaluated across [TO FILL] random 
-seeds to account for stochastic variability in both student 
+The software environment used Python 3.11. Each instance size was evaluated across 4 modes (this will be explained further later this section): DMRT Linnet, Strict and MRT 60 and 90 minutes with 3 random 
+seeds per mode to account for stochastic variability in both student 
 placement and ALNS search.
 
 
@@ -855,8 +855,6 @@ DMRT floor $\tau_{\min}$ & 60 min & Minimum ride time
 cap for any student \\
 DMRT offset $\tau_{add}$ & 30 min & Additive detour 
 allowance above $T^{direct}_s$ \\
-Seeds per instance & 3 & Number of random seeds 
-per instance size \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -868,11 +866,7 @@ stage-dependent policy parameters that encode the student welfare
 constraints central to this paper. MWD thresholds were set by 
 school stage as shown in Table~\ref{tab:mwd_stage}, reflecting 
 the reduced walking capacity of younger students \cite{c7}. 
-[TO FILL: one or two sentences justifying your specific threshold 
-values, e.g., referencing local Egyptian or regional guidelines 
-if available, or noting they were set conservatively relative to 
-developed-country benchmarks such as the 1.6 km Welsh 
-standard \cite{c15}.]
+These thresholds were established conservatively relative to developed-country benchmarks—such as the 1.6 km Welsh standard \cite{c15}, to align with local socio-cultural expectations in the Egypt, where specific national regulatory guidelines for student walking distances are currently absent.
 
 The road crossing permission matrix in 
 Table~\ref{tab:crossing_matrix} defines which road classes each 
@@ -883,9 +877,9 @@ to middle and high school students, reflecting their greater road
 awareness and physical ability. Secondary and higher road classes 
 are restricted for all students, as these roads carry higher 
 traffic volumes incompatible with informal crossing in the studied 
-urban environment \cite{c4}. Students with physical disabilities 
+urban environment \cite{c4}. Students with moderate to severe disabilities
 are excluded from all crossing permissions regardless of school 
-stage \cite{c7}.
+stage.
 
 \begin{table}[t]
 \caption{MWD THRESHOLDS BY SCHOOL STAGE}
@@ -927,43 +921,38 @@ Student home locations were generated synthetically using the
 annulus-Gaussian pipeline described in Section~IV-B, centered on 
 Victory College School in Maadi, Cairo, Egypt. This school was 
 selected as the anchor site because Cairo represents a dense,
-informal urban environment characteristic of the developing-country
-context motivating this work \cite{c4}: road infrastructure is
-heterogeneous, pedestrian crossings are largely absent, and no
-formal MRT policy exists. The graph boundary was the Cairo
-administrative zone, covering approximately $573\,\text{km}^2$.
+urban environment characteristic of the developing-country
+context motivating this work: no formal MRT policy exists. and  formal pedestrian crossings are largely absent. 
+The graph boundary was set to the Cairo administrative zone, covering approximately $573\,\text{km}^2$,  The total number of synthetic crossing edges injected into the pedestrian graph within this area was 4353.
 Student locations were accepted only if they fell within this
 boundary, avoided restricted road types and land uses, and had
 at least one residential road node in their vicinity. Road
-network data was obtained from OpenStreetMap via
+network data was obtained from OpenStreetMap and used via
 OSMnx \cite{c8}.
 
 The annulus distribution was parameterized in ratio form with 
 $\text{peak\_ratio}=0.25$, $\text{sigma\_ratio}=0.18$, and 
 $\text{bbox\_radius\_scale}=1.0$, with bounds 
 $[d_{min}, d_{max}] = [1.0, 12.0]$ km. 
-School stage was assigned according to [TO FILL: uniform 
-distribution or school-specific demographics]. A disability flag 
-was applied at a rate of 4\% per student. 
-Table~\ref{tab:instances} summarizes the instance scales 
-evaluated. The total number of synthetic crossing edges injected 
-into the pedestrian graph was 4353.
+School stage was assigned according to a uniform 
+distribution. A disability flag 
+was applied at a rate of 12.5\% per student as Olusanya et al. \cite{c23} estimated the percentage of moderate to severe disability prevalent in children aged 5–17 years globally. 
+Table~\ref{tab:instances} summarizes the instances 
+evaluated. The capacity of busses used $C$ was set to 28 across all busses, as it is observed to be the most common bus capacity in Egypt.
 
 \begin{table}[t]
 \caption{SYNTHETIC INSTANCE SUMMARY}
 \label{tab:instances}
 \centering
-\begin{tabular}{p{0.6cm}p{1.4cm}p{1.4cm}p{1.5cm}p{1.4cm}}
+\begin{tabular}{p{0.4cm}p{1cm}p{2cm}p{1.5cm}p{1.4cm}}
 \toprule
 \textbf{ID} & \textbf{Students $|S|$} & 
-\textbf{Candidates $|P|$} & 
+\textbf{Max Candidates Per Student $|P|$} & 
 \textbf{Fleet Count |$F$|}& 
 \textbf{Min Fleet $\lceil|S|/C\rceil$} \\
 \midrule
-I-1 & [TO FILL] & [TO FILL] & [TO FILL] & [TO FILL] \\
-I-2 & [TO FILL] & [TO FILL] & [TO FILL] & [TO FILL] \\
-I-3 & [TO FILL] & [TO FILL] & [TO FILL] & [TO FILL] \\
-I-4 & [TO FILL] & [TO FILL] & [TO FILL] & [TO FILL] \\
+I-1 & 200 & 7& 9& 8\\
+I-2 & 400 & 7& 16& 15\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1052,7 +1041,7 @@ logic applied during insertion evaluation
 \begin{itemize}
 
 \item \textbf{Fixed MRT} (baseline): A single fixed ride-time cap 
-of [TO FILL] minutes is applied uniformly to all students, 
+of either 60 or 90 minutes is applied uniformly to all students, 
 regardless of their proximity to school. This replicates the 
 conventional constraint used in the SBRP literature \cite{c3}.
 
@@ -1065,10 +1054,10 @@ $T_s^{AM} > T_s^{\max}$.
 is enforced jointly across both directions. Insertion is rejected 
 only if both $T_s^{AM} > T_s^{\max}$ and $T_s^{PM} > T_s^{\max}$.
 
-\item \textbf{No MRT} (ablation upper bound): No ride-time 
+\item \textbf{No MRT}: No ride-time 
 constraint is applied. This mode provides an upper bound on 
 achievable service rate and quantifies the coverage cost 
-introduced by any ride-time welfare constraint.
+introduced by any ride time constraint.
 
 \end{itemize}
 
@@ -1077,40 +1066,96 @@ introduced by any ride-time welfare constraint.
 
 \subsection{Service Coverage and Operational Efficiency}
 
-[TO FILL: Table reporting ServiceRate, ActiveRoutes, 
-TotalRouteTime, AvgRouteTime, and FleetUtilization for all four 
-modes across all instance sizes, averaged over seeds with standard 
-deviation. Discuss whether DMRT modes achieve comparable service 
-rates to Fixed MRT and how close each mode comes to the No MRT 
-upper bound.]
+Tables~\ref{tab:eval_i1} and~\ref{tab:eval_i2} report all evaluation 
+metrics at the run level, split by instance size (I-1 and I-2), with 
+rows grouped by seed and four modes per seed. Mean walking distance is 
+intentionally excluded as requested.
+
+\begin{table*}[!t]
+\caption{FULL EVALUATION RESULTS FOR I-1 ($|S|=200$) BY SEED AND MODE}
+\label{tab:eval_i1}
+\centering
+\tiny
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.05}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{c l c c c c c c c c c c c l}
+\toprule
+\textbf{Seed} & \textbf{Mode} & \makecell{\textbf{Service}\\\textbf{Rate}} & \makecell{\textbf{Active}\\\textbf{Routes}} & \makecell{\textbf{Total}\\\textbf{RouteTime}} & \makecell{\textbf{Avg}\\\textbf{RouteTime}} & \makecell{\textbf{Fleet}\\\textbf{Util.}} & \makecell{\textbf{RideRatio}\\\textbf{Mean}} & \makecell{\textbf{RideRatio}\\\textbf{Std}} & \makecell{\textbf{Welfare}\\\textbf{ViolationRate}} & \makecell{\textbf{RideRatio}\\\textbf{Max}} & \makecell{\textbf{Runtime}\\\textbf{Seconds}} & \makecell{\textbf{Executed}\\\textbf{Iterations}} & \textbf{StopReason} \\
+\midrule
+\multirow{4}{*}{Seed-1}
+& DMRT Lenient & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& DMRT Strict & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& MRT 60 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& MRT 90 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\midrule
+\multirow{4}{*}{Seed-2}
+& DMRT Lenient & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& DMRT Strict & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& MRT 60 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& MRT 90 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\midrule
+\multirow{4}{*}{Seed-3}
+& DMRT Lenient & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& DMRT Strict & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& MRT 60 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& MRT 90 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}%
+}
+\vspace{0.6em}
+
+\caption{FULL EVALUATION RESULTS FOR I-2 ($|S|=400$) BY SEED AND MODE}
+\label{tab:eval_i2}
+\centering
+\tiny
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.05}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{c l c c c c c c c c c c c l}
+\toprule
+\textbf{Seed} & \textbf{Mode} & \makecell{\textbf{Service}\\\textbf{Rate}} & \makecell{\textbf{Active}\\\textbf{Routes}} & \makecell{\textbf{Total}\\\textbf{RouteTime}} & \makecell{\textbf{Avg}\\\textbf{RouteTime}} & \makecell{\textbf{Fleet}\\\textbf{Util.}} & \makecell{\textbf{RideRatio}\\\textbf{Mean}} & \makecell{\textbf{RideRatio}\\\textbf{Std}} & \makecell{\textbf{Welfare}\\\textbf{ViolationRate}} & \makecell{\textbf{RideRatio}\\\textbf{Max}} & \makecell{\textbf{Runtime}\\\textbf{Seconds}} & \makecell{\textbf{Executed}\\\textbf{Iterations}} & \textbf{StopReason} \\
+\midrule
+\multirow{4}{*}{Seed-1}
+& DMRT Lenient & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& DMRT Strict & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& MRT 60 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& MRT 90 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\midrule
+\multirow{4}{*}{Seed-2}
+& DMRT Lenient & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& DMRT Strict & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& MRT 60 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& MRT 90 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\midrule
+\multirow{4}{*}{Seed-3}
+& DMRT Lenient & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& DMRT Strict & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& MRT 60 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& MRT 90 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+The table supports direct cross-mode comparisons within each seed and 
+then aggregation across seeds for mean and standard deviation reporting.
 
 \subsection{Ride Time Fairness}
 
-[TO FILL: Table reporting RideRatioMean, RideRatioStd, 
-WelfareViolationRate, and RideRatioMax for all four modes. This 
-is the core results table of the paper. The expected finding is 
-that Fixed MRT produces a higher RideRatioStd and RideRatioMax 
-than both DMRT modes, demonstrating that geographically distant 
-students bear a disproportionate ride time burden under a fixed 
-cap. Discuss the tradeoff between DMRT Strict and DMRT Lenient 
-in terms of fairness versus service rate.]
+Ride-time fairness is analyzed from 
+Tables~\ref{tab:eval_i1} and~\ref{tab:eval_i2} 
+using RideRatioMean, RideRatioStd, WelfareViolationRate, and 
+RideRatioMax for each seed-mode run.
 
-\subsection{Stop Selection and Walking Safety}
-
-[TO FILL: Table or figure reporting MeanWalkDist, 
-CrossingTierShare by stage, and SyntheticCrossingsUsed. Discuss 
-how the age-differentiated crossing model affects which stops are 
-assigned to younger versus older students, and how many students 
-benefit from synthetic crossings that would otherwise have had no 
-reachable stop.]
 
 \subsection{ALNS Convergence and Runtime}
 
-[TO FILL: Convergence plot (objective value vs iteration) for a 
-representative instance under each mode. Runtime table by instance 
-size using RuntimeSeconds and ExecutedIterations. Stopping-reason 
-distribution using StopReasonShare (early-stop vs freeze vs 
-time-budget). Polishing-window and merge-tail trigger frequencies.]
+Computational performance is reported from 
+Tables~\ref{tab:eval_i1} and~\ref{tab:eval_i2} using RuntimeSeconds, 
+ExecutedIterations, and per-run StopReason. StopReasonShare by 
+instance size can be computed by counting stop-reason categories 
+across runs within each size.
 
 \section{CONCLUSION}
 [Work in progress]
@@ -1283,6 +1328,11 @@ search for vehicle routing problems,''
 \textit{European Journal of Operational Research}, vol. 322, no. 2, 
 pp. 357--375, 2025.
 \url{https://doi.org/10.1016/j.ejor.2024.05.033}
+
+\bibitem{c23}
+Olusanya B, Kancherla V, Shaheen A, Ogbo F, Davis A ``Global and regional prevalence of disabilities among children and adolescents: Analysis of findings from global health databases,''
+\textit{Frontiers in Public Health 10, 2022.}
+\url{https://doi.org/10.3389/fpubh.2022.977453}
 
 \end{thebibliography}
 \end{document}
