@@ -206,13 +206,29 @@ def _parse_bins(bin_spec: str) -> np.ndarray:
     return arr
 
 
+def _save_figure_with_pdf(fig, out_path: Path) -> List[Path]:
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    saved: List[Path] = []
+
+    fig.savefig(out_path, dpi=320, bbox_inches="tight")
+    saved.append(out_path)
+
+    # Always emit a companion PDF for paper workflows.
+    pdf_path = out_path.with_suffix(".pdf")
+    if pdf_path != out_path:
+        fig.savefig(pdf_path, bbox_inches="tight")
+        saved.append(pdf_path)
+
+    return saved
+
+
 def plot_instance(
     all_rows: Sequence[StudentDirectRecord],
     instance_size: int,
     out_path: Path,
     bins: np.ndarray,
     x_max: float | None,
-) -> None:
+) -> List[Path]:
     rows = [r for r in all_rows if r.instance_size == instance_size]
     if not rows:
         raise ValueError(f"No direct-time rows for instance size {instance_size}.")
@@ -248,9 +264,9 @@ def plot_instance(
     ax.legend(frameon=False, fontsize=7)
 
     fig.tight_layout()
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_path, dpi=320, bbox_inches="tight")
+    saved = _save_figure_with_pdf(fig, out_path)
     plt.close(fig)
+    return saved
 
 
 def _instance_sizes(rows: Iterable[StudentDirectRecord]) -> List[int]:
@@ -307,14 +323,16 @@ def main() -> None:
         )
 
     if args.instance_size is not None:
-        plot_instance(rows, args.instance_size, output, bins, args.x_max)
-        print(f"Saved: {output}")
+        saved = plot_instance(rows, args.instance_size, output, bins, args.x_max)
+        for p in saved:
+            print(f"Saved: {p}")
         return
 
     for size in _instance_sizes(rows):
         out = output.with_name(f"{output.stem}_n{size}{output.suffix}")
-        plot_instance(rows, size, out, bins, args.x_max)
-        print(f"Saved: {out}")
+        saved = plot_instance(rows, size, out, bins, args.x_max)
+        for p in saved:
+            print(f"Saved: {p}")
 
 
 if __name__ == "__main__":

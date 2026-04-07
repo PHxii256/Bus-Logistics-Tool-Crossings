@@ -68,10 +68,7 @@ from geospatial OpenStreetMap data, replacing the policy-based fixed
 maximum ride time (MRT) constraint common in literature involving 
 developed countries, which is often absent in developing countries. 
 Unlike fixed MRT, DMRT scales with each student's direct travel time 
-via an additive offset above their personal direct travel time, 
-bounded below by a minimum floor, reducing the disparity between 
-direct and assigned travel times while maintaining a feasible 
-solution space across diverse geographic distributions; and (2) a 
+via an additive offset above each student’s direct travel time, bounded below by a minimum floor, which reduces the disparity between direct and assigned travel times while preserving feasibility across diverse geographic distributions. DMRT improved service rate by up to 7.6\% over MRT of 60 minutes and reduced mean ride-time unfairness by 11.5\% relative to MRT of 90 minutes; and (2) a 
 refined student age-based stop selection process that enforces 
 maximum walking distance (MWD) and street crossing constraints, 
 accounting for limited pedestrian infrastructure such as crosswalks 
@@ -798,10 +795,10 @@ Compute walking penalty $\phi_s$ for $s \rightarrow p$\;
 
 \subsection{Experimental Setup}
 
-All experiments were conducted on [TO FILL: CPU model, RAM, OS]. 
-The software environment used Python 3.11. Each instance size was evaluated across 4 modes (this will be explained further later this section): DMRT Linnet, Strict and MRT 60 and 90 minutes with 3 random 
+All experiments were conducted on: an AMD Ryzen 5 5500 (12) @ 3.59 GHz CPU, 32 GB RAM,  Ubuntu 24.04.4 LTS x86\_64 operating system. 
+The software environment used Python 3.11. Each instance size was evaluated across 4  ride time constraints (this will be explained further later this section): DMRT Linnet, Strict and MRT 60 and 90 minutes with 3 fixed 
 seeds per mode to account for stochastic variability in both student 
-placement and ALNS search.
+placement and ALNS search, the seeds used are: (42, 67 and 123)
 
 
 \subsubsection{ALNS Hyperparameters}
@@ -937,6 +934,20 @@ $[d_{min}, d_{max}] = [1.0, 12.0]$ km.
 School stage was assigned according to a uniform 
 distribution. A disability flag 
 was applied at a rate of 12.5\% per student as Olusanya et al. \cite{c23} estimated the percentage of moderate to severe disability prevalent in children aged 5–17 years globally. 
+Figure~\ref{fig:map_distribution_example} shows one representative
+post-routing map from the experiments. It visualizes the spatial
+coverage over Cairo, with served students in green and unserved
+students in red; the density also tapers with distance from school,
+reflecting the intended realistic annulus-based generation process.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/map_distribution.png}
+    \caption{Example post-routing student distribution over Cairo.
+    Green: served, red: unserved.}
+    \label{fig:map_distribution_example}
+\end{figure}
+
 Table~\ref{tab:instances} summarizes the instances 
 evaluated. The capacity of busses used $C$ was set to 28 across all busses, as it is observed to be the most common bus capacity in Egypt.
 
@@ -952,7 +963,6 @@ evaluated. The capacity of busses used $C$ was set to 28 across all busses, as i
 \textbf{Min Fleet $\lceil|S|/C\rceil$} \\
 \midrule
 I-1 & 200 & 7& 9& 8\\
-I-2 & 400 & 7& 16& 15\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1031,8 +1041,7 @@ counts are reported per mode and summarized by instance size.
 
 \subsection{Comparison Modes}
 
-To isolate the effect of the ride-time cap policy, all four modes 
-below use identical candidate stop sets, ALNS operators and 
+To isolate the effect of the ride-time cap policy, the four ride time constraints runs below use identical candidate stop sets, ALNS operators and 
 configuration, objective weights, and random seeds. The only 
 component that differs across modes is the ride-time feasibility 
 logic applied during insertion evaluation 
@@ -1040,7 +1049,7 @@ logic applied during insertion evaluation
 
 \begin{itemize}
 
-\item \textbf{Fixed MRT} (baseline): A single fixed ride-time cap 
+\item \textbf{Fixed MRT (60 and 90 minutes)}: A single fixed ride-time cap 
 of either 60 or 90 minutes is applied uniformly to all students, 
 regardless of their proximity to school. This replicates the 
 conventional constraint used in the SBRP literature \cite{c3}.
@@ -1054,22 +1063,63 @@ $T_s^{AM} > T_s^{\max}$.
 is enforced jointly across both directions. Insertion is rejected 
 only if both $T_s^{AM} > T_s^{\max}$ and $T_s^{PM} > T_s^{\max}$.
 
-\item \textbf{No MRT}: No ride-time 
-constraint is applied. This mode provides an upper bound on 
-achievable service rate and quantifies the coverage cost 
-introduced by any ride time constraint.
-
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{RESULTS AND DISCUSSION}
 
+This section evaluates the proposed DMRT-based formulation against
+fixed MRT baselines under identical routing and search settings.
+The analysis is organized into three parts: (A) service coverage and
+operational efficiency, (B) ride-time fairness, and
+(C) ALNS convergence and runtime behavior. Together, these results
+assess whether the proposed welfare-focused constraints improve equity
+without sacrificing practical service levels or computational efficiency.
+
 \subsection{Service Coverage and Operational Efficiency}
 
-Tables~\ref{tab:eval_i1} and~\ref{tab:eval_i2} report all evaluation 
-metrics at the run level, split by instance size (I-1 and I-2), with 
-rows grouped by seed and four modes per seed. Mean walking distance is 
-intentionally excluded as requested.
+Table~\ref{tab:eval_i1} reports per-seed outcomes for the four
+ride-time policies on I-1 ($|S|=200$), while
+Fig.~\ref{fig:service_prob_direct_time_i1} shows how service
+probability varies with direct home-to-school travel time.
+Aggregating across the three seeds, DMRT Lenient and DMRT Strict
+achieve mean service rates of 0.938 and 0.932 respectively,
+substantially higher than MRT 60 (0.872), while remaining below
+MRT 90 (0.993). This confirms the expected policy trade-off:
+a strict fixed cap under-serves distant students, whereas a very
+high fixed cap maximizes coverage at the expense of substantially
+longer rides.
+
+Operationally, MRT 60 yields the lowest mean total route time
+(690.72 min), but this is coupled with the lowest service. DMRT
+Strict and DMRT Lenient increase total route time to 710.04 and
+716.58 min respectively, while recovering about 6.0--6.7 percentage
+points of service relative to MRT 60. MRT 90 produces the highest
+total route time (753.59 min) and the highest average route time,
+indicating that its coverage gain is obtained by allowing materially
+longer route detours. Figure~\ref{fig:service_prob_direct_time_i1}
+is consistent with this pattern: DMRT curves dominate MRT 60 in the
+mid-to-high direct-time bins, showing that DMRT mainly improves
+inclusion for geographically distant students.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/fig2_service_prob_vs_direct_time_n200.pdf}
+    \caption{Service probability versus direct travel time for
+    I-1 ($|S|=200$), aggregated over seeds $\{42,67,123\}$.}
+    \label{fig:service_prob_direct_time_i1}
+\end{figure}
+
+
+\subsection{Ride Time Fairness}
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/fig3b_ride_ratio_max_n200.pdf}
+    \caption{Maximum ride ratio by mode for I-1 ($|S|=200$),
+    aggregated over seeds. Lower is better.}
+    \label{fig:ride_ratio_max_i1}
+\end{figure}
+
 
 \begin{table*}[!t]
 \caption{FULL EVALUATION RESULTS FOR I-1 ($|S|=200$) BY SEED AND MODE}
@@ -1079,86 +1129,138 @@ intentionally excluded as requested.
 \setlength{\tabcolsep}{2pt}
 \renewcommand{\arraystretch}{1.05}
 \resizebox{\textwidth}{!}{%
-\begin{tabular}{c l c c c c c c c c c c c l}
+\begin{tabular}{c l c c c c c c c c c c l}
 \toprule
-\textbf{Seed} & \textbf{Mode} & \makecell{\textbf{Service}\\\textbf{Rate}} & \makecell{\textbf{Active}\\\textbf{Routes}} & \makecell{\textbf{Total}\\\textbf{RouteTime}} & \makecell{\textbf{Avg}\\\textbf{RouteTime}} & \makecell{\textbf{Fleet}\\\textbf{Util.}} & \makecell{\textbf{RideRatio}\\\textbf{Mean}} & \makecell{\textbf{RideRatio}\\\textbf{Std}} & \makecell{\textbf{Welfare}\\\textbf{ViolationRate}} & \makecell{\textbf{RideRatio}\\\textbf{Max}} & \makecell{\textbf{Runtime}\\\textbf{Seconds}} & \makecell{\textbf{Executed}\\\textbf{Iterations}} & \textbf{StopReason} \\
+\textbf{Seed} & \textbf{Mode} & \makecell{\textbf{Service}\\\textbf{Rate}} & \makecell{\textbf{Active}\\\textbf{Routes}} & \makecell{\textbf{Total}\\\textbf{RouteTime}} & \makecell{\textbf{Avg}\\\textbf{RouteTime}} & \makecell{\textbf{Fleet}\\\textbf{Util.}} & \makecell{\textbf{RideRatio}\\\textbf{Mean}} & \makecell{\textbf{RideRatio}\\\textbf{Std}} & \makecell{\textbf{RideRatio}\\\textbf{Max}} & \makecell{\textbf{Runtime}\\\textbf{Seconds}} & \makecell{\textbf{Executed}\\\textbf{Iterations}} & \textbf{StopReason} \\
 \midrule
-\multirow{4}{*}{Seed-1}
-& DMRT Lenient & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& DMRT Strict & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& MRT 60 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& MRT 90 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\multirow{4}{*}{42}
+& DMRT Lenient & 0.950 & 9 & 712.90 & 79.21 & 0.754 & 4.076 & 3.838 & 30.355 & 200.53 & 308 & freeze\_patience \\
+& DMRT Strict & 0.930 & 9 & 707.39 & 78.60 & 0.738 & 3.608 & 2.892 & 16.852 & 129.42 & 331 & freeze\_patience \\
+& MRT 60 & 0.870 & 9 & 699.04 & 77.67 & 0.690 & 4.639 & 4.470 & 29.518 & 231.03 & 281 & no\_improve\_patience \\
+& MRT 90 & 0.990 & 8 & 785.57 & 98.20 & 0.884 & 4.663 & 4.218 & 23.406 & 184.71 & 324 & freeze\_patience \\
 \midrule
-\multirow{4}{*}{Seed-2}
-& DMRT Lenient & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& DMRT Strict & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& MRT 60 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& MRT 90 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\multirow{4}{*}{67}
+& DMRT Lenient & 0.935 & 9 & 710.18 & 78.91 & 0.742 & 3.774 & 3.224 & 15.068 & 178.61 & 308 & freeze\_patience \\
+& DMRT Strict & 0.935 & 9 & 707.66 & 78.63 & 0.742 & 3.593 & 3.489 & 28.870 & 120.27 & 218 & no\_improve\_patience \\
+& MRT 60 & 0.870 & 9 & 668.98 & 74.33 & 0.690 & 3.960 & 3.144 & 18.235 & 182.60 & 295 & no\_improve\_patience \\
+& MRT 90 & 0.990 & 8 & 736.78 & 92.10 & 0.884 & 3.677 & 3.802 & 29.041 & 207.17 & 308 & freeze\_patience \\
 \midrule
-\multirow{4}{*}{Seed-3}
-& DMRT Lenient & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& DMRT Strict & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& MRT 60 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& MRT 90 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-\bottomrule
-\end{tabular}%
-}
-\vspace{0.6em}
-
-\caption{FULL EVALUATION RESULTS FOR I-2 ($|S|=400$) BY SEED AND MODE}
-\label{tab:eval_i2}
-\centering
-\tiny
-\setlength{\tabcolsep}{2pt}
-\renewcommand{\arraystretch}{1.05}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{c l c c c c c c c c c c c l}
-\toprule
-\textbf{Seed} & \textbf{Mode} & \makecell{\textbf{Service}\\\textbf{Rate}} & \makecell{\textbf{Active}\\\textbf{Routes}} & \makecell{\textbf{Total}\\\textbf{RouteTime}} & \makecell{\textbf{Avg}\\\textbf{RouteTime}} & \makecell{\textbf{Fleet}\\\textbf{Util.}} & \makecell{\textbf{RideRatio}\\\textbf{Mean}} & \makecell{\textbf{RideRatio}\\\textbf{Std}} & \makecell{\textbf{Welfare}\\\textbf{ViolationRate}} & \makecell{\textbf{RideRatio}\\\textbf{Max}} & \makecell{\textbf{Runtime}\\\textbf{Seconds}} & \makecell{\textbf{Executed}\\\textbf{Iterations}} & \textbf{StopReason} \\
-\midrule
-\multirow{4}{*}{Seed-1}
-& DMRT Lenient & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& DMRT Strict & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& MRT 60 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& MRT 90 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-\midrule
-\multirow{4}{*}{Seed-2}
-& DMRT Lenient & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& DMRT Strict & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& MRT 60 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& MRT 90 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-\midrule
-\multirow{4}{*}{Seed-3}
-& DMRT Lenient & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& DMRT Strict & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& MRT 60 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& MRT 90 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\multirow{4}{*}{123}
+& DMRT Lenient & 0.930 & 9 & 726.67 & 80.74 & 0.738 & 3.491 & 2.661 & 15.644 & 151.41 & 208 & no\_improve\_patience \\
+& DMRT Strict & 0.930 & 9 & 715.08 & 79.45 & 0.738 & 3.560 & 3.089 & 22.290 & 125.40 & 308 & freeze\_patience \\
+& MRT 60 & 0.875 & 9 & 704.14 & 78.24 & 0.694 & 3.307 & 2.190 & 12.590 & 199.82 & 312 & freeze\_patience \\
+& MRT 90 & 1.000 & 9 & 738.43 & 82.05 & 0.794 & 3.814 & 4.023 & 23.213 & 178.07 & 320 & freeze\_patience \\
 \bottomrule
 \end{tabular}%
 }
 \end{table*}
 
-The table supports direct cross-mode comparisons within each seed and 
-then aggregation across seeds for mean and standard deviation reporting.
+Ride-time fairness is evaluated with the ratio
+$T_s^{assigned}/T_s^{direct}$ (Table~\ref{tab:eval_i1},
+Figs.~\ref{fig:ride_ratio_mean_i1} and
+\ref{fig:ride_ratio_max_i1}). Lower values indicate that assigned
+rides stay closer to each student's direct travel time.
+Across seeds, DMRT Strict attains the lowest mean unfairness
+(RideRatioMean $=3.587$), followed by DMRT Lenient (3.780),
+while both fixed-cap baselines are higher (MRT 60: 3.969,
+MRT 90: 4.051). This indicates that personalized caps improve
+average proportional fairness even when service remains high.
 
-\subsection{Ride Time Fairness}
+For tail fairness (worst-case student burden), MRT 90 shows the
+largest RideRatioMax on average (25.22), whereas DMRT policies reduce
+this value (22.67 for DMRT Strict and 20.36 for DMRT Lenient).
+MRT 60 has a comparable mean maximum ratio (20.11), but this should
+be interpreted together with its much lower service rate; many
+hard-to-serve distant students are not served under MRT 60, which
+can mechanically suppress observed unfairness among only the served
+subset. Therefore, the combined evidence supports DMRT as a better
+coverage-fairness compromise than either fixed baseline.
 
-Ride-time fairness is analyzed from 
-Tables~\ref{tab:eval_i1} and~\ref{tab:eval_i2} 
-using RideRatioMean, RideRatioStd, WelfareViolationRate, and 
-RideRatioMax for each seed-mode run.
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/fig3a_ride_ratio_mean_n200.pdf}
+    \caption{Mean ride ratio by mode for I-1 ($|S|=200$),
+    aggregated over seeds. Lower is better.}
+    \label{fig:ride_ratio_mean_i1}
+\end{figure}
+
 
 
 \subsection{ALNS Convergence and Runtime}
 
-Computational performance is reported from 
-Tables~\ref{tab:eval_i1} and~\ref{tab:eval_i2} using RuntimeSeconds, 
-ExecutedIterations, and per-run StopReason. StopReasonShare by 
-instance size can be computed by counting stop-reason categories 
-across runs within each size.
+The computational metrics in Table~\ref{tab:eval_i1} indicate stable
+ALNS behavior across policies. Mean executed iterations remain in a
+narrow range (approximately 275--317), with MRT 90 running slightly
+longer on average. DMRT Strict achieves the shortest mean runtime
+(125.03 s), followed by DMRT Lenient (176.85 s), while MRT 60 and
+MRT 90 average 204.48 s and 189.98 s respectively. Terminal reasons
+are predominantly \texttt{freeze\_patience} and
+\texttt{no\_improve\_patience}; no run terminates due to time budget,
+indicating that the configured stopping criteria are active before
+hard budget exhaustion. Overall, runtime results suggest that the
+fairness and service gains of DMRT are not obtained through higher
+computational cost relative to fixed MRT baselines.
+
+Table~\ref{tab:operator_perf_i1} summarizes operator-level behavior
+aggregated across all 12 I-1 runs (3 seeds $\times$ 4 ride-time
+policies). Random removal is the most frequently
+selected destroy operator, while worst-cost removal is the most
+expensive destroy move per call. On the repair side, regret repair is
+slower per invocation, but random-order best repair is selected more
+often, together explaining most ALNS wall time.
+
+\begin{table}[t]
+\caption{ALNS OPERATOR USAGE AND PERFORMANCE FOR I-1 ($|S|=200$)}
+\label{tab:operator_perf_i1}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.08}
+\begin{tabular}{l p{0.32\linewidth}c >{\centering\arraybackslash}p{0.15\linewidth}c}
+\toprule
+\textbf{Type} & \textbf{Operator} & \makecell{\textbf{Mean}\\\textbf{Calls/run}} & \makecell{\textbf{Mean}\\\textbf{Share (\%)}} & \makecell{\textbf{Mean}\\\textbf{Time/call (ms)}}\\
+\midrule
+Destroy & random\_removal & 141.8 & 48.41 & 0.490 \\
+Destroy & worst\_cost\_removal & 58.7 & 20.13 & 2.660 \\
+Destroy & shaw\_related\_removal & 35.8 & 11.99 & 0.857 \\
+Destroy & sequence\_removal & 32.6 & 11.12 & 0.364 \\
+Destroy & route\_merge\_removal & 26.1 & 8.78 & 0.207 \\
+Repair & random\_order\_best\_repair & 179.8 & 61.45 & 198.812 \\
+Repair & regret\_repair & 116.1 & 39.34 & 396.127 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 
 \section{CONCLUSION}
-[Work in progress]
+This paper presented a student welfare-focused formulation of the
+School Bus Routing Problem tailored to developing-country contexts,
+where fixed policy MRT values and formal pedestrian infrastructure
+are often unavailable. The proposed approach combines two core
+mechanisms: (i) a Dynamic Maximum Ride Time (DMRT) cap,
+$T_s^{\max}=\max(\tau_{\min},T_s^{direct}+\tau_{add})$, and
+(ii) stage-aware stop selection with road-class crossing constraints
+and synthetic crossing augmentation.
+
+Experimental results on Cairo-based synthetic instances show that DMRT
+consistently improves the service-fairness trade-off relative to a
+strict fixed MRT baseline. On I-1 ($|S|=200$), both DMRT variants
+substantially outperform MRT 60 in service while maintaining lower
+average proportional unfairness than fixed MRT policies overall.
+Compared with MRT 90, DMRT provides stronger fairness behavior,
+particularly in tail-risk control (lower worst-case ride-time ratios),
+while avoiding the substantial route-time inflation associated with a
+high uniform cap. Runtime analysis further indicates that these
+benefits are achieved without additional computational burden.
+Quantitatively, DMRT delivered up to 7.6\% higher service than MRT 60
+and reduced RideRatioMean by 11.5\% versus MRT 90 on I-1.
+
+Overall, the findings support DMRT as a practical and equitable
+ride-time policy for data-constrained urban settings in developing
+countries. Future work will extend evaluation to larger instance
+sizes, sensitivity analysis of welfare-policy parameters
+($\tau_{\min}$, $\tau_{add}$, and stage-dependent MWD/crossing rules),
+and multi-school/multi-depot deployments on real operational data.
 
 \section{ACKNOWLEDGMENTS}
 
