@@ -1,0 +1,34 @@
+Experiment 4 – Crossings
+  Config hash  : d74eae6f
+  MRT Status   : mrt
+  Run folder   : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/d74eae6f_mrt_1_0408-2038
+  Input config : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/input.json
+  Output map   : /home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/d74eae6f_mrt_1_0408-2038/comparison_map.html
+
+  Matrix cache cfg: enabled=False, force_disable=False, isolate_per_run=False, min_finite_ratio=0.0001
+============================================================
+  THREE-MODE ROUTING COMPARISON  (input.json)
+============================================================
+  Students : 200
+  Seed     : 123
+  Stages   : {'KG': 0.25, 'ELEMENTARY': 0.25, 'MIDDLE': 0.25, 'HIGH': 0.25}
+  Walk lim : {'KG': 0, 'ELEMENTARY': 0, 'MIDDLE': 250, 'HIGH': 500}
+  Iters    : 5000
+  Dwell    : 30s per pickup stop
+  BuildMap : ON
+  Running  : Weakly Constrained
+  Skipping : Strictly Constrained, Door-to-Door (debug flags)
+
+  Random seed: 123 (ALNS deterministic)
+[1/7] Generating dataset …
+Generating 200 students around Victory College School...
+  Accessibility profile: 25/200 physically/mentally disabled (12.50%)
+Downloading graph from configured boundary polygon...
+  Graph bbox: N=30.2014, S=29.7537, E=31.4668, W=31.2148
+  Max distance to bbox corner: 32.43 km
+  Annulus auto-from-bbox-circle: max_km=32.43, peak_km=9.73, sigma_km=9.43, min_km=1.00
+Fetching restricted landuse zones...
+  Loaded 18 restricted-zone polygons.
+Found 22448 nodes on restricted highways.
+Building residential reachability index...
+  Residential context nodes (<= 200m): 235854

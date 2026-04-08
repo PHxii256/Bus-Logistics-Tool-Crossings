@@ -1188,21 +1188,50 @@ def _student_direct_metrics(G, school_node, student):
     if school_node is None:
         return None, None
 
-    direct_time = compute_direct_time(student, school_node, G)
+    def _normalize_school_node_id(graph, school_ref):
+        """Resolve school reference (node id / coords dict / tuple) to a graph node id."""
+        # Fast path: already a hashable node id in graph.
+        try:
+            hash(school_ref)
+            if graph is not None and school_ref in graph:
+                return school_ref
+        except TypeError:
+            pass
+
+        lat = lon = None
+        if isinstance(school_ref, dict):
+            lat = school_ref.get("latitude", school_ref.get("lat", school_ref.get("y")))
+            lon = school_ref.get("longitude", school_ref.get("lon", school_ref.get("x")))
+        elif isinstance(school_ref, (tuple, list)) and len(school_ref) >= 2:
+            lat, lon = school_ref[0], school_ref[1]
+
+        if lat is None or lon is None or graph is None:
+            return None
+
+        try:
+            return _eng.fast_nearest_node(graph, float(lon), float(lat))
+        except Exception:
+            return None
+
+    school_node_id = _normalize_school_node_id(G, school_node)
+    if school_node_id is None:
+        return None, None
+
+    direct_time = compute_direct_time(student, school_node_id, G)
     if not math.isfinite(direct_time):
         direct_time = None
 
     direct_distance_km = None
     try:
         s_node = _student_frontage_node_id(G, student.coords)
-        direct_distance_m = _MATRIX_CACHE_LENGTH.get((s_node, school_node), None)
+        direct_distance_m = _MATRIX_CACHE_LENGTH.get((s_node, school_node_id), None)
         if direct_distance_m is None:
-            direct_distance_m = _MATRIX_CACHE_LENGTH.get((school_node, s_node), None)
+            direct_distance_m = _MATRIX_CACHE_LENGTH.get((school_node_id, s_node), None)
 
         if direct_distance_m is not None and math.isfinite(direct_distance_m):
             direct_distance_km = direct_distance_m / 1000.0
         else:
-            school_data = G.nodes.get(school_node, {}) if G is not None else {}
+            school_data = G.nodes.get(school_node_id, {}) if G is not None else {}
             school_lat = school_data.get("y")
             school_lon = school_data.get("x")
             if school_lat is not None and school_lon is not None:
@@ -1742,7 +1771,7 @@ def _add_candidate_layer(m, G, mode_key, sol, cand_cache, cand_dist):
     return fg
 
 
-def _add_unserved_layer(m, sol, mode_key, unserved_records=None):
+def _add_unserved_layer(m, sol, mode_key, unserved_records=None, G=None, school_node=None):
     """Add a FeatureGroup with X-pin markers for every unserved student in *sol*."""
     show = mode_key in ("A", "B")
     fg = FeatureGroup(name=f"{_MODE_NAMES[mode_key]} – Unserved Students", show=show)
@@ -1768,6 +1797,14 @@ def _add_unserved_layer(m, sol, mode_key, unserved_records=None):
 
         direct_potential_min = rec.get("direct_potential_min", None)
         direct_distance_km = rec.get("direct_distance_km", None)
+        if (direct_potential_min is None or direct_distance_km is None) and G is not None and school_node is not None:
+            # Fallback for map rendering phase: compute direct metrics if serialized
+            # unserved records are not yet attached to mode stats.
+            calc_direct_time, calc_direct_distance_km = _student_direct_metrics(G, school_node, student)
+            if direct_potential_min is None and calc_direct_time is not None:
+                direct_potential_min = round(float(calc_direct_time), 2)
+            if direct_distance_km is None and calc_direct_distance_km is not None:
+                direct_distance_km = round(float(calc_direct_distance_km), 2)
         walk_distance_m = rec.get("walk_distance_m", None)
         used_synthetic_crossing = bool(rec.get("used_synthetic_crossing", False))
         rejection_reason = (
@@ -2300,7 +2337,25 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
     
     # Get MRT status for title
     mrt_enabled = (meta or {}).get("constraints", {}).get("mrt_enabled", False) if meta else False
-    mrt_status_text = f" {'(MRT)' if mrt_enabled else '(DMRT)'}"
+    mrt_raw = (meta or {}).get("constraints", {}).get("mrt") if meta else None
+    if mrt_enabled:
+        mrt_disp = None
+        try:
+            mrt_val = float(mrt_raw)
+            mrt_disp = str(int(mrt_val)) if mrt_val.is_integer() else f"{mrt_val:g}"
+        except (TypeError, ValueError):
+            mrt_disp = str(mrt_raw).strip() if mrt_raw is not None else None
+        mrt_status_text = f" (MRT={mrt_disp})" if mrt_disp else " (MRT)"
+    else:
+        mrt_status_text = " (DMRT)"
+
+    mrt_json_line = "\"mrt\": N/A"
+    if mrt_raw is not None:
+        try:
+            mrt_num = float(mrt_raw)
+            mrt_json_line = f'\"mrt\": {int(mrt_num) if mrt_num.is_integer() else f"{mrt_num:g}"}'
+        except (TypeError, ValueError):
+            mrt_json_line = f'\"mrt\": {str(mrt_raw)}'
 
     blocks = ""
     _build_stats_html._mode_tables = ""   # accumulator for side-by-side mode tables
@@ -2437,6 +2492,9 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
             <div style="font-weight:bold; font-size:13px; margin-bottom:10px;
                   padding-bottom:6px; border-bottom:2px solid #ccc;">
         Three-Mode Routing Comparison{mrt_status_text}
+                <div style="font-weight:normal; font-size:11px; color:#666; margin-top:2px;">
+                    {mrt_json_line}
+                </div>
       </div>
       {blocks}
       {route_table}
@@ -3983,12 +4041,12 @@ def run(input_path=None, output_path=None, iterations=None):
         fgs_unserved = {}  # mk -> fg_unserved
 
         solutions = [
-            ("A", sol_a),
-            ("B", sol_b),
-            ("C", sol_c),
+            ("A", sol_a, school_a),
+            ("B", sol_b, school_b),
+            ("C", sol_c, school_c),
         ]
 
-        for mk, sol in solutions:
+        for mk, sol, school_node_for_mode in solutions:
             if sol is None:
                 continue
             print(f"  Drawing Mode {mk} …")
@@ -3996,7 +4054,14 @@ def run(input_path=None, output_path=None, iterations=None):
                                 constraints=meta.get("constraints"))
             fgs[mk] = (fg_r, fg_w)
             mode_unserved_records = (all_stats.get(mk) or {}).get("unserved_students")
-            fgs_unserved[mk] = _add_unserved_layer(m, sol, mk, mode_unserved_records)
+            fgs_unserved[mk] = _add_unserved_layer(
+                m,
+                sol,
+                mk,
+                mode_unserved_records,
+                G=G_unc,
+                school_node=school_node_for_mode,
+            )
 
         # Candidate stop inspector layers (one per mode, hidden by default)
         cand_data = {mk: cd for mk, cd in {
