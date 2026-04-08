@@ -1,0 +1,1 @@
+[DEBUG] Building metrics for mode B: sol has 8 routes
