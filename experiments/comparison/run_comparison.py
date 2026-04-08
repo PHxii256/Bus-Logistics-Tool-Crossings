@@ -1742,10 +1742,20 @@ def _add_candidate_layer(m, G, mode_key, sol, cand_cache, cand_dist):
     return fg
 
 
-def _add_unserved_layer(m, sol, mode_key):
+def _add_unserved_layer(m, sol, mode_key, unserved_records=None):
     """Add a FeatureGroup with X-pin markers for every unserved student in *sol*."""
     show = mode_key in ("A", "B")
     fg = FeatureGroup(name=f"{_MODE_NAMES[mode_key]} – Unserved Students", show=show)
+
+    unserved_lookup = {}
+    for rec in (unserved_records or []):
+        if not isinstance(rec, dict):
+            continue
+        sid = rec.get("id")
+        if sid is None:
+            continue
+        unserved_lookup[str(sid)] = rec
+
     for student in sol.students:
         if getattr(student, 'is_served', False):
             continue
@@ -1754,13 +1764,48 @@ def _add_unserved_layer(m, sol, mode_key):
             if hasattr(student.school_stage, 'name')
             else str(student.school_stage)
         )
+        rec = unserved_lookup.get(str(student.id), {})
+
+        direct_potential_min = rec.get("direct_potential_min", None)
+        direct_distance_km = rec.get("direct_distance_km", None)
+        walk_distance_m = rec.get("walk_distance_m", None)
+        used_synthetic_crossing = bool(rec.get("used_synthetic_crossing", False))
+        rejection_reason = (
+            rec.get("rejection_reason")
+            or getattr(student, "failure_reason", None)
+            or "unclassified_unserved"
+        )
+        crossing_tier = rec.get("crossing_tier", "none")
+
+        direct_potential_html = (
+            f"{float(direct_potential_min):.2f} min"
+            if direct_potential_min is not None
+            else "N/A"
+        )
+        direct_distance_html = (
+            f"{float(direct_distance_km):.2f} km"
+            if direct_distance_km is not None
+            else "N/A"
+        )
+        walk_distance_html = (
+            f"{float(walk_distance_m):.1f} m"
+            if walk_distance_m is not None
+            else "N/A"
+        )
+
         popup_html = (
-            f'<div style="width:220px;font-size:12px;">'
+            f'<div style="width:300px;font-size:12px;">'
             f'<b style="color:#c0392b;">&#x2716; Unserved</b><br>'
             f'<b>Student: {student.id}</b><br>'
             f'Stage: {stage_name}<br>'
             f'Home: {student.coords[0]:.5f}, {student.coords[1]:.5f}<br>'
-            f'Mode: {_MODE_NAMES[mode_key]}'
+            f'Mode: {_MODE_NAMES[mode_key]}<br>'
+            f'Direct Potential: {direct_potential_html}<br>'
+            f'Direct Distance: {direct_distance_html}<br>'
+            f'Walk Distance: {walk_distance_html}<br>'
+            f'Used Synthetic Crossing: {"yes" if used_synthetic_crossing else "no"}<br>'
+            f'Rejection Reason: {rejection_reason}<br>'
+            f'Crossing Tier: {crossing_tier}'
             f'</div>'
         )
         folium.Marker(

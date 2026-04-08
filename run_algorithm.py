@@ -599,12 +599,14 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
         critical_nodes.add(nearest_node)
         student_frontages[s.id] = node_id
         if s.walk_radius > 0:
+            walk_limit_for_candidates = get_walk_absolute_max(s.walk_radius)
             walk_g = _get_walk_graph(G_drive)  # Uses configured walk graph when provided
             safe_nodes = find_safe_nodes_within_radius(
                 s.coords,
                 G_drive,
                 500,
-                s.walk_radius,
+                walk_limit_for_candidates,
+                candidate_cfg={"max_candidates_per_student": max_candidates},
                 walk_graph=walk_g,
                 student_stage=getattr(s, "school_stage", None),
                 student_disabled=bool(getattr(s, "physically_mentally_disabled", False)),

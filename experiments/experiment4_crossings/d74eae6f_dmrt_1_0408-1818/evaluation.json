@@ -1,0 +1,294 @@
+{
+  "schema_version": "1.0",
+  "runs": [
+    {
+      "run_id": "d74eae6f_dmrt_1_0408-1818",
+      "source_output": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/d74eae6f_dmrt_1_0408-1818/output.json",
+      "generated_at": "08/04/26 06:36 pm",
+      "recorded_at": "2026-04-08T16:36:06Z",
+      "config": {
+        "n_students": 200,
+        "seed": 123,
+        "iterations": 5000,
+        "buses_count": 9,
+        "buses_capacity": 28,
+        "constraints": {
+          "enabled": true,
+          "ride_time_multiplier": 2,
+          "floor_minutes": 60,
+          "ceiling_minutes": 60,
+          "acceptable_offset_minutes": 30,
+          "bidirectional_check": false,
+          "mrt_enabled": false,
+          "mrt": 90
+        }
+      },
+      "performance": {
+        "instance_size_students": 200,
+        "runtime_seconds_by_mode": {
+          "strictly_constrained": null,
+          "weakly_constrained": 445.21,
+          "door_to_door": null
+        },
+        "executed_iterations_by_mode": {
+          "strictly_constrained": 0,
+          "weakly_constrained": 318,
+          "door_to_door": 0
+        },
+        "stop_reason_distribution": {
+          "counts": {
+            "unknown": 2,
+            "freeze_patience": 1
+          },
+          "share": {
+            "unknown": 0.666667,
+            "freeze_patience": 0.333333
+          },
+          "total_modes": 3
+        }
+      },
+      "modes": {
+        "strictly_constrained": {
+          "source_mode_key": "strictly_constrained",
+          "ride_time_policy": "dmrt_strict_am",
+          "counts": {
+            "students_total": 0,
+            "students_served": 0,
+            "students_unserved": 0,
+            "active_routes": 0
+          },
+          "paper_metrics": {
+            "ServiceRate": 0.0,
+            "ActiveRoutes": 0,
+            "TotalRouteTime": 0.0,
+            "AvgRouteTime": 0.0,
+            "FleetUtilization": 0.0,
+            "RideRatioMean": null,
+            "RideRatioStd": null,
+            "WelfareViolationRate": null,
+            "RideRatioMax": null,
+            "MeanWalkDist": 0.0,
+            "AllowedMeanWalkingDist": null,
+            "CrossingTierShare": {},
+            "SyntheticCrossingsUsed": 0,
+            "UsedCrossing": null,
+            "ConsideredCrossing": null
+          },
+          "performance_metrics": {
+            "RuntimeSeconds": null,
+            "ExecutedIterations": 0,
+            "StopReason": "unknown"
+          },
+          "diagnostics": {
+            "stop_reason": "unknown",
+            "executed_iterations": 0,
+            "merge_tail_ran": null,
+            "theoretical_optimum_polish": false
+          },
+          "quality_flags": {
+            "n_students_with_valid_ride_ratio": 0,
+            "n_students_missing_direct_or_ride": 0,
+            "n_students_checked_for_welfare": 0,
+            "students_payload_size": 0
+          }
+        },
+        "weakly_constrained": {
+          "source_mode_key": "weakly_constrained",
+          "ride_time_policy": "dmrt_strict_am",
+          "counts": {
+            "students_total": 200,
+            "students_served": 134,
+            "students_unserved": 66,
+            "active_routes": 9
+          },
+          "paper_metrics": {
+            "ServiceRate": 0.67,
+            "ActiveRoutes": 9,
+            "TotalRouteTime": 872.2,
+            "AvgRouteTime": 96.91,
+            "FleetUtilization": 0.5317460317460316,
+            "RideRatioMean": 2.291745064917181,
+            "RideRatioStd": 1.8656246421337324,
+            "WelfareViolationRate": 0.0,
+            "RideRatioMax": 10.87918215613383,
+            "MeanWalkDist": 64.7,
+            "AllowedMeanWalkingDist": 127.47941176470589,
+            "CrossingTierShare": {
+              "KG": {
+                "served": 30,
+                "counts": {
+                  "none": 30,
+                  "tertiary": 0,
+                  "secondary": 0,
+                  "primary_plus": 0,
+                  "unknown": 0
+                },
+                "share": {
+                  "none": 1.0,
+                  "tertiary": 0.0,
+                  "secondary": 0.0,
+                  "primary_plus": 0.0,
+                  "unknown": 0.0
+                }
+              },
+              "HIGH": {
+                "served": 39,
+                "counts": {
+                  "none": 38,
+                  "tertiary": 0,
+                  "secondary": 0,
+                  "primary_plus": 0,
+                  "unknown": 1
+                },
+                "share": {
+                  "none": 0.9744,
+                  "tertiary": 0.0,
+                  "secondary": 0.0,
+                  "primary_plus": 0.0,
+                  "unknown": 0.0256
+                }
+              },
+              "MIDDLE": {
+                "served": 29,
+                "counts": {
+                  "none": 29,
+                  "tertiary": 0,
+                  "secondary": 0,
+                  "primary_plus": 0,
+                  "unknown": 0
+                },
+                "share": {
+                  "none": 1.0,
+                  "tertiary": 0.0,
+                  "secondary": 0.0,
+                  "primary_plus": 0.0,
+                  "unknown": 0.0
+                }
+              },
+              "ELEMENTARY": {
+                "served": 36,
+                "counts": {
+                  "none": 36,
+                  "tertiary": 0,
+                  "secondary": 0,
+                  "primary_plus": 0,
+                  "unknown": 0
+                },
+                "share": {
+                  "none": 1.0,
+                  "tertiary": 0.0,
+                  "secondary": 0.0,
+                  "primary_plus": 0.0,
+                  "unknown": 0.0
+                }
+              }
+            },
+            "SyntheticCrossingsUsed": 1,
+            "UsedCrossing": 1.2345679012345678,
+            "ConsideredCrossing": 0.0
+          },
+          "performance_metrics": {
+            "RuntimeSeconds": 445.21,
+            "ExecutedIterations": 318,
+            "StopReason": "freeze_patience"
+          },
+          "diagnostics": {
+            "stop_reason": "freeze_patience",
+            "executed_iterations": 318,
+            "merge_tail_ran": false,
+            "theoretical_optimum_polish": false
+          },
+          "quality_flags": {
+            "n_students_with_valid_ride_ratio": 134,
+            "n_students_missing_direct_or_ride": 0,
+            "n_students_checked_for_welfare": 134,
+            "students_payload_size": 134
+          }
+        },
+        "door_to_door": {
+          "source_mode_key": "door_to_door",
+          "ride_time_policy": "dmrt_strict_am",
+          "counts": {
+            "students_total": 0,
+            "students_served": 0,
+            "students_unserved": 0,
+            "active_routes": 0
+          },
+          "paper_metrics": {
+            "ServiceRate": 0.0,
+            "ActiveRoutes": 0,
+            "TotalRouteTime": 0.0,
+            "AvgRouteTime": 0.0,
+            "FleetUtilization": 0.0,
+            "RideRatioMean": null,
+            "RideRatioStd": null,
+            "WelfareViolationRate": null,
+            "RideRatioMax": null,
+            "MeanWalkDist": 0.0,
+            "AllowedMeanWalkingDist": null,
+            "CrossingTierShare": {},
+            "SyntheticCrossingsUsed": 0,
+            "UsedCrossing": null,
+            "ConsideredCrossing": null
+          },
+          "performance_metrics": {
+            "RuntimeSeconds": null,
+            "ExecutedIterations": 0,
+            "StopReason": "unknown"
+          },
+          "diagnostics": {
+            "stop_reason": "unknown",
+            "executed_iterations": 0,
+            "merge_tail_ran": null,
+            "theoretical_optimum_polish": false
+          },
+          "quality_flags": {
+            "n_students_with_valid_ride_ratio": 0,
+            "n_students_missing_direct_or_ride": 0,
+            "n_students_checked_for_welfare": 0,
+            "students_payload_size": 0
+          }
+        }
+      }
+    }
+  ],
+  "performance_summary_by_instance_size": {
+    "200": {
+      "runs": 1,
+      "modes": {
+        "strictly_constrained": {
+          "runtime_seconds": null,
+          "executed_iterations": null,
+          "stop_reason_counts": {
+            "unknown": 1
+          }
+        },
+        "weakly_constrained": {
+          "runtime_seconds": {
+            "n": 1,
+            "mean": 445.21,
+            "min": 445.21,
+            "max": 445.21
+          },
+          "executed_iterations": {
+            "n": 1,
+            "mean": 318.0,
+            "min": 318,
+            "max": 318
+          },
+          "stop_reason_counts": {
+            "freeze_patience": 1
+          }
+        },
+        "door_to_door": {
+          "runtime_seconds": null,
+          "executed_iterations": null,
+          "stop_reason_counts": {
+            "unknown": 1
+          }
+        }
+      }
+    }
+  },
+  "updated_at": "2026-04-08T16:36:06Z"
+}

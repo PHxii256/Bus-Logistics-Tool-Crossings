@@ -487,6 +487,7 @@ def _get_insertions_for_route(student, route, graph, frontage_info, deadline=Non
         
         if student.walk_radius > 0:
             from detour_engine import find_safe_nodes_within_radius, _get_walk_graph
+            walk_limit_for_candidates = get_walk_absolute_max(student.walk_radius)
             # Pass candidate_cfg so results are scored (intersections/arterials preferred)
             # and already returned in (-points, dist) order.
             cand_cfg = _alns_candidate_cfg if _alns_candidate_cfg else None
@@ -495,7 +496,7 @@ def _get_insertions_for_route(student, route, graph, frontage_info, deadline=Non
                 student.coords,
                 graph,
                 500,
-                student.walk_radius,
+                walk_limit_for_candidates,
                 candidate_cfg=cand_cfg,
                 walk_graph=walk_g,
                 student_stage=getattr(student, "school_stage", None),
@@ -591,7 +592,10 @@ def _get_insertions_for_route(student, route, graph, frontage_info, deadline=Non
     # to be incorrectly marked as completely un-routable.
     reachable_candidates = candidate_nodes
     _insertion_debug_stats["candidates_considered"] += len(reachable_candidates)
-    hard_walk_limit_m = float(getattr(student, "walk_radius", 0) or 0)
+    walk_radius = float(getattr(student, "walk_radius", 0) or 0)
+    # Keep strict door-to-door behavior for zero-radius students, but allow
+    # stage-specific absolute max for students who are allowed to walk.
+    hard_walk_limit_m = 0.0 if walk_radius <= 0 else float(get_walk_absolute_max(walk_radius))
     strict_walk_cache = {}
         
     for pos in range(start_pos, end_pos):

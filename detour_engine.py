@@ -1628,7 +1628,7 @@ def haversine_walk_distance(lat1, lon1, lat2, lon2):
     R = 6371000  # Earth radius in meters
     phi1 = math.radians(lat1)
     phi2 = math.radians(lat2)
-    dphi = math.radians(lon2 - lon1)
+    dphi = math.radians(lat2 - lat1)
     dlambda = math.radians(lon2 - lon1)
     a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
@@ -2427,9 +2427,11 @@ def find_safe_nodes_within_radius(coords, graph, radius_meters, walk_distance_li
             )
         return all_reachable
 
-    # If walk_graph provided, do BFS on walk graph and map results to drive nodes
+    # If walk_graph provided, do BFS on walk graph and map results to drive nodes.
+    # Also union with direct drive-graph BFS so candidate coverage doesn't collapse
+    # when walk->drive projection is overly coarse in sparse/simplified areas.
     if walk_graph is not None:
-        safe_nodes = _bfs_walk_graph_to_drive_nodes(
+        safe_nodes_walk = _bfs_walk_graph_to_drive_nodes(
             coords,
             graph,
             walk_graph,
@@ -2437,6 +2439,18 @@ def find_safe_nodes_within_radius(coords, graph, radius_meters, walk_distance_li
             student_stage=student_stage,
             student_disabled=student_disabled,
         )
+        safe_nodes_drive = _bfs_on_drive_graph(coords, graph, walk_distance_limit)
+
+        merged = {}
+        for nid, dist in safe_nodes_walk:
+            d = float(dist)
+            if d < merged.get(nid, float("inf")):
+                merged[nid] = d
+        for nid, dist in safe_nodes_drive:
+            d = float(dist)
+            if d < merged.get(nid, float("inf")):
+                merged[nid] = d
+        safe_nodes = [(nid, dist) for nid, dist in merged.items()]
     else:
         # Legacy mode: BFS directly on drive graph
         safe_nodes = _bfs_on_drive_graph(coords, graph, walk_distance_limit)
