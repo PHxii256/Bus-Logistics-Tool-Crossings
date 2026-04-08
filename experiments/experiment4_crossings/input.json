@@ -50,8 +50,8 @@
     "ceiling_minutes": 60,
     "daily_detour_budget_minutes": 10,
     "bidirectional_check": false,
-    "mrt_enabled": false,
-    "mrt": 90,
+    "mrt_enabled": true,
+    "mrt": 60,
     "acceptable_offset_minutes": 30
   },
 

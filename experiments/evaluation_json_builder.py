@@ -256,6 +256,7 @@ def _derive_paper_metrics(mode_data: Dict[str, Any], constraints: Dict[str, Any]
     if students_considered_allowed is None:
         students_considered_allowed = (crossing_bfs_stats or {}).get("allowed_students_explored_crossing", 0)
     students_considered_allowed = _safe_int(students_considered_allowed, 0)
+    students_considered_allowed = max(students_considered_allowed, students_used_allowed)
 
     return {
         "ServiceRate": service_rate,

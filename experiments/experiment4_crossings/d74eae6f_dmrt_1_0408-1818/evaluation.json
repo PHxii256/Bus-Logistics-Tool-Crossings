@@ -5,7 +5,7 @@
       "run_id": "d74eae6f_dmrt_1_0408-1818",
       "source_output": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/d74eae6f_dmrt_1_0408-1818/output.json",
       "generated_at": "08/04/26 06:36 pm",
-      "recorded_at": "2026-04-08T16:36:06Z",
+      "recorded_at": "2026-04-08T17:21:02Z",
       "config": {
         "n_students": 200,
         "seed": 123,
@@ -185,7 +185,7 @@
             },
             "SyntheticCrossingsUsed": 1,
             "UsedCrossing": 1.2345679012345678,
-            "ConsideredCrossing": 0.0
+            "ConsideredCrossing": 1.2345679012345678
           },
           "performance_metrics": {
             "RuntimeSeconds": 445.21,
@@ -290,5 +290,5 @@
       }
     }
   },
-  "updated_at": "2026-04-08T16:36:06Z"
+  "updated_at": "2026-04-08T17:21:02Z"
 }

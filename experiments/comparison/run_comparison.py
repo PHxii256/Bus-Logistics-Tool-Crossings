@@ -2745,6 +2745,7 @@ def _compute_mode_paper_metrics(mode_entry, constraints_cfg):
     if students_considered_allowed is None:
         students_considered_allowed = crossing_bfs_stats.get("allowed_students_explored_crossing", 0)
     students_considered_allowed = int(students_considered_allowed or 0)
+    students_considered_allowed = max(students_considered_allowed, students_used_allowed)
 
     used_crossing_pct = _ratio_pct(students_used_allowed, allowed_crossing_students)
     considered_crossing_pct = _ratio_pct(students_considered_allowed, allowed_crossing_students)
@@ -3025,6 +3026,10 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         crossing_bfs_stats = dict(s.get("crossing_bfs_stats") or {})
         crossing_students_considered_allowed = int(
             crossing_bfs_stats.get("allowed_students_explored_crossing", 0) or 0
+        )
+        crossing_students_considered_allowed = max(
+            crossing_students_considered_allowed,
+            crossing_students_used_allowed,
         )
         allowed_crossing_students = _count_allowed_crossing_students(
             students_list,
@@ -3990,7 +3995,8 @@ def run(input_path=None, output_path=None, iterations=None):
             fg_r, fg_w, _ = _add_route_layer(m, G_unc, sol, mk, G_con,
                                 constraints=meta.get("constraints"))
             fgs[mk] = (fg_r, fg_w)
-            fgs_unserved[mk] = _add_unserved_layer(m, sol, mk)
+            mode_unserved_records = (all_stats.get(mk) or {}).get("unserved_students")
+            fgs_unserved[mk] = _add_unserved_layer(m, sol, mk, mode_unserved_records)
 
         # Candidate stop inspector layers (one per mode, hidden by default)
         cand_data = {mk: cd for mk, cd in {
