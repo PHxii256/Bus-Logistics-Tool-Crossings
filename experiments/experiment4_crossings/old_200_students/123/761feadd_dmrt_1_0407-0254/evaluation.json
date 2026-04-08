@@ -1,0 +1,285 @@
+{
+  "schema_version": "1.0",
+  "runs": [
+    {
+      "run_id": "761feadd_dmrt_1_0407-0254",
+      "source_output": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/experiments/experiment4_crossings/761feadd_dmrt_1_0407-0254/output.json",
+      "generated_at": "07/04/26 03:03 am",
+      "recorded_at": "2026-04-07T01:03:54Z",
+      "config": {
+        "n_students": 200,
+        "seed": 123,
+        "iterations": 5000,
+        "buses_count": 9,
+        "buses_capacity": 28,
+        "constraints": {
+          "enabled": true,
+          "ride_time_multiplier": 2,
+          "floor_minutes": 60,
+          "ceiling_minutes": 60,
+          "acceptable_offset_minutes": 30,
+          "bidirectional_check": false,
+          "mrt_enabled": false,
+          "mrt": 90
+        }
+      },
+      "performance": {
+        "instance_size_students": 200,
+        "runtime_seconds_by_mode": {
+          "strictly_constrained": null,
+          "weakly_constrained": 125.4,
+          "door_to_door": null
+        },
+        "executed_iterations_by_mode": {
+          "strictly_constrained": 0,
+          "weakly_constrained": 308,
+          "door_to_door": 0
+        },
+        "stop_reason_distribution": {
+          "counts": {
+            "unknown": 2,
+            "freeze_patience": 1
+          },
+          "share": {
+            "unknown": 0.666667,
+            "freeze_patience": 0.333333
+          },
+          "total_modes": 3
+        }
+      },
+      "modes": {
+        "strictly_constrained": {
+          "source_mode_key": "strictly_constrained",
+          "ride_time_policy": "dmrt_strict_am",
+          "counts": {
+            "students_total": 0,
+            "students_served": 0,
+            "students_unserved": 0,
+            "active_routes": 0
+          },
+          "paper_metrics": {
+            "ServiceRate": 0.0,
+            "ActiveRoutes": 0,
+            "TotalRouteTime": 0.0,
+            "AvgRouteTime": 0.0,
+            "FleetUtilization": 0.0,
+            "RideRatioMean": null,
+            "RideRatioStd": null,
+            "WelfareViolationRate": null,
+            "RideRatioMax": null,
+            "MeanWalkDist": 0.0,
+            "CrossingTierShare": {},
+            "SyntheticCrossingsUsed": 0
+          },
+          "performance_metrics": {
+            "RuntimeSeconds": null,
+            "ExecutedIterations": 0,
+            "StopReason": "unknown"
+          },
+          "diagnostics": {
+            "stop_reason": "unknown",
+            "executed_iterations": 0,
+            "merge_tail_ran": null,
+            "theoretical_optimum_polish": false
+          },
+          "quality_flags": {
+            "n_students_with_valid_ride_ratio": 0,
+            "n_students_missing_direct_or_ride": 0,
+            "n_students_checked_for_welfare": 0,
+            "students_payload_size": 0
+          }
+        },
+        "weakly_constrained": {
+          "source_mode_key": "weakly_constrained",
+          "ride_time_policy": "dmrt_strict_am",
+          "counts": {
+            "students_total": 200,
+            "students_served": 186,
+            "students_unserved": 14,
+            "active_routes": 9
+          },
+          "paper_metrics": {
+            "ServiceRate": 0.93,
+            "ActiveRoutes": 9,
+            "TotalRouteTime": 715.08,
+            "AvgRouteTime": 79.45,
+            "FleetUtilization": 0.7380952380952381,
+            "RideRatioMean": 3.56003166861993,
+            "RideRatioStd": 3.0890968162997794,
+            "WelfareViolationRate": 0.0,
+            "RideRatioMax": 22.290196078431375,
+            "MeanWalkDist": 0.0,
+            "CrossingTierShare": {
+              "MIDDLE": {
+                "served": 51,
+                "counts": {
+                  "none": 51,
+                  "tertiary": 0,
+                  "secondary": 0,
+                  "primary_plus": 0,
+                  "unknown": 0
+                },
+                "share": {
+                  "none": 1.0,
+                  "tertiary": 0.0,
+                  "secondary": 0.0,
+                  "primary_plus": 0.0,
+                  "unknown": 0.0
+                }
+              },
+              "KG": {
+                "served": 45,
+                "counts": {
+                  "none": 45,
+                  "tertiary": 0,
+                  "secondary": 0,
+                  "primary_plus": 0,
+                  "unknown": 0
+                },
+                "share": {
+                  "none": 1.0,
+                  "tertiary": 0.0,
+                  "secondary": 0.0,
+                  "primary_plus": 0.0,
+                  "unknown": 0.0
+                }
+              },
+              "ELEMENTARY": {
+                "served": 43,
+                "counts": {
+                  "none": 43,
+                  "tertiary": 0,
+                  "secondary": 0,
+                  "primary_plus": 0,
+                  "unknown": 0
+                },
+                "share": {
+                  "none": 1.0,
+                  "tertiary": 0.0,
+                  "secondary": 0.0,
+                  "primary_plus": 0.0,
+                  "unknown": 0.0
+                }
+              },
+              "HIGH": {
+                "served": 47,
+                "counts": {
+                  "none": 47,
+                  "tertiary": 0,
+                  "secondary": 0,
+                  "primary_plus": 0,
+                  "unknown": 0
+                },
+                "share": {
+                  "none": 1.0,
+                  "tertiary": 0.0,
+                  "secondary": 0.0,
+                  "primary_plus": 0.0,
+                  "unknown": 0.0
+                }
+              }
+            },
+            "SyntheticCrossingsUsed": 0
+          },
+          "performance_metrics": {
+            "RuntimeSeconds": 125.4,
+            "ExecutedIterations": 308,
+            "StopReason": "freeze_patience"
+          },
+          "diagnostics": {
+            "stop_reason": "freeze_patience",
+            "executed_iterations": 308,
+            "merge_tail_ran": false,
+            "theoretical_optimum_polish": false
+          },
+          "quality_flags": {
+            "n_students_with_valid_ride_ratio": 186,
+            "n_students_missing_direct_or_ride": 0,
+            "n_students_checked_for_welfare": 186,
+            "students_payload_size": 186
+          }
+        },
+        "door_to_door": {
+          "source_mode_key": "door_to_door",
+          "ride_time_policy": "dmrt_strict_am",
+          "counts": {
+            "students_total": 0,
+            "students_served": 0,
+            "students_unserved": 0,
+            "active_routes": 0
+          },
+          "paper_metrics": {
+            "ServiceRate": 0.0,
+            "ActiveRoutes": 0,
+            "TotalRouteTime": 0.0,
+            "AvgRouteTime": 0.0,
+            "FleetUtilization": 0.0,
+            "RideRatioMean": null,
+            "RideRatioStd": null,
+            "WelfareViolationRate": null,
+            "RideRatioMax": null,
+            "MeanWalkDist": 0.0,
+            "CrossingTierShare": {},
+            "SyntheticCrossingsUsed": 0
+          },
+          "performance_metrics": {
+            "RuntimeSeconds": null,
+            "ExecutedIterations": 0,
+            "StopReason": "unknown"
+          },
+          "diagnostics": {
+            "stop_reason": "unknown",
+            "executed_iterations": 0,
+            "merge_tail_ran": null,
+            "theoretical_optimum_polish": false
+          },
+          "quality_flags": {
+            "n_students_with_valid_ride_ratio": 0,
+            "n_students_missing_direct_or_ride": 0,
+            "n_students_checked_for_welfare": 0,
+            "students_payload_size": 0
+          }
+        }
+      }
+    }
+  ],
+  "performance_summary_by_instance_size": {
+    "200": {
+      "runs": 1,
+      "modes": {
+        "strictly_constrained": {
+          "runtime_seconds": null,
+          "executed_iterations": null,
+          "stop_reason_counts": {
+            "unknown": 1
+          }
+        },
+        "weakly_constrained": {
+          "runtime_seconds": {
+            "n": 1,
+            "mean": 125.4,
+            "min": 125.4,
+            "max": 125.4
+          },
+          "executed_iterations": {
+            "n": 1,
+            "mean": 308.0,
+            "min": 308,
+            "max": 308
+          },
+          "stop_reason_counts": {
+            "freeze_patience": 1
+          }
+        },
+        "door_to_door": {
+          "runtime_seconds": null,
+          "executed_iterations": null,
+          "stop_reason_counts": {
+            "unknown": 1
+          }
+        }
+      }
+    }
+  },
+  "updated_at": "2026-04-07T01:03:54Z"
+}

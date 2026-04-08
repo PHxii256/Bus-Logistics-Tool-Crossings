@@ -207,16 +207,41 @@ def _build_matrix_cache_hash(meta):
         st = os.stat(pkl_abs)
         pkl_stat = {"path": pkl_abs, "size": int(st.st_size), "mtime": int(st.st_mtime)}
 
+    matrix_cfg = (meta or {}).get("distance_matrix", {}) if isinstance(meta, dict) else {}
+    matrix_source = (meta or {}).get("distance_matrix_source")
+    if matrix_source is None and isinstance(matrix_cfg, dict):
+        matrix_source = matrix_cfg.get("source")
+        if matrix_source is None and matrix_cfg.get("use_osrm") is True:
+            matrix_source = "osrm"
+    matrix_source = str(matrix_source or "osrm_scaled").strip().lower()
+    if matrix_source == "osrm":
+        matrix_source = "osrm_scaled"
+    if matrix_source not in {"graph", "osrm_raw", "osrm_scaled"}:
+        matrix_source = "osrm_scaled"
+
+    road_cfg_abs = os.path.abspath(os.path.join(_ROOT, "road_speeds_config.json"))
+    road_cfg_stat = None
+    if os.path.exists(road_cfg_abs):
+        st = os.stat(road_cfg_abs)
+        road_cfg_stat = {
+            "path": road_cfg_abs,
+            "size": int(st.st_size),
+            "mtime": int(st.st_mtime),
+        }
+
     seed = {
         "graph_bbox": resolved_bbox,
         "graph_boundary_mode": graph_cfg.get("boundary_mode", "bbox"),
         "graph_boundary_polygon_path": graph_cfg.get("boundary_polygon_path"),
         "drive_graph": pkl_stat,
+        "matrix_source": matrix_source,
         "school": (meta or {}).get("school"),
         "seed": (meta or {}).get("seed"),
         "n_students": (meta or {}).get("n_students"),
         "stage_walk_limits": (meta or {}).get("stage_walk_limits"),
         "annulus": (meta or {}).get("annulus"),
+        "road_speeds_override": (meta or {}).get("road_speeds"),
+        "road_speeds_config_file": road_cfg_stat,
     }
     return _cache_hash_from_obj(seed), seed
 
@@ -236,10 +261,13 @@ def _resolve_matrix_cache_pkl_path(matrix_cfg, input_path, output_path, meta=Non
 
     enabled = bool(matrix_cfg.get("enabled", False))
     raw = (matrix_cfg.get("pkl_path") or "").strip()
+    if not enabled:
+        return None
+
     cache_dir = os.path.join(_ROOT, "cache")
     os.makedirs(cache_dir, exist_ok=True)
 
-    if enabled and raw:
+    if raw:
         # Explicit user-selected path takes precedence when enabled.
         resolved = _resolve_optional_path(raw, input_path)
         return _maybe_isolate_matrix_cache_path(resolved, matrix_cfg)
@@ -3296,6 +3324,10 @@ def run(input_path=None, output_path=None, iterations=None):
     base_data["meta"]["walk_graph"] = copy.deepcopy(meta.get("walk_graph", {}))
     if "road_speeds" in meta:
         base_data["meta"]["road_speeds"] = copy.deepcopy(meta.get("road_speeds"))
+    if "distance_matrix_source" in meta:
+        base_data["meta"]["distance_matrix_source"] = meta.get("distance_matrix_source")
+    if "distance_matrix" in meta:
+        base_data["meta"]["distance_matrix"] = copy.deepcopy(meta.get("distance_matrix"))
     # Preserve full algorithm config from input meta (early-stop, time budget, etc.).
     base_data["meta"]["algorithm"] = copy.deepcopy(meta.get("algorithm", {}))
     base_data["meta"]["algorithm"]["iterations"] = iters

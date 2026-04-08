@@ -105,6 +105,8 @@
     "pkl_path": ""
   },
 
+  "distance_matrix_source": "osrm_scaled",
+
   "algorithm": {
     "iterations": 5000,
     "time_budget_seconds": 720,
@@ -127,10 +129,10 @@
     "sigma_km": 10.0,
     "min_km": 1.0,
     "max_km": 12,
-    "dynamic_max_km": false,
-    "auto_from_bbox_circle": false,
-    "auto_peak_km": false,
-    "auto_sigma_km": false,
+    "dynamic_max_km": true,
+    "auto_from_bbox_circle": true,
+    "auto_peak_km": true,
+    "auto_sigma_km": true,
     "peak_ratio": 0.3,
     "sigma_ratio": 0.3,
     "bbox_radius_scale": 1.0,

@@ -11,6 +11,7 @@ import os
 import glob
 import json
 import csv
+import re
 import time as _t
 import hashlib
 import pickle
@@ -217,7 +218,7 @@ def _resolve_graph_boundary(graph_cfg: dict):
     boundary_seed = json.dumps(seed_payload, sort_keys=True, ensure_ascii=True)
     return mode, bbox, boundary_polygon, boundary_seed
 
-def _load_road_speeds(override: dict = None) -> dict:
+def _load_road_speeds(override: Optional[dict] = None) -> dict:
     builtin = {
         'default_speed_kph': 30,
         'road_types': {
@@ -239,6 +240,117 @@ def _load_road_speeds(override: dict = None) -> dict:
     if override:
         builtin.update(override)
     return builtin
+
+
+def _resolve_matrix_source(meta: Optional[dict] = None) -> str:
+    """Resolve matrix precompute backend.
+
+    Defaults to OSRM distances with graph-speed-adjusted durations so
+    road_speeds_config multipliers influence direct/bus times while
+    preserving fast OSRM matrix distances.
+    """
+    meta = meta or {}
+    matrix_cfg = meta.get("distance_matrix", {})
+    source = meta.get("distance_matrix_source")
+    if source is None and isinstance(matrix_cfg, dict):
+        source = matrix_cfg.get("source")
+        if source is None and matrix_cfg.get("use_osrm") is True:
+            source = "osrm"
+
+    source = str(source or "osrm_scaled").strip().lower()
+    if source == "osrm":
+        # Backward-compatible alias: OSRM with speed-aware time scaling.
+        return "osrm_scaled"
+    if source in {"graph", "osrm_raw", "osrm_scaled"}:
+        return source
+    return "osrm_scaled"
+
+
+def _road_speeds_signature(meta: Optional[dict] = None) -> str:
+    """Stable short signature of active road speed configuration."""
+    cfg = _load_road_speeds((meta or {}).get("road_speeds"))
+    canonical = json.dumps(cfg, sort_keys=True, ensure_ascii=True)
+    return hashlib.md5(canonical.encode("utf-8")).hexdigest()[:12]
+
+
+def _parse_speed_kph(value, fallback: float) -> float:
+    if value is None:
+        return float(fallback)
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, list) and value:
+        return _parse_speed_kph(value[0], fallback)
+    if isinstance(value, str):
+        txt = value.strip().lower()
+        m = re.search(r"\d+(?:\.\d+)?", txt)
+        if not m:
+            return float(fallback)
+        spd = float(m.group(0))
+        if "mph" in txt:
+            spd *= 1.60934
+        return spd
+    return float(fallback)
+
+
+def _estimate_osrm_speed_scale_factor(graph, road_speeds_override: Optional[dict] = None) -> float:
+    """Estimate a global time scale factor from road speed multipliers.
+
+    factor > 1.0 means configured speeds are slower than baseline.
+    """
+    road_cfg = _load_road_speeds(road_speeds_override)
+    road_types = road_cfg.get("road_types", {})
+    default_spd = float(road_cfg.get("default_speed_kph", 30) or 30)
+
+    base_total_min = 0.0
+    cfg_total_min = 0.0
+
+    for _, _, _, data in graph.edges(keys=True, data=True):
+        length_m = float(data.get("length", 0.0) or 0.0)
+        if length_m <= 0:
+            continue
+
+        base_speed_kph = _parse_speed_kph(data.get("maxspeed"), default_spd)
+        if base_speed_kph <= 0:
+            base_speed_kph = default_spd
+
+        highway = data.get("highway", "unclassified")
+        if isinstance(highway, list):
+            highway = highway[0] if highway else "unclassified"
+
+        cfg = road_types.get(highway, road_types.get("default", {}))
+        speed_mult = float(cfg.get("speed_multiplier", 1.0) or 1.0)
+        if speed_mult <= 0:
+            continue
+
+        cfg_speed_kph = base_speed_kph * speed_mult
+        if cfg_speed_kph <= 0:
+            continue
+
+        base_total_min += length_m / ((base_speed_kph * 1000.0) / 60.0)
+        cfg_total_min += length_m / ((cfg_speed_kph * 1000.0) / 60.0)
+
+    if base_total_min <= 0:
+        return 1.0
+
+    factor = cfg_total_min / base_total_min
+    # Defensive clamp against malformed metadata.
+    return max(0.1, min(10.0, float(factor)))
+
+
+def _apply_osrm_time_scale(nodes, factor: float) -> int:
+    """Scale existing OSRM matrix travel times in-place, keep distances intact."""
+    scaled = 0
+    for src in nodes:
+        for dst in nodes:
+            if src == dst:
+                continue
+            key = (src, dst)
+            t = _MATRIX_CACHE.get(key)
+            if t is None or t == float("inf"):
+                continue
+            _MATRIX_CACHE[key] = float(t) * factor
+            scaled += 1
+    return scaled
 
 def setup_graph(meta: dict = None, unconstrained: bool = False):
     graph_cfg    = (meta or {}).get('graph', {})
@@ -417,7 +529,8 @@ def _set_last_matrix_precompute_stats(stats):
 def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
                       max_candidates=15, matrix_cache_pkl_path=None,
                       matrix_cache_min_finite_ratio=0.0001,
-                      cache_context=None):
+                      cache_context=None, matrix_source="osrm_scaled",
+                      road_speeds_override=None):
     """Build the distance matrix for ALNS.
 
     Parameters
@@ -434,10 +547,16 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
     """
     if G_drive is None:
         G_drive = G
+    matrix_source = str(matrix_source or "osrm_scaled").strip().lower()
+    if matrix_source == "osrm":
+        matrix_source = "osrm_scaled"
+    if matrix_source not in {"graph", "osrm_raw", "osrm_scaled"}:
+        matrix_source = "osrm_scaled"
     print("[Optimization] Preparing distance matrix...")
     _t_start = _t.time()
     _stats = {
-        "source": "computed_osrm",
+        "source": f"computed_{matrix_source}",
+        "matrix_source": matrix_source,
         "loaded_from_pkl": False,
         "saved_to_pkl": False,
         "matrix_cache_pkl_path": matrix_cache_pkl_path,
@@ -458,6 +577,8 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
         "cache_recomputed_after_reject": False,
         "cache_context_seed": None,
         "cache_context_student_count": None,
+        "osrm_time_scale_factor": None,
+        "osrm_time_scaled_pairs": 0,
     }
     if isinstance(cache_context, dict):
         _stats["cache_context_seed"] = cache_context.get("seed")
@@ -546,10 +667,10 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
                 _stats["cache_load_reject_reason"] = reject_reason
                 _stats["cache_recomputed_after_reject"] = True
                 _stats["loaded_from_pkl"] = False
-                _stats["source"] = "computed_osrm"
+                _stats["source"] = f"computed_{matrix_source}"
                 print(
                     "[Optimization] Warning: rejecting persisted matrix cache "
-                    f"({reject_reason}). Recomputing via OSRM."
+                    f"({reject_reason}). Recomputing via {matrix_source.upper()}."
                 )
                 # Defensive clear: avoid stale/poisoned pairs affecting this solve.
                 _MATRIX_CACHE.clear()
@@ -563,13 +684,24 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
                     f"(finite_ratio={finite_ratio}, finite_pairs={finite_pairs})"
                 )
                 return critical_nodes, student_frontages
-    # Bus distance matrix ALWAYS uses the full driving graph
-    # precalculate_distance_matrix(G_drive, list(critical_nodes), fast_mode=fast_mode)
-    
-    # OSRM-based precomputation: much faster on large graphs, but requires a local OSRM instance running with the same graph data.  Falls back to in-memory if OSRM fails for any reason (e.g. not running, different graph, etc.) — in that case a warning is printed and the function behaves like the old version, precomputing only the critical nodes with in-memory Dijkstra.
-    from detour_engine import precalculate_distance_matrix_osrm
+    # Bus distance matrix ALWAYS uses the full driving graph.
+    # graph: pure graph travel_time.
+    # osrm_raw: pure OSRM durations/distances.
+    # osrm_scaled: OSRM distances + durations scaled by road speed multipliers.
     _tc = _t.time()
-    precalculate_distance_matrix_osrm(G_drive, list(critical_nodes))
+    if matrix_source in {"osrm_raw", "osrm_scaled"}:
+        from detour_engine import precalculate_distance_matrix_osrm
+        precalculate_distance_matrix_osrm(G_drive, list(critical_nodes))
+        if matrix_source == "osrm_scaled":
+            scale_factor = _estimate_osrm_speed_scale_factor(
+                G_drive,
+                road_speeds_override=road_speeds_override,
+            )
+            scaled_pairs = _apply_osrm_time_scale(critical_nodes, scale_factor)
+            _stats["osrm_time_scale_factor"] = round(scale_factor, 6)
+            _stats["osrm_time_scaled_pairs"] = int(scaled_pairs)
+    else:
+        precalculate_distance_matrix(G_drive, list(critical_nodes), fast_mode=fast_mode)
     _stats["compute_time_s"] = round(_t.time() - _tc, 4)
 
     if matrix_cache_pkl_path:
@@ -593,10 +725,17 @@ def _build_matrix_cache_key(graph, node_ids, cache_context=None):
     node_sig = "|".join(str(n) for n in node_ids)
     seed = None
     student_count = None
+    matrix_source = "osrm_scaled"
+    road_speeds_signature = None
     if isinstance(cache_context, dict):
         seed = cache_context.get("seed")
         student_count = cache_context.get("student_count")
-    ctx_sig = f"seed={seed}|students={student_count}"
+        matrix_source = str(cache_context.get("matrix_source") or "osrm_scaled").strip().lower()
+        road_speeds_signature = cache_context.get("road_speeds_signature")
+    ctx_sig = (
+        f"seed={seed}|students={student_count}|matrix={matrix_source}|"
+        f"speeds={road_speeds_signature}"
+    )
     return hashlib.sha1(f"{graph_sig}|{ctx_sig}|{node_sig}".encode("utf-8")).hexdigest()
 
 
@@ -737,13 +876,19 @@ def run_generate_routes(data, G, input_file_path):
     _run_start = _t.time()
     students, buses, routes, school_coords, constraints, algo_config = load_mode1_input(data, G)
     print_input_summary(students, buses, routes, school_coords)
+    meta_cfg = data.get("meta", {}) if isinstance(data, dict) else {}
+    matrix_source = _resolve_matrix_source(meta_cfg)
     precompute_matrix(
         students,
         routes,
         G,
+        matrix_source=matrix_source,
+        road_speeds_override=meta_cfg.get("road_speeds"),
         cache_context={
             "seed": data.get("seed", data.get("meta", {}).get("seed")),
             "student_count": len(students),
+            "matrix_source": matrix_source,
+            "road_speeds_signature": _road_speeds_signature(meta_cfg),
         },
     )
     print(f"\nRUNNING ALNS OPTIMIZATION ({algo_config.get('iterations', 60)} iters)")
@@ -857,9 +1002,13 @@ def run_algorithm(data: dict, G, iterations: int = None,
     destroy_fraction_max = algo_cfg.get("destroy_fraction_max", None)
     repair_max_unassigned_per_call = algo_cfg.get("repair_max_unassigned_per_call", None)
     regret_scan_limit = algo_cfg.get("regret_scan_limit", None)
+    meta_cfg = data.get("meta", {}) if isinstance(data, dict) else {}
+    matrix_source = _resolve_matrix_source(meta_cfg)
     cache_context = {
         "seed": data.get("seed", data.get("meta", {}).get("seed")),
         "student_count": len(students),
+        "matrix_source": matrix_source,
+        "road_speeds_signature": _road_speeds_signature(meta_cfg),
     }
     # Walking BFS uses G (may be constrained); bus routing uses G_drive (unconstrained)
     precompute_matrix(
@@ -867,6 +1016,8 @@ def run_algorithm(data: dict, G, iterations: int = None,
         routes,
         G,
         G_drive=G_drive,
+        matrix_source=matrix_source,
+        road_speeds_override=meta_cfg.get("road_speeds"),
         max_candidates=max_cands,
         matrix_cache_pkl_path=matrix_cache_pkl_path,
         matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio,
@@ -1416,7 +1567,21 @@ def run_change_location(data, G, input_file_path):
     else:
         target_student.coords = new_coords
         target_student.assignment = change_type
-    precompute_matrix([target_student], routes, G)
+    meta_cfg = data.get("meta", {}) if isinstance(data, dict) else {}
+    matrix_source = _resolve_matrix_source(meta_cfg)
+    precompute_matrix(
+        [target_student],
+        routes,
+        G,
+        matrix_source=matrix_source,
+        road_speeds_override=meta_cfg.get("road_speeds"),
+        cache_context={
+            "seed": data.get("seed", data.get("meta", {}).get("seed")),
+            "student_count": 1,
+            "matrix_source": matrix_source,
+            "road_speeds_signature": _road_speeds_signature(meta_cfg),
+        },
+    )
     if method == '2opt': success, updated_route, message = insert_with_2opt(target_student, routes, G, change_type, daily_budget)
     elif method == 'alns':
         if target_student not in all_students: all_students.append(target_student)
