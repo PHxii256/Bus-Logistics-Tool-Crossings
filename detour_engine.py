@@ -463,39 +463,52 @@ def _map_to_walk_node(node_id, drive_graph, walk_graph, generate_synthetic=False
         lon = drive_graph.nodes[node_id]['x']
     except Exception:
         return None
-    
-    # Check if walk_graph contains synthetic nodes (string IDs).
-    # ox.nearest_nodes() only works with integer node IDs.
-    has_synthetic = any(isinstance(n, str) and n.startswith('synth_') for n in list(walk_graph.nodes())[:100])
-    
-    if has_synthetic:
-        # Manual nearest neighbor search using haversine distance
-        import math
-        min_dist = float('inf')
-        mapped = None
-        for n in walk_graph.nodes():
-            node_data = walk_graph.nodes[n]
-            node_lat = node_data.get('y')
-            node_lon = node_data.get('x')
-            if node_lat is None or node_lon is None:
-                continue
-            # Haversine distance
-            phi1, phi2 = math.radians(lat), math.radians(node_lat)
-            dphi = phi2 - phi1
-            dlambda = math.radians(node_lon - lon)
-            a = math.sin(dphi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2)**2
-            dist = 2 * math.asin(math.sqrt(a))
-            if dist < min_dist:
-                min_dist = dist
-                mapped = n
-    else:
-        # Use fast ox.nearest_nodes for integer-only graphs
-        mapped = ox.nearest_nodes(walk_graph, lon, lat)
+
+    mapped = _nearest_node_any_id(walk_graph, lon, lat)
     
     _WALK_NODE_MAP_CACHE[cache_key] = mapped
     if generate_synthetic:
         _ensure_synthetic_near_drive_node(node_id, drive_graph, walk_graph, mapped)
     return mapped
+
+
+def _nearest_node_any_id(graph, lon, lat):
+    """Nearest node lookup that works with int and string node IDs.
+
+    osmnx.nearest_nodes may fail on some graphs when node IDs are non-numeric.
+    Fallback to BallTree/manual search to keep behavior robust.
+    """
+    try:
+        return ox.nearest_nodes(graph, lon, lat)
+    except Exception:
+        pass
+
+    try:
+        tree, node_ids = _get_or_build_ball_tree(graph)
+        import numpy as np
+        pt_rad = np.deg2rad([[lat, lon]])
+        _, pos = tree.query(pt_rad, k=1)
+        return node_ids[pos[0][0]]
+    except Exception:
+        pass
+
+    # Last resort: linear scan in degree space (small local fallback path only).
+    best = None
+    best_d2 = float('inf')
+    lat_rad = math.radians(lat)
+    cos_lat = max(1e-6, math.cos(lat_rad))
+    for n, d in graph.nodes(data=True):
+        nlat = d.get('y')
+        nlon = d.get('x')
+        if nlat is None or nlon is None:
+            continue
+        dy = float(nlat) - float(lat)
+        dx = (float(nlon) - float(lon)) * cos_lat
+        d2 = dx * dx + dy * dy
+        if d2 < best_d2:
+            best_d2 = d2
+            best = n
+    return best
 
 
 def _build_walk_spatial_index(walk_graph, cell_m):
@@ -2537,29 +2550,10 @@ def _bfs_walk_graph_to_drive_nodes(
     drive_start = fast_nearest_node(drive_graph, lon, lat)
     walk_start = _map_to_walk_node(drive_start, drive_graph, walk_graph)
     if walk_start is None:
-        # Fallback: direct snap to walk graph (handles synthetic nodes)
-        has_synthetic = any(isinstance(n, str) and n.startswith('synth_') for n in list(walk_graph.nodes())[:100])
-        if has_synthetic:
-            # Manual search for synthetic-aware graphs
-            import math
-            min_dist = float('inf')
-            walk_start = None
-            for n in walk_graph.nodes():
-                node_data = walk_graph.nodes[n]
-                node_lat = node_data.get('y')
-                node_lon = node_data.get('x')
-                if node_lat is None or node_lon is None:
-                    continue
-                phi1, phi2 = math.radians(lat), math.radians(node_lat)
-                dphi = phi2 - phi1
-                dlambda = math.radians(node_lon - lon)
-                a = math.sin(dphi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2)**2
-                dist = 2 * math.asin(math.sqrt(a))
-                if dist < min_dist:
-                    min_dist = dist
-                    walk_start = n
-        else:
-            walk_start = ox.nearest_nodes(walk_graph, lon, lat)
+        # Fallback: direct snap to walk graph (robust to synthetic string node IDs)
+        walk_start = _nearest_node_any_id(walk_graph, lon, lat)
+    if walk_start is None:
+        return []
 
     # BFS on walk graph
     # Track: (walk_node, distance, crossed_synthetic)
