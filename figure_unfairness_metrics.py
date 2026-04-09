@@ -218,9 +218,14 @@ def _plot_metric_panel(
     ax.grid(axis="y", alpha=0.3, linewidth=0.6)
     ax.set_axisbelow(True)
 
-    valid_heights = [h for h in means if np.isfinite(h)]
-    if valid_heights:
-        ax.set_ylim(0.0, max(valid_heights) * 1.25)
+    valid_tops = [
+        (m + e)
+        for m, e in zip(means, errors)
+        if np.isfinite(m) and np.isfinite(e)
+    ]
+    if valid_tops:
+        # Include error bars in the axis range so caps never clip at the top.
+        ax.set_ylim(0.0, max(valid_tops) * 1.12)
 
     # Keep legend out to avoid clutter; bars are mode-colored and x labels are explicit.
     for b in bars:
@@ -241,7 +246,7 @@ def plot_instance(records: List[UnfairnessRecord], instance_size: int, out_path:
     _plot_metric_panel(axes[2], subset, modes, "ride_ratio_max", "Ride Ratio Max")
 
     axes[0].set_ylabel("Value")
-    fig.suptitle(f"Unfairness Metrics by Mode (|S|={instance_size})", fontsize=10, y=1.03)
+    fig.suptitle("Unfairness Metrics by Mode", fontsize=10, y=1.03)
     fig.tight_layout()
 
     saved = _save_figure_with_pdf(fig, out_path)
@@ -263,9 +268,8 @@ def plot_single_metric_instance(
     modes = sorted({r.mode_label for r in subset}, key=_mode_sort_key)
 
     fig, ax = plt.subplots(1, 1, figsize=(3.5, 2.6))
-    _plot_metric_panel(ax, subset, modes, metric_attr, metric_title)
+    _plot_metric_panel(ax, subset, modes, metric_attr, "")
     ax.set_ylabel("Value")
-    fig.suptitle(f"{metric_title} by Mode (|S|={instance_size})", fontsize=9, y=1.02)
     fig.tight_layout()
 
     saved = _save_figure_with_pdf(fig, out_path)

@@ -1,7 +1,5 @@
-\documentclass[letterpaper, 10 pt, conference]{ieeeconf}
-
+\documentclass[journal]{IEEEtran}
 \IEEEoverridecommandlockouts                             
-\overrideIEEEmargins
 
 % --- Packages ---
 \usepackage{graphics} 
@@ -25,13 +23,8 @@
 \setlength{\intextsep}{8pt plus 2pt minus 2pt}
 
 % --- Hyperref Setup for Clickable Links ---
-\usepackage{hyperref}
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    citecolor=blue,
-    urlcolor=blue
-}
+\usepackage[colorlinks=true, citecolor=blue, linkcolor=blue, urlcolor=blue]{hyperref}
+
 
 \SetNlSty{large}{}{:}
 
@@ -47,10 +40,12 @@ A Student Welfare-Focused Approach To The School Bus Routing Problem
 In Developing Countries
 }
 
-\author{Authors Names\\
-Department of Information Technology \\
-Misr University For Science And Technology \\
-}
+
+\author{Mohamed~Ayman, 
+        Omar~Asaad, 
+        and~Doha~Taha%
+\thanks{The authors are with the Department of Computer Science, College of Information Technology, Misr University for Science and Technology (MUST), 6th of October City, Egypt (e-mail: 200026500@must.edu.eg; 200027710@must.edu.eg; doha.taha@must.edu.eg).}}
+
 
 \begin{document}
 
@@ -68,7 +63,7 @@ from geospatial OpenStreetMap data, replacing the policy-based fixed
 maximum ride time (MRT) constraint common in literature involving 
 developed countries, which is often absent in developing countries. 
 Unlike fixed MRT, DMRT scales with each student's direct travel time 
-via an additive offset above each student’s direct travel time, bounded below by a minimum floor, which reduces the disparity between direct and assigned travel times while preserving feasibility across diverse geographic distributions. DMRT improved service rate by up to 7.6\% over MRT of 60 minutes and reduced mean ride-time unfairness by 11.5\% relative to MRT of 90 minutes; and (2) a 
+via an additive offset above each student’s direct travel time, bounded below by a minimum floor, which reduces the disparity between direct and assigned travel times while preserving feasibility across diverse geographic distributions. DMRT improved service rate by up to 14.6\% over MRT of 60 minutes and reduced mean ride-time unfairness by up to 29.01\% relative to MRT of 90 minutes; and (2) a 
 refined student age-based stop selection process that enforces 
 maximum walking distance (MWD) and street crossing constraints, 
 accounting for limited pedestrian infrastructure such as crosswalks 
@@ -76,10 +71,10 @@ prevalent in developing countries. The proposed model is implemented
 using Adaptive Large Neighborhood Search (ALNS).
 \end{abstract}
 
-\begin{keywords}
+\begin{IEEEkeywords}
 School Bus Routing Problem, Stop Selection, Developing Countries, 
 ALNS, Dynamic Maximum Ride Time
-\end{keywords}
+\end{IEEEkeywords}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{INTRODUCTION}
@@ -94,12 +89,12 @@ unique challenges: the absence of standardized maximum ride time (MRT)
 policies, which are a common constraint in SBRP literature \cite{c3}, 
 and the lack of formal pedestrian infrastructure such as designated 
 crosswalks, making uncontrolled street crossing the systemic norm, a 
-reality not captured in current stop selection models \cite{c4}. Stop 
+reality not captured in current stop selection models. Stop 
 selection determines which candidate bus stops should be used and 
 assigns students to them, commonly subject to a maximum walking 
 distance (MWD) or time (MWT) constraint \cite{c5}. These challenges 
 are further compounded by the scarcity of highly detailed road network 
-data in developing countries \cite{c4}.
+data in developing countries.
 
 This study makes two key contributions to the SBRP literature. First, 
 we introduce a Dynamic Maximum Ride Time (DMRT) constraint that 
@@ -114,19 +109,18 @@ propose modifications to the stop selection process \cite{c6}
 tailored to developing-country conditions, where uncontrolled street 
 crossing is common. Synthetic crossings are introduced into the map 
 data, and crossing permissions are assigned based on road class and 
-student school stage as a proxy for age \cite{c4}. For example, 
+student school stage as a proxy for age. For example, 
 residential streets are considered safe to cross in most instances, 
 while tertiary roads are restricted for younger students. Crossing is 
-prohibited entirely for students with moderate to severe disabilities \cite{c7}. 
+prohibited entirely for students with moderate to severe disabilities. 
 MWD constraints are similarly differentiated by school stage and 
  presence of disability rather than applying a uniform threshold \cite{c1}.
 
 The proposed formulation uses real-world road network data from
 OpenStreetMap (OSM) and is solved using Adaptive Large
 Neighborhood Search (ALNS) \cite{c9}. OSM data is accessed and
-processed via the OSMnx library created by Boeing \cite{c8}. As no publicly available
-dataset combining real student locations with real road network data
-was found in the literature \cite{c4}, synthetic student addresses
+processed via the OSMnx library created by Boeing \cite{c8}. As we could not find publicly available
+datasets combining real student locations, with student demographic distribution and real road network data in developing countries \cite{c4}, synthetic student addresses
 were generated around a real school in Cairo, Egypt, a dense urban
 setting representative of a developing country, to evaluate the
 proposed approach.
@@ -231,8 +225,8 @@ as proposed in this paper.
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{figures/dmrt_corridor_60_only.pdf}
-    \caption{Feasibility corridor comparison between a fixed MRT 
-    of 60 minutes and the proposed DMRT formulation 
+    \caption{Feasibility corridor comparison between a 60 minutes fixed MRT 
+    and the proposed DMRT formulation 
     $T^{\max}_s = \max(\tau_{\min}, T^{direct}_s + \tau_{add})$. }
     \label{fig:dmrt_corridor_60}
 \end{figure}
@@ -329,30 +323,30 @@ $z_r\in\{0,1\}$ indicates whether route $r$ is active, $T_r$ is
 route travel time, and $\phi_s$ is the walking penalty for student 
 $s$. The implementation uses $w_s=10000$ and $w_r=5000$, which 
 ensures one additional served student always dominates the activation 
-of one additional bus in the objective \cite{c15}.
+of one additional bus in the objective.
 
 \subsection{Student Welfare Focused Constraints}
 
 The SBRP transforms student welfare into geographic and temporal 
 constraints with a hard-feasibility layer (candidate generation and 
 insertion checks) and an objective-cost layer (walking penalty in the 
-objective) \cite{c3}. Hard constraints include:
+objective). Hard constraints include:
 
 \begin{enumerate}
 
 \item \textbf{School-Stage Dependent Street Crossing:} For each 
 student $s$, the pedestrian exploration graph is filtered by street 
 crossing safety permissions defined for their school stage and 
- presence of disability \cite{c7}.
+ presence of disability.
 
 \item \textbf{School-Stage Dependent Walking Distance (MWD):} A 
 stop $p$ is a feasible candidate for student $s$ only if pedestrian 
 distance in the filtered graph satisfies $d_{walk}(s,p) \le 
-W_{stage(s)}$, and the student is physically able \cite{c6}.
+W_{stage(s)}$, and the student is physically able.
 
 \item \textbf{Dynamic Maximum Ride Time (DMRT):} To prevent 
 ride time unfairness arising from the geographical distribution of 
-students \cite{c4}, we define a per-student ride time cap 
+students, we define a per-student ride time cap 
 $T^{\max}_s$ as:
 
 \begin{equation}
@@ -441,12 +435,12 @@ build a drive graph from OpenStreetMap.
 pedestrian crossings between opposite carriageways (when safety 
 predicates hold) to model informal crossing behavior present in 
 many developing countries, where formal pedestrian infrastructure 
-is absent \cite{c4}.
+is absent.
 
 \item \textbf{School-Stage-Tiered Candidate Stop Selection:} For 
 each student, perform safety-filtered pedestrian search to 
 enumerate reachable pickup nodes and select the most promising 
-subset of stops \cite{c6}.
+subset of stops.
 
 \item \textbf{ALNS Route Optimization:} Solve the 
 service-maximization objective with destroy and repair operators 
@@ -475,8 +469,7 @@ $d_{\max}=R_{bbox}\cdot\text{bbox\_radius\_scale}$,
 $\mu_d=d_{\max}\cdot\text{peak\_ratio}$, and 
 $\sigma_d=(d_{\max}-d_{\min})\cdot\text{sigma\_ratio}$. 
 For each attempt, a bearing is sampled uniformly in $[0,2\pi)$, 
-converted to latitude/longitude, snapped to the nearest drive node 
-\cite{c8}, and validated using boundary, forbidden-highway, 
+converted to latitude/longitude, snapped to the nearest drive node, and validated using boundary, forbidden-highway, 
 restricted-landuse, and residential-context checks.
 
 Each generated student is assigned a school stage from the 
@@ -584,7 +577,7 @@ eligible roads (typically tertiary and secondary classes) when
 geometric and safety checks are satisfied, producing an augmented
 pedestrian graph. The pedestrian graph is used exclusively for bus
 stop candidate generation; bus routing remains on the original
-drive graph \cite{c8}.
+drive graph.
 
 Algorithm~\ref{alg:candidate_synth} summarizes the integrated 
 stop-candidate pipeline. It combines school-stage safety 
@@ -604,16 +597,15 @@ school-stage policy $\Pi$, mode config}
 \KwOut{Ranked candidate stop set $C_s$}
 Construct stage-filtered pedestrian permissions for $s$ from 
 $\Pi$\;
-Detect eligible opposite-carriageway pairs under geometry and 
+Detect eligible opposite-carriageway pairs using road names under geometry and 
 road-class rules\;
-Insert synthetic crossing edges into $G_w$ only when safety 
-predicates are satisfied\;
+Insert synthetic crossing edges into $G_w$\;
 Run bounded pedestrian search from student frontage/home node on 
 augmented $G_w$\;
 Map reachable pedestrian nodes to drive-graph stop nodes\;
 Score and rank candidates (safety, adjacent road speed, walk 
 distance, consolidation potential)\;
-Truncate to top-$K$ mode-dependent candidates\;
+Truncate to top-$K$ candidates\;
 \Return{$C_s$}\;
 \end{algorithm}
 
@@ -732,16 +724,15 @@ insertion feasibility checks inside repair.
 \subsection{Constraint Handling in Search}
 
 Constraint handling is designed to operationalize the two core 
-welfare contributions of this work \cite{c4}. First, stage-aware 
+welfare contributions of this work. First, stage-aware 
 pedestrian safety is enforced before insertion: candidate stops 
 are generated only from school-stage compliant walking 
 reachability (distance and crossing permissions), with 
 physical-ability restrictions applied in the pedestrian 
-layer \cite{c7}. Second, ride-time fairness is enforced at 
+layer. Second, ride-time fairness is enforced at 
 insertion time through the DMRT cap $T^{\max}_s$ 
 (Eq.~\ref{eq:dmrt}), so temporal feasibility is personalized 
-to each student's direct travel time rather than uniform 
-\cite{c3}.
+to each student's direct travel time rather than uniform.
 
 During insertion, temporal feasibility supports three configurable 
 policy variants for deployment and comparison:
@@ -862,7 +853,7 @@ The MWD thresholds and road crossing permissions are
 stage-dependent policy parameters that encode the student welfare 
 constraints central to this paper. MWD thresholds were set by 
 school stage as shown in Table~\ref{tab:mwd_stage}, reflecting 
-the reduced walking capacity of younger students \cite{c7}. 
+the reduced walking capacity of younger students. 
 These thresholds were established conservatively relative to developed-country benchmarks—such as the 1.6 km Welsh standard \cite{c15}, to align with local socio-cultural expectations in the Egypt, where specific national regulatory guidelines for student walking distances are currently absent.
 
 The road crossing permission matrix in 
@@ -871,10 +862,9 @@ school stage is permitted to cross. Residential and living-street
 class roads are considered crossable by all stages due to their 
 low speeds and narrow carriageways. Tertiary roads are restricted 
 to middle and high school students, reflecting their greater road 
-awareness and physical ability. Secondary and higher road classes 
+awareness and physical ability. Primary and higher road classes 
 are restricted for all students, as these roads carry higher 
-traffic volumes incompatible with informal crossing in the studied 
-urban environment \cite{c4}. Students with moderate to severe disabilities
+traffic volumes incompatible with informal crossing. Students with moderate to severe disabilities
 are excluded from all crossing permissions regardless of school 
 stage.
 
@@ -920,7 +910,7 @@ Victory College School in Maadi, Cairo, Egypt. This school was
 selected as the anchor site because Cairo represents a dense,
 urban environment characteristic of the developing-country
 context motivating this work: no formal MRT policy exists. and  formal pedestrian crossings are largely absent. 
-The graph boundary was set to the Cairo administrative zone, covering approximately $573\,\text{km}^2$,  The total number of synthetic crossing edges injected into the pedestrian graph within this area was 4353.
+The graph boundary was set to the Cairo administrative zone, covering approximately $573\,\text{km}^2$,  The total number of synthetic crossing edges injected into the pedestrian graph within this area was 4353 crossings.
 Student locations were accepted only if they fell within this
 boundary, avoided restricted road types and land uses, and had
 at least one residential road node in their vicinity. Road
@@ -939,33 +929,30 @@ post-routing map from the experiments. It visualizes the spatial
 coverage over Cairo, with served students in green and unserved
 students in red; the density also tapers with distance from school,
 reflecting the intended realistic annulus-based generation process.
+Figure~\ref{fig:crossing_distribution} complements this view
+by showing one representative seed run (seed 42), where synthetic
+crossing nodes are shown as yellow points with blue outlines and
+student homes are shown as green points.
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=\linewidth]{figures/map_distribution.png}
+    \includegraphics[width=\linewidth]{figures/map_distribution_v2.png}
     \caption{Example post-routing student distribution over Cairo.
     Green: served, red: unserved.}
     \label{fig:map_distribution_example}
 \end{figure}
 
-Table~\ref{tab:instances} summarizes the instances 
-evaluated. The capacity of busses used $C$ was set to 28 across all busses, as it is observed to be the most common bus capacity in Egypt.
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/crossings_distribution.png}
+    \caption{Spatial distribution of a subset of synthetic crossing nodes for one representative run (seed 42). Yellow points
+    with blue outlines denote synthetic crossing nodes; green points
+    denote student homes.}
+    \label{fig:crossing_distribution}
+\end{figure}
 
-\begin{table}[t]
-\caption{SYNTHETIC INSTANCE SUMMARY}
-\label{tab:instances}
-\centering
-\begin{tabular}{p{0.4cm}p{1cm}p{2cm}p{1.5cm}p{1.4cm}}
-\toprule
-\textbf{ID} & \textbf{Students $|S|$} & 
-\textbf{Max Candidates Per Student $|P|$} & 
-\textbf{Fleet Count |$F$|}& 
-\textbf{Min Fleet $\lceil|S|/C\rceil$} \\
-\midrule
-I-1 & 200 & 7& 9& 8\\
-\bottomrule
-\end{tabular}
-\end{table}
+In summary, the instance 
+evaluated. contained 200 students, a maximum of 7 stop candidates per student, and a bus fleet consisting of 9 busses each with a capacity of 28 students across all busses, 28 was chosen as it is observed to be the most common bus capacity in Egypt.
 
 \subsection{Evaluation Metrics}
 
@@ -1078,15 +1065,6 @@ terminal stop reason directly:
 \text{StopReason}(i,m)=\rho_{i,m},\quad i\in\mathcal{I}_n,\; m\in M
 \end{equation}
 
-For aggregated analysis by instance size, we report the share of a
-reason $r$ for each mode $m$:
-
-\begin{equation}
-\text{StopReasonShare}(r,m,n) =
-\frac{\sum\limits_{i \in \mathcal{I}_n} \mathbf{1}\{\rho_{i,m} = r\}}
-{|\mathcal{I}_n|}
-\end{equation}
-
 where $\rho_{i,m}$ is the terminal ALNS stop reason for run $i$ in mode $m$
 (e.g., early-stop, freeze, time-budget). Runtime and iteration
 counts are reported per mode and summarized by instance size.
@@ -1122,43 +1100,75 @@ only if both $T_s^{AM} > T_s^{\max}$ and $T_s^{PM} > T_s^{\max}$.
 
 This section evaluates the proposed DMRT-based formulation against
 fixed MRT baselines under identical routing and search settings.
-The analysis is organized into three parts: (A) service coverage and
-operational efficiency, (B) ride-time fairness, and
-(C) ALNS convergence and runtime behavior. Together, these results
+The analysis is organized into four parts: (A) service coverage and
+operational efficiency, (B) stop-selection behavior,
+(C) ride-time fairness, and (D) ALNS convergence and runtime behavior.
+Together, these results
 assess whether the proposed welfare-focused constraints improve equity
 without sacrificing practical service levels or computational efficiency.
 
 \subsection{Service Coverage and Operational Efficiency}
 
 Table~\ref{tab:eval_i1} reports per-seed outcomes for the four
-ride-time policies on I-1 ($|S|=200$), while
+ride-time policies, while
 Fig.~\ref{fig:service_prob_direct_time_i1} shows how service
 probability varies with direct home-to-school travel time.
 Aggregating across the three seeds, DMRT Lenient and DMRT Strict
-achieve mean service rates of 0.938 and 0.932 respectively,
-substantially higher than MRT 60 (0.872), while remaining below
-MRT 90 (0.993). This confirms the expected policy trade-off:
+achieve mean service rates of 0.680 and 0.690 respectively,
+substantially higher than MRT 60 (0.602), while remaining below
+MRT 90 (0.787). This confirms the expected policy trade-off:
 a strict fixed cap under-serves distant students, whereas a very
 high fixed cap maximizes coverage at the expense of substantially
 longer rides.
 
 Operationally, MRT 60 yields the lowest mean total route time
-(690.72 min), but this is coupled with the lowest service. DMRT
-Strict and DMRT Lenient increase total route time to 710.04 and
-716.58 min respectively, while recovering about 6.0--6.7 percentage
+(755.32 min), but this is coupled with the lowest service. DMRT
+Strict and DMRT Lenient increase total route time to 792.91 and
+786.66 min respectively, while recovering about 7.8--8.8 percentage
 points of service relative to MRT 60. MRT 90 produces the highest
-total route time (753.59 min) and the highest average route time,
+total route time (1014.96 min) and the highest average route time,
 indicating that its coverage gain is obtained by allowing materially
 longer route detours. Figure~\ref{fig:service_prob_direct_time_i1}
 is consistent with this pattern: DMRT curves dominate MRT 60 in the
 mid-to-high direct-time bins, showing that DMRT mainly improves
 inclusion for geographically distant students.
 
+\subsection{Stop Selection Behavior}
+
+Table~\ref{tab:stop_metrics_i1} reports the stop-selection metrics aggregated over seeds: Allowed Mean Walking Distance,
+Used Crossing, and Considered Crossing. These metrics complement
+service and fairness results by quantifying how the policy-constrained
+pedestrian layer behaves in both final assignments and candidate
+exploration.
+
+In our framework, synthetic crossings are introduced specifically to
+model informal street crossing behavior commonly observed in
+developing countries, where formal pedestrian
+infrastructure is limited. Accordingly, these metrics provide direct
+evidence of how that modeled crossing mechanism is performed in
+candidate exploration and in final assignments.
+
+Allowed Mean Walking Distance summarizes the realized walking burden for
+served students with a positive walking allowance. Used Crossing captures realized
+crossing behavior in final assigned paths, while Considered Crossing
+captures exploration-time exposure to synthetic crossings during
+bounded BFS.
+
+Because all comparison modes share the same crossing policy and
+candidate-generation mechanism, differences in these metrics mainly
+reflect indirect effects from mode-dependent service composition
+(which students are ultimately served) and variation in synthetic student location
+distribution across seeds. This section
+therefore links route-level ride-time policy decisions to
+pedestrian-access outcomes. Figure~\ref{fig:crossing_distribution}
+provides the corresponding spatial context for one run, showing where
+the synthetic crossing might be concentrated relative to sampled
+student homes.
+
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{figures/fig2_service_prob_vs_direct_time_n200.pdf}
-    \caption{Service probability versus direct travel time for
-    I-1 ($|S|=200$), aggregated over seeds $\{42,67,123\}$.}
+    \caption{Service probability versus direct travel time, aggregated over seeds $\{42,67,123\}$.}
     \label{fig:service_prob_direct_time_i1}
 \end{figure}
 
@@ -1166,15 +1176,15 @@ inclusion for geographically distant students.
 \subsection{Ride Time Fairness}
 \begin{figure}[t]
     \centering
-    \includegraphics[width=\linewidth]{figures/fig3b_ride_ratio_max_n200.pdf}
-    \caption{Maximum ride ratio by mode for I-1 ($|S|=200$),
+    \includegraphics[width=\linewidth]{figures/fig3b_ride_ratio_max.pdf}
+    \caption{Maximum ride ratio by mode,
     aggregated over seeds. Lower is better.}
     \label{fig:ride_ratio_max_i1}
 \end{figure}
 
 
 \begin{table*}[!t]
-\caption{FULL EVALUATION RESULTS FOR I-1 ($|S|=200$) BY SEED AND MODE}
+\caption{FULL EVALUATION RESULTS BY SEED AND MODE}
 \label{tab:eval_i1}
 \centering
 \tiny
@@ -1186,26 +1196,47 @@ inclusion for geographically distant students.
 \textbf{Seed} & \textbf{Mode} & \makecell{\textbf{Service}\\\textbf{Rate}} & \makecell{\textbf{Active}\\\textbf{Routes}} & \makecell{\textbf{Total}\\\textbf{RouteTime}} & \makecell{\textbf{Avg}\\\textbf{RouteTime}} & \makecell{\textbf{Fleet}\\\textbf{Util.}} & \makecell{\textbf{RideRatio}\\\textbf{Mean}} & \makecell{\textbf{RideRatio}\\\textbf{Std}} & \makecell{\textbf{RideRatio}\\\textbf{Max}} & \makecell{\textbf{Runtime}\\\textbf{Seconds}} & \makecell{\textbf{Executed}\\\textbf{Iterations}} & \textbf{StopReason} \\
 \midrule
 \multirow{4}{*}{42}
-& DMRT Lenient & 0.950 & 9 & 712.90 & 79.21 & 0.754 & 4.076 & 3.838 & 30.355 & 200.53 & 308 & freeze\_patience \\
-& DMRT Strict & 0.930 & 9 & 707.39 & 78.60 & 0.738 & 3.608 & 2.892 & 16.852 & 129.42 & 331 & freeze\_patience \\
-& MRT 60 & 0.870 & 9 & 699.04 & 77.67 & 0.690 & 4.639 & 4.470 & 29.518 & 231.03 & 281 & no\_improve\_patience \\
-& MRT 90 & 0.990 & 8 & 785.57 & 98.20 & 0.884 & 4.663 & 4.218 & 23.406 & 184.71 & 324 & freeze\_patience \\
+& DMRT Lenient & 0.725 & 9 & 791.33 & 87.93 & 0.575 & 2.214 & 1.805 & 13.703 & 468.72 & 319 & freeze\_patience \\
+& DMRT Strict & 0.745 & 9 & 748.55 & 83.17 & 0.591 & 2.461 & 1.802 & 13.059 & 356.42 & 308 & freeze\_patience \\
+& MRT 60 & 0.650 & 9 & 718.36 & 79.82 & 0.516 & 2.250 & 1.842 & 12.950 & 383.54 & 287 & no\_improve\_patience \\
+& MRT 90 & 0.825 & 9 & 1007.64 & 111.96 & 0.655 & 3.376 & 3.312 & 19.406 & 601.90 & 308 & freeze\_patience \\
 \midrule
 \multirow{4}{*}{67}
-& DMRT Lenient & 0.935 & 9 & 710.18 & 78.91 & 0.742 & 3.774 & 3.224 & 15.068 & 178.61 & 308 & freeze\_patience \\
-& DMRT Strict & 0.935 & 9 & 707.66 & 78.63 & 0.742 & 3.593 & 3.489 & 28.870 & 120.27 & 218 & no\_improve\_patience \\
-& MRT 60 & 0.870 & 9 & 668.98 & 74.33 & 0.690 & 3.960 & 3.144 & 18.235 & 182.60 & 295 & no\_improve\_patience \\
-& MRT 90 & 0.990 & 8 & 736.78 & 92.10 & 0.884 & 3.677 & 3.802 & 29.041 & 207.17 & 308 & freeze\_patience \\
+& DMRT Lenient & 0.620 & 8 & 729.36 & 91.17 & 0.554 & 2.472 & 1.952 & 12.121 & 380.46 & 300 & no\_improve\_patience \\
+& DMRT Strict & 0.655 & 9 & 757.97 & 84.22 & 0.520 & 2.803 & 2.085 & 11.680 & 245.78 & 260 & no\_improve\_patience \\
+& MRT 60 & 0.565 & 9 & 740.53 & 82.28 & 0.448 & 2.307 & 1.833 & 10.790 & 339.19 & 295 & no\_improve\_patience \\
+& MRT 90 & 0.750 & 8 & 944.80 & 118.10 & 0.670 & 3.349 & 3.250 & 18.261 & 575.55 & 328 & freeze\_patience \\
 \midrule
 \multirow{4}{*}{123}
-& DMRT Lenient & 0.930 & 9 & 726.67 & 80.74 & 0.738 & 3.491 & 2.661 & 15.644 & 151.41 & 208 & no\_improve\_patience \\
-& DMRT Strict & 0.930 & 9 & 715.08 & 79.45 & 0.738 & 3.560 & 3.089 & 22.290 & 125.40 & 308 & freeze\_patience \\
-& MRT 60 & 0.875 & 9 & 704.14 & 78.24 & 0.694 & 3.307 & 2.190 & 12.590 & 199.82 & 312 & freeze\_patience \\
-& MRT 90 & 1.000 & 9 & 738.43 & 82.05 & 0.794 & 3.814 & 4.023 & 23.213 & 178.07 & 320 & freeze\_patience \\
+& DMRT Lenient & 0.695 & 9 & 839.28 & 93.25 & 0.552 & 1.972 & 1.183 & 7.930 & 361.95 & 316 & freeze\_patience \\
+& DMRT Strict & 0.670 & 9 & 872.20 & 96.91 & 0.532 & 2.292 & 1.866 & 10.879 & 445.21 & 318 & freeze\_patience \\
+& MRT 60 & 0.590 & 9 & 807.08 & 89.68 & 0.468 & 2.052 & 0.930 & 4.904 & 373.56 & 308 & freeze\_patience \\
+& MRT 90 & 0.785 & 9 & 1092.45 & 121.38 & 0.623 & 2.652 & 1.378 & 8.799 & 505.79 & 322 & freeze\_patience \\
 \bottomrule
 \end{tabular}%
 }
 \end{table*}
+
+\begin{table}[t]
+\caption{STOP-SELECTION METRICS, MEAN OVER SEEDS}
+\label{tab:stop_metrics_i1}
+\centering
+\small
+\setlength{\tabcolsep}{8pt}
+\renewcommand{\arraystretch}{1.08}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l c c c}
+\toprule
+\textbf{Mode} & \makecell{\textbf{Allowed Mean}\\\textbf{Walking Distance (m)}} & \makecell{\textbf{Used}\\\textbf{Crossing (\%)}} & \makecell{\textbf{Considered}\\\textbf{Crossing (\%)}} \\
+\midrule
+DMRT Lenient & 127.78 & 0.412 & 0.412 \\
+DMRT Strict  & 119.42 & 0.808 & 0.808 \\
+MRT 60       & 123.31 & 0.412 & 0.412 \\
+MRT 90       & 112.53 & 0.383 & 0.383 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
 
 Ride-time fairness is evaluated with the ratio
 $T_s^{assigned}/T_s^{direct}$ (Table~\ref{tab:eval_i1},
@@ -1213,25 +1244,30 @@ Figs.~\ref{fig:ride_ratio_mean_i1} and
 \ref{fig:ride_ratio_max_i1}). Lower values indicate that assigned
 rides stay closer to each student's direct travel time.
 Across seeds, DMRT Strict attains the lowest mean unfairness
-(RideRatioMean $=3.587$), followed by DMRT Lenient (3.780),
-while both fixed-cap baselines are higher (MRT 60: 3.969,
-MRT 90: 4.051). This indicates that personalized caps improve
-average proportional fairness even when service remains high.
+on average among DMRT variants (RideRatioMean $=2.519$), with
+DMRT Lenient at 2.219. Across all four policies, MRT 60 yields
+the lowest mean ratio (2.203), while MRT 90 is the highest
+(3.126). Relative to MRT 90, RideRatioMean is reduced by 19.42\%
+for DMRT Strict and 29.01\% for DMRT Lenient. This indicates that
+fairness results should be interpreted
+jointly with service coverage, because tighter caps reduce feasible
+service for distant students.
 
 For tail fairness (worst-case student burden), MRT 90 shows the
-largest RideRatioMax on average (25.22), whereas DMRT policies reduce
-this value (22.67 for DMRT Strict and 20.36 for DMRT Lenient).
-MRT 60 has a comparable mean maximum ratio (20.11), but this should
+largest RideRatioMax on average (15.49), whereas DMRT policies reduce
+this value (11.87 for DMRT Strict and 11.25 for DMRT Lenient).
+MRT 60 has the lowest mean maximum ratio (9.55), but this should
 be interpreted together with its much lower service rate; many
-hard-to-serve distant students are not served under MRT 60, which
+hard to serve distant students are not served under MRT 60, which
 can mechanically suppress observed unfairness among only the served
-subset. Therefore, the combined evidence supports DMRT as a better
-coverage-fairness compromise than either fixed baseline.
+subset. Therefore, the combined evidence supports DMRT as an
+improved service-fairness compromise over MRT 60, while MRT 90
+remains the highest-coverage but highest-burden policy.
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=\linewidth]{figures/fig3a_ride_ratio_mean_n200.pdf}
-    \caption{Mean ride ratio by mode for I-1 ($|S|=200$),
+    \includegraphics[width=\linewidth]{figures/fig3a_ride_ratio_mean.pdf}
+    \caption{Mean ride ratio by mode,
     aggregated over seeds. Lower is better.}
     \label{fig:ride_ratio_mean_i1}
 \end{figure}
@@ -1242,10 +1278,10 @@ coverage-fairness compromise than either fixed baseline.
 
 The computational metrics in Table~\ref{tab:eval_i1} indicate stable
 ALNS behavior across policies. Mean executed iterations remain in a
-narrow range (approximately 275--317), with MRT 90 running slightly
+narrow range (approximately 295--319), with MRT 90 running slightly
 longer on average. DMRT Strict achieves the shortest mean runtime
-(125.03 s), followed by DMRT Lenient (176.85 s), while MRT 60 and
-MRT 90 average 204.48 s and 189.98 s respectively. Terminal reasons
+(349.14 s), followed by MRT 60 (365.43 s) and DMRT Lenient (403.71 s),
+while MRT 90 is the slowest at 561.08 s. Terminal reasons
 are predominantly \texttt{freeze\_patience} and
 \texttt{no\_improve\_patience}; no run terminates due to time budget,
 indicating that the configured stopping criteria are active before
@@ -1254,7 +1290,7 @@ fairness and service gains of DMRT are not obtained through higher
 computational cost relative to fixed MRT baselines.
 
 Table~\ref{tab:operator_perf_i1} summarizes operator-level behavior
-aggregated across all 12 I-1 runs (3 seeds $\times$ 4 ride-time
+aggregated across all 12 runs (3 seeds $\times$ 4 ride-time
 policies). Random removal is the most frequently
 selected destroy operator, while worst-cost removal is the most
 expensive destroy move per call. On the repair side, regret repair is
@@ -1262,7 +1298,7 @@ slower per invocation, but random-order best repair is selected more
 often, together explaining most ALNS wall time.
 
 \begin{table}[t]
-\caption{ALNS OPERATOR USAGE AND PERFORMANCE FOR I-1 ($|S|=200$)}
+\caption{ALNS OPERATOR USAGE AND PERFORMANCE}
 \label{tab:operator_perf_i1}
 \centering
 \scriptsize
@@ -1272,13 +1308,13 @@ often, together explaining most ALNS wall time.
 \toprule
 \textbf{Type} & \textbf{Operator} & \makecell{\textbf{Mean}\\\textbf{Calls/run}} & \makecell{\textbf{Mean}\\\textbf{Share (\%)}} & \makecell{\textbf{Mean}\\\textbf{Time/call (ms)}}\\
 \midrule
-Destroy & random\_removal & 141.8 & 48.41 & 0.490 \\
-Destroy & worst\_cost\_removal & 58.7 & 20.13 & 2.660 \\
-Destroy & shaw\_related\_removal & 35.8 & 11.99 & 0.857 \\
-Destroy & sequence\_removal & 32.6 & 11.12 & 0.364 \\
-Destroy & route\_merge\_removal & 26.1 & 8.78 & 0.207 \\
-Repair & random\_order\_best\_repair & 179.8 & 61.45 & 198.812 \\
-Repair & regret\_repair & 116.1 & 39.34 & 396.127 \\
+Destroy & random\_removal & 125.6 & 40.71 & 0.335 \\
+Destroy & worst\_cost\_removal & 87.2 & 28.64 & 1.564 \\
+Destroy & shaw\_related\_removal & 32.8 & 10.79 & 0.580 \\
+Destroy & sequence\_removal & 33.9 & 11.15 & 0.261 \\
+Destroy & route\_merge\_removal & 25.0 & 8.27 & 0.156 \\
+Repair & random\_order\_best\_repair & 231.2 & 75.33 & 615.024 \\
+Repair & regret\_repair & 74.6 & 24.67 & 1047.469 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1295,198 +1331,46 @@ $T_s^{\max}=\max(\tau_{\min},T_s^{direct}+\tau_{add})$, and
 and synthetic crossing augmentation.
 
 Experimental results on Cairo-based synthetic instances show that DMRT
-consistently improves the service-fairness trade-off relative to a
-strict fixed MRT baseline. On I-1 ($|S|=200$), both DMRT variants
-substantially outperform MRT 60 in service while maintaining lower
-average proportional unfairness than fixed MRT policies overall.
-Compared with MRT 90, DMRT provides stronger fairness behavior,
-particularly in tail-risk control (lower worst-case ride-time ratios),
-while avoiding the substantial route-time inflation associated with a
-high uniform cap. Runtime analysis further indicates that these
-benefits are achieved without additional computational burden.
-Quantitatively, DMRT delivered up to 7.6\% higher service than MRT 60
-and reduced RideRatioMean by 11.5\% versus MRT 90 on I-1.
+improves service coverage relative to MRT 60 while preserving a
+competitive fairness profile. On tested the instance, both DMRT variants
+outperform MRT 60 in service, with DMRT Strict reaching 0.690 versus
+0.602 for MRT 60. MRT 90 achieves the highest service (0.787), but at
+substantially higher total route time and runtime, and higher unfairness when it comes to mean and max ride ratios. Fairness metrics
+show that MRT 60 has the lowest mean ride ratio among served
+students (2.203), while DMRT offers a better balance between service and mean ride ratio (2.219) for DMRT Lenient and (2.519) for DMRT Strict. Runtime analysis
+indicates that DMRT Strict is the fastest mode on average, while MRT 90
+is consistently the slowest.
+
+Quantitatively, compared with MRT 60, DMRT Strict and DMRT Lenient increased service by 14.6\% and 13.0\%, respectively. However, these service gains came with higher ride-time unfairness relative to MRT 60: RideRatioMean increased by 14.34\% and 0.73\%, and RideRatioMax increased by 24.29\% and 17.80\%, respectively. In contrast, compared with MRT 90, both DMRT variants reduced RideRatioMean by 19.42\% and 29.01\%, and RideRatioMax by 23.37\% and 27.37\%, respectively.
 
 Overall, the findings support DMRT as a practical and equitable
-ride-time policy for data-constrained urban settings in developing
-countries. Future work will extend evaluation to larger instance
-sizes, sensitivity analysis of welfare-policy parameters
-($\tau_{\min}$, $\tau_{add}$, and stage-dependent MWD/crossing rules),
-and multi-school/multi-depot deployments on real operational data.
+ride-time policy for developing countries, or any country lacking a fixed maximum student ride-time policy.
+
+\section{LIMITATIONS AND FUTURE WORK}
+Figure~\ref{fig:crossing_distribution} highlights a key
+methodological limitation: we were unable to produce and measure the effects of
+synthetic crossings on solution quality, and we believe it is due to two main factors.
+
+The first factor is the current strategy used to connect opposite
+sides of a divided street. The present algorithm tries to pair two streets of the same name with opposite driving directions,
+which works well on some streets, but it does not work well on roundabouts, medians, and one-way streets regardless of road class.
+
+The second factor, as could be inferred from Fig.~\ref{fig:crossing_distribution}, is that there are relatively few students close to many of the aforementioned two-way streets,
+and among those students there are even fewer with permission to cross. This, paired with the inconsistent density of road crossings,
+could be why nearly no crossings are used in the final solution.
+
+A richer linking method based on local topology and intersection context is needed to improve
+the realism of simulating real-world informal crossing behavior as well as supporting a larger number of students.
+
+Another limitation is computational performance: although runtime is acceptable for the current instance size,
+the method needs further optimization to scale efficiently to larger student populations.
 
 \section{ACKNOWLEDGMENTS}
 
-This research benefited from several open-source and open-data resources. Road network data was obtained from OpenStreetMap, a collaborative, open-access project providing comprehensive geospatial data. The Cairo administrative boundary was obtained from The Built Environment Observatory. The Adaptive Large Neighborhood Search metaheuristic was implemented using insights from the ALNS Python library. We acknowledge the contributions of these resources to the advancement of accessible research and open-science practices.
+This research benefited from several open-source and open-data resources. Road network data was obtained from OpenStreetMap, a collaborative, open-access project providing comprehensive geospatial data. The Cairo administrative boundary was obtained from The Built Environment Observatory. The Adaptive Large Neighborhood Search metaheuristic was implemented using insights from the ALNS Python library. We acknowledge the contributions of these resources to the advancement of accessible research.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{thebibliography}{99}
 
-\bibitem{c1}
-W. A. Ellegood, S. Solomon, J. North, and J. F. Campbell,
-``School bus routing problem: Contemporary trends and research 
-directions,''
-\textit{Omega}, vol. 95, p. 102056, 2020.
-\url{https://doi.org/10.1016/j.omega.2019.03.014}
-
-\bibitem{c2}
-R. M. Newton and W. H. Thomas,
-``Design of school bus routes by computer,''
-\textit{Socio-Economic Planning Sciences}, vol. 3, no. 1,
-pp. 75--85, 1969.
-\url{https://doi.org/10.1016/0038-0121(69)90011-8}
-
-\bibitem{c3}
-J. Park and B. I. Kim,
-``The school bus routing problem: A review,''
-\textit{European Journal of Operational Research}, vol. 202, no. 2,
-pp. 311--319, 2010.
-\url{https://doi.org/10.1016/j.ejor.2009.05.017}
-
-\bibitem{c4}
-K. Wang, Y. Yang, M. Liao, and A. Chen,
-``The school bus routing problem: A comprehensive review,''
-\textit{European Transport Studies}, vol. 2, p. 100043, 2025.
-\url{https://doi.org/10.1016/j.ets.2025.100043}
-
-\bibitem{c5}
-J. Desrosiers, J. A. Ferland, J. M. Rousseau, G. Lapalme, and
-L. Chapleau,
-``An overview of a school busing system,''
-\textit{Science in Management of Transport Systems}, pp. 235--243,
-1981.
-\url{https://doi.org/10.1016/B978-0-08-024180-9.50028-4}
-
-\bibitem{c6}
-P. Schittekat, J. Kinable, K. S\"{o}rensen, M. Sevaux, F. Spieksma,
-and J. Springael,
-``A metaheuristic for the school bus routing problem with bus stop
-selection,''
-\textit{European Journal of Operational Research}, vol. 229, no. 2,
-pp. 518--528, 2013.
-\url{https://doi.org/10.1016/j.ejor.2013.02.025}
-
-\bibitem{c7}
-O. Paul, J. Handl, and M. L\'opez-Ib\'a\~{n}ez,
-``Capacitated school bus routing problem with time windows,
-heterogeneous fleets and travel assistants,''
-in \textit{Proc. Companion Conference on Genetic and Evolutionary
-Computation (GECCO)}, pp. 2374--2377, 2023.
-\url{https://doi.org/10.1145/3583133.3596375}
-
-\bibitem{c8}
-G. Boeing,
-``OSMnx: New methods for acquiring, constructing, analyzing, and
-visualizing complex street networks,''
-\textit{Computers, Environment and Urban Systems}, vol. 65,
-pp. 126--139, 2017.
-\url{https://doi.org/10.1016/j.compenvurbsys.2017.05.004}
-
-\bibitem{c9}
-S. Ropke and D. Pisinger,
-``An adaptive large neighborhood search heuristic for the pickup 
-and delivery problem with time windows,''
-\textit{Transportation Science}, vol. 40, no. 4, pp. 455--472, 2006.
-\url{https://doi.org/10.1287/trsc.1050.0135}
-
-\bibitem{c10}
-K. Braekers, K. Ramaekers, and I. V. Nieuwenhuyse,
-``The vehicle routing problem: State of the art classification 
-and review,''
-\textit{Computers \& Industrial Engineering}, vol. 99, 
-pp. 300--313, 2016.
-\url{https://doi.org/10.1016/j.cie.2015.12.007}
-
-\bibitem{c11}
-L. D. Bodin and L. Berman,
-``Routing and scheduling of school buses by computer,''
-\textit{Transportation Science}, vol. 13, no. 2, 
-pp. 113--129, 1979.
-\url{https://doi.org/10.1287/trsc.13.2.113}
-
-\bibitem{c12}
-H. I. Calvete, C. Gal\'{e}, J. A. Iranzo, and P. Toth,
-``A partial allocation local search matheuristic for solving the 
-school bus routing problem with bus stop selection,''
-\textit{Mathematics}, vol. 8, no. 8, p. 1214, 2020.
-\url{https://doi.org/10.3390/math8081214}
-
-\bibitem{c13}
-S. P. Parvasi, M. Mahmoodjanloo, and M. Setak,
-``A bi-level school bus routing problem with bus stops selection 
-and possibility of demand outsourcing,''
-\textit{Applied Soft Computing}, vol. 61, pp. 222--238, 2017.
-\url{https://doi.org/10.1016/j.asoc.2017.08.018}
-
-\bibitem{c14}
-R. Bowerman, B. Hall, and P. Calamai,
-``A multi-objective optimization approach to urban school bus 
-routing: Formulation and solution method,''
-\textit{Transportation Research Part A}, vol. 29, no. 2,
-pp. 107--123, 1995.
-\url{https://doi.org/10.1016/0965-8564(94)E0006-U}
-
-\bibitem{c15}
-M. Sciortino, R. Lewis, and J. Thompson,
-``A school bus routing heuristic algorithm allowing heterogeneous 
-fleets and bus stop selection,''
-\textit{SN Computer Science}, vol. 4, p. 74, 2023.
-\url{https://doi.org/10.1007/s42979-022-01466-6}
-
-\bibitem{c16}
-E. R. L\'{o}pez Santana and J. de J. Romero Carvajal,
-``A hybrid column generation and clustering approach to the school 
-bus routing problem with time windows,''
-\textit{Ingenier\'ia}, vol. 20, no. 2, pp. 101--117, 2015.
-\url{https://doi.org/10.14483/udistrital.jour.reving.2015.2.a01}
-
-\bibitem{c17}
-L. D. Sales, C. S. Melo, T. D. Bonates, and B. D. Prata,
-``Memetic algorithm for the heterogeneous fleet school bus routing
-problem,''
-\textit{Journal of Urban Planning and Development}, vol. 144, 
-no. 2, p. 04018018, 2018.
-\url{https://doi.org/10.1061/(ASCE)UP.1943-5444.0000432}
-
-\bibitem{c18}
-D. M. Miranda, R. S. de Camargo, S. V. Concei\c{c}\~{a}o,
-M. F. Porto, and N. T. R. Nunes,
-``A metaheuristic for the rural school bus routing problem with 
-bell adjustment,''
-\textit{Expert Systems with Applications}, vol. 180, 
-p. 115086, 2021.
-\url{https://doi.org/10.1016/j.eswa.2021.115086}
-
-\bibitem{c19}
-P. Shaw,
-``Using constraint programming and local search methods to solve
-vehicle routing problems,''
-in \textit{Proc. International Conference on Principles and
-Practice of Constraint Programming (CP)}, pp. 417--431, 1998.
-\url{https://doi.org/10.1007/3-540-49481-2_30}
-
-\bibitem{c20}
-S. Kirkpatrick, C. D. Gelatt, and M. P. Vecchi,
-``Optimization by simulated annealing,''
-\textit{Science}, vol. 220, no. 4598, pp. 671--680, 1983.
-\url{https://doi.org/10.1126/science.220.4598.671}
-
-\bibitem{c21}
-Chen X, Kong Y, Dang L, Hou Y, Ye X ``Exact and Metaheuristic Approaches for a Bi-Objective School Bus Scheduling Problem,''
-\textit{PLoS ONE 10(7): e0132600, 2015.}
-\url{https://doi.org/10.1371/journal.pone.0132600}
-
-\bibitem{c22}
-S. Voigt,
-``A review and ranking of operators in adaptive large neighborhood 
-search for vehicle routing problems,''
-\textit{European Journal of Operational Research}, vol. 322, no. 2, 
-pp. 357--375, 2025.
-\url{https://doi.org/10.1016/j.ejor.2024.05.033}
-
-\bibitem{c23}
-Olusanya B, Kancherla V, Shaheen A, Ogbo F, Davis A ``Global and regional prevalence of disabilities among children and adolescents: Analysis of findings from global health databases,''
-\textit{Frontiers in Public Health 10, 2022.}
-\url{https://doi.org/10.3389/fpubh.2022.977453}
-
-\end{thebibliography}
+\bibliographystyle{ieeetr}
+\bibliography{Bibliography/references}
 \end{document}

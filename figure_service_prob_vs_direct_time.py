@@ -260,7 +260,6 @@ def plot_instance(
     ax.set_xlim(float(bins[0]), x_upper)
     ax.grid(alpha=0.3, linewidth=0.6)
     ax.set_axisbelow(True)
-    ax.set_title(f"Service Probability vs Direct Time (|S|={instance_size})", fontsize=9)
     ax.legend(frameon=False, fontsize=7)
 
     fig.tight_layout()
