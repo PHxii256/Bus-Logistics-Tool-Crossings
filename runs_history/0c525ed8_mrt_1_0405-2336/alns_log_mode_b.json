@@ -1,0 +1,144 @@
+{
+  "mode": "B",
+  "mode_name": "Weakly Constrained (Any Walking)",
+  "buses_used": 5,
+  "iterations_configured": 5000,
+  "log_interval_iterations": 10,
+  "operator_performance": {
+    "executed_iterations": 50,
+    "destroy": {
+      "random_removal": {
+        "count": 6,
+        "frequency_pct": 12.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "worst_cost_removal": {
+        "count": 1,
+        "frequency_pct": 2.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "shaw_related_removal": {
+        "count": 16,
+        "frequency_pct": 32.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "sequence_removal": {
+        "count": 5,
+        "frequency_pct": 10.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "route_merge_removal": {
+        "count": 22,
+        "frequency_pct": 44.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      }
+    },
+    "repair": {
+      "random_order_best_repair": {
+        "count": 25,
+        "frequency_pct": 50.0,
+        "avg_time_s": 3.529059,
+        "best_time_s": 2.011243,
+        "worst_time_s": 9.347139,
+        "total_time_s": 88.226463
+      },
+      "regret_repair": {
+        "count": 25,
+        "frequency_pct": 50.0,
+        "avg_time_s": 3.537404,
+        "best_time_s": 0.000133,
+        "worst_time_s": 7.292887,
+        "total_time_s": 88.435108
+      }
+    }
+  },
+  "matrix_precompute": {
+    "source": "loaded_from_pkl",
+    "loaded_from_pkl": true,
+    "saved_to_pkl": false,
+    "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/cache/distance_matrix_9fbc6a5a_0405-2336.pkl",
+    "load_time_s": 0.4611,
+    "compute_time_s": 0.0,
+    "save_time_s": 0.0,
+    "total_time_s": 0.6234,
+    "critical_nodes_count": 653,
+    "matrix_nodes_count": 653,
+    "cache_key_prefix": "fbf8719f0979",
+    "cache_entry_node_count": 653,
+    "cache_loaded_finite_ratio": 1.0,
+    "cache_loaded_inf_pairs": 0,
+    "cache_loaded_finite_pairs": 425756,
+    "cache_guard_min_finite_ratio": 0.0001,
+    "cache_load_rejected": false,
+    "cache_load_reject_reason": null,
+    "cache_recomputed_after_reject": false,
+    "cache_context_seed": null,
+    "cache_context_student_count": 100
+  },
+  "synthetic_edges_timing": {
+    "source": "injection_pkl",
+    "prepare_time_s": 12.7539,
+    "pkl_load_time_s": 0.0065,
+    "generate_time_s": 0.0,
+    "auto_save_pkl_time_s": 0.0,
+    "pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/cache/crossings_3eab1f2e_0403-2023.pkl",
+    "cache_hash": "3eab1f2e"
+  },
+  "entries": [
+    {
+      "iteration": 10,
+      "temperature": 817.072807,
+      "objective_value": 54936.68,
+      "best_objective": 54936.68,
+      "students_served": 6,
+      "block_elapsed_seconds": 36.18
+    },
+    {
+      "iteration": 20,
+      "temperature": 667.607972,
+      "objective_value": 64936.68,
+      "best_objective": 64936.68,
+      "students_served": 7,
+      "block_elapsed_seconds": 35.394
+    },
+    {
+      "iteration": 30,
+      "temperature": 545.484319,
+      "objective_value": 69918.38,
+      "best_objective": 69918.38,
+      "students_served": 8,
+      "block_elapsed_seconds": 42.455
+    },
+    {
+      "iteration": 40,
+      "temperature": 445.700404,
+      "objective_value": 79907.17,
+      "best_objective": 79907.17,
+      "students_served": 9,
+      "block_elapsed_seconds": 34.959
+    },
+    {
+      "iteration": 50,
+      "temperature": 364.16968,
+      "objective_value": 99902.23,
+      "best_objective": 99902.23,
+      "students_served": 11,
+      "block_elapsed_seconds": 27.721
+    }
+  ]
+}

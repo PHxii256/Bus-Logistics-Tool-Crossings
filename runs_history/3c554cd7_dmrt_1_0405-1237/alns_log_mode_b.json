@@ -1,0 +1,144 @@
+{
+  "mode": "B",
+  "mode_name": "Weakly Constrained (Any Walking)",
+  "buses_used": 10,
+  "iterations_configured": 5000,
+  "log_interval_iterations": 10,
+  "operator_performance": {
+    "executed_iterations": 50,
+    "destroy": {
+      "random_removal": {
+        "count": 1,
+        "frequency_pct": 2.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "worst_cost_removal": {
+        "count": 19,
+        "frequency_pct": 38.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "shaw_related_removal": {
+        "count": 15,
+        "frequency_pct": 30.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "sequence_removal": {
+        "count": 0,
+        "frequency_pct": 0.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      },
+      "route_merge_removal": {
+        "count": 15,
+        "frequency_pct": 30.0,
+        "avg_time_s": 0.0,
+        "best_time_s": 0.0,
+        "worst_time_s": 0.0,
+        "total_time_s": 0.0
+      }
+    },
+    "repair": {
+      "random_order_best_repair": {
+        "count": 25,
+        "frequency_pct": 50.0,
+        "avg_time_s": 5.759635,
+        "best_time_s": 2.589493,
+        "worst_time_s": 10.791211,
+        "total_time_s": 143.990882
+      },
+      "regret_repair": {
+        "count": 25,
+        "frequency_pct": 50.0,
+        "avg_time_s": 5.311095,
+        "best_time_s": 0.00012,
+        "worst_time_s": 9.388429,
+        "total_time_s": 132.777379
+      }
+    }
+  },
+  "matrix_precompute": {
+    "source": "computed_osrm",
+    "loaded_from_pkl": false,
+    "saved_to_pkl": true,
+    "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/cache/distance_matrix_6446e64c_0405-1237.pkl",
+    "load_time_s": 0.0001,
+    "compute_time_s": 1.2798,
+    "save_time_s": 0.3194,
+    "total_time_s": 9.7145,
+    "critical_nodes_count": 587,
+    "matrix_nodes_count": 587,
+    "cache_key_prefix": "5dd7286b1049",
+    "cache_entry_node_count": null,
+    "cache_loaded_finite_ratio": null,
+    "cache_loaded_inf_pairs": null,
+    "cache_loaded_finite_pairs": null,
+    "cache_guard_min_finite_ratio": 0.0001,
+    "cache_load_rejected": false,
+    "cache_load_reject_reason": null,
+    "cache_recomputed_after_reject": false,
+    "cache_context_seed": null,
+    "cache_context_student_count": 200
+  },
+  "synthetic_edges_timing": {
+    "source": "injection_pkl",
+    "prepare_time_s": 11.8304,
+    "pkl_load_time_s": 0.0067,
+    "generate_time_s": 0.0,
+    "auto_save_pkl_time_s": 0.0,
+    "pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/cache/crossings_3eab1f2e_0403-2023.pkl",
+    "cache_hash": "3eab1f2e"
+  },
+  "entries": [
+    {
+      "iteration": 10,
+      "temperature": 817.072807,
+      "objective_value": 44922.7,
+      "best_objective": 44922.7,
+      "students_served": 5,
+      "block_elapsed_seconds": 56.934
+    },
+    {
+      "iteration": 20,
+      "temperature": 667.607972,
+      "objective_value": 49884.47,
+      "best_objective": 49884.47,
+      "students_served": 6,
+      "block_elapsed_seconds": 58.637
+    },
+    {
+      "iteration": 30,
+      "temperature": 545.484319,
+      "objective_value": 59882.18,
+      "best_objective": 59882.18,
+      "students_served": 7,
+      "block_elapsed_seconds": 53.41
+    },
+    {
+      "iteration": 40,
+      "temperature": 445.700404,
+      "objective_value": 69876.6,
+      "best_objective": 69876.6,
+      "students_served": 8,
+      "block_elapsed_seconds": 61.168
+    },
+    {
+      "iteration": 50,
+      "temperature": 364.16968,
+      "objective_value": 79875.86,
+      "best_objective": 79875.86,
+      "students_served": 9,
+      "block_elapsed_seconds": 46.685
+    }
+  ]
+}

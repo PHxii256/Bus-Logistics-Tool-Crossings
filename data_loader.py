@@ -63,7 +63,8 @@ def _create_students(student_data_list):
             fee=data.get('fee', 100.0),
             assignment=data.get('assignment', 'permanent'),
             valid_from=data.get('valid_from'),
-            valid_until=data.get('valid_until')
+            valid_until=data.get('valid_until'),
+            physically_mentally_disabled=data.get('physically_mentally_disabled', False),
         )
         if 'walk_radius_override' in data:
             student.walk_radius = data['walk_radius_override']
@@ -106,15 +107,27 @@ def load_mode1_input(data, G):
     constraints = meta.get('constraints', {})
     algo_config = meta.get('algorithm', {'method': 'alns', 'iterations': 60})
 
-    # Per-student ride-time constraints — tiered: clamp(k*T_direct, floor, ceiling)
+    # Per-student ride-time constraints:
+    #   DMRT cap = max(base_mrt, T_direct + acceptable_offset_minutes)
     ride_time_multiplier = constraints.get('ride_time_multiplier', 2.5)
     floor_minutes        = constraints.get('floor_minutes',        45)
     ceiling_minutes      = constraints.get('ceiling_minutes',      60)
+    try:
+        acceptable_offset_minutes = float(constraints.get('acceptable_offset_minutes', 30))
+    except (TypeError, ValueError):
+        acceptable_offset_minutes = 30.0
     bidirectional_check  = constraints.get('bidirectional_check',  True)
+    mrt_enabled          = bool(constraints.get('mrt_enabled', constraints.get('mrt enabled', False)))
+    mrt_minutes_raw      = constraints.get('mrt', None)
+    try:
+        mrt_minutes = float(mrt_minutes_raw) if mrt_minutes_raw is not None else None
+    except (TypeError, ValueError):
+        mrt_minutes = None
     caps_enabled         = constraints.get('enabled',              True)
-    soft_ride_caps       = constraints.get('soft_ride_caps',       False)
     # Legacy flat cap — kept as fallback (= ceiling)
     route_tmax = constraints.get('route_tmax', ceiling_minutes)
+    if mrt_enabled and mrt_minutes is not None and mrt_minutes > 0:
+        route_tmax = mrt_minutes
     
     # Create one route per bus, each starting with school start/end stops
     routes = []
@@ -134,10 +147,12 @@ def load_mode1_input(data, G):
             floor_minutes=floor_minutes,
             ceiling_minutes=ceiling_minutes,
             bidirectional_check=bidirectional_check,
+            mrt_enabled=mrt_enabled,
+            mrt_minutes=mrt_minutes,
+            acceptable_offset_minutes=acceptable_offset_minutes,
         )
-        # Flags used by validate_permanent_student for hard/soft cap behavior
+        # Flag used by validate_permanent_student for cap enforcement behavior
         route.ride_caps_enabled = caps_enabled
-        route.soft_ride_caps    = soft_ride_caps
         
         node_lat = school_node_lat
         node_lon = school_node_lon
@@ -225,6 +240,10 @@ def _reconstruct_routes(routes_json, buses_dict, G):
             ride_time_multiplier=route_data.get('ride_time_multiplier', 2.5),
             floor_minutes=route_data.get('floor_minutes',   45),
             ceiling_minutes=route_data.get('ceiling_minutes', 60),
+            bidirectional_check=route_data.get('bidirectional_check', True),
+            mrt_enabled=route_data.get('mrt_enabled', route_data.get('mrt enabled', False)),
+            mrt_minutes=route_data.get('mrt', None),
+            acceptable_offset_minutes=route_data.get('acceptable_offset_minutes', 30),
         )
         route.total_distance = route_data.get('total_distance_km', 0)
         route.total_time = route_data.get('total_time_minutes', 0)
@@ -249,7 +268,8 @@ def _reconstruct_routes(routes_json, buses_dict, G):
                     fee=s_data.get('fee', 0),
                     assignment=s_data.get('assignment', 'permanent'),
                     valid_from=s_data.get('valid_from'),
-                    valid_until=s_data.get('valid_until')
+                    valid_until=s_data.get('valid_until'),
+                    physically_mentally_disabled=s_data.get('physically_mentally_disabled', False),
                 )
                 stop.add_student(student)
                 all_students.append(student)
@@ -326,6 +346,7 @@ def serialize_routes(routes, buses, school_coords, unserved_students=None, graph
                     "home_latitude": s.coords[0],
                     "home_longitude": s.coords[1],
                     "school_stage": s.school_stage.name,
+                    "physically_mentally_disabled": bool(getattr(s, 'physically_mentally_disabled', False)),
                     "age": s.age,
                     "fee": s.fee,
                     "assignment": s.assignment,
@@ -349,6 +370,10 @@ def serialize_routes(routes, buses, school_coords, unserved_students=None, graph
             "ride_time_multiplier": getattr(route, 'ride_time_multiplier', 2.5),
             "floor_minutes":        getattr(route, 'floor_minutes',        45),
             "ceiling_minutes":      getattr(route, 'ceiling_minutes',      60),
+            "acceptable_offset_minutes": getattr(route, 'acceptable_offset_minutes', 30),
+            "bidirectional_check":  getattr(route, 'bidirectional_check',  True),
+            "mrt_enabled":          getattr(route, 'mrt_enabled',          False),
+            "mrt":                  getattr(route, 'mrt_minutes',          None),
             "total_distance_km": round(route.total_distance, 2),
             "total_time_minutes": round(route.total_time, 2),
             "detour_time_used_today": round(route.detour_time_used, 2),
@@ -363,6 +388,7 @@ def serialize_routes(routes, buses, school_coords, unserved_students=None, graph
                 "home_latitude": s.coords[0],
                 "home_longitude": s.coords[1],
                 "school_stage": s.school_stage.name,
+                "physically_mentally_disabled": bool(getattr(s, 'physically_mentally_disabled', False)),
                 "age": s.age,
                 "fee": s.fee,
                 "reason": s.failure_reason or "No valid insertion found"
@@ -394,10 +420,15 @@ def print_input_summary(students, buses, routes, school_coords):
     
     print(f"\nRoutes: {len(routes)}")
     for route in routes:
-        k       = getattr(route, 'ride_time_multiplier', 2.5)
         floor_m = getattr(route, 'floor_minutes',        45)
-        ceil_m  = getattr(route, 'ceiling_minutes',      60)
-        print(f"  {route.route_id}: {len(route.stops)} stops, "
-              f"ride cap clamp({k}x, >={floor_m} min, <=direct+{ceil_m} min), capacity={route.bus.capacity}")
+        dmrt_offset = getattr(route, 'acceptable_offset_minutes', 30)
+        mrt_on  = bool(getattr(route, 'mrt_enabled', False))
+        mrt_val = getattr(route, 'mrt_minutes', None)
+        if mrt_on and mrt_val is not None:
+            cap_desc = f"hard MRT={float(mrt_val):.1f} min (AM and PM)"
+        else:
+            base_mrt = floor_m
+            cap_desc = f"DMRT cap max({float(base_mrt):.1f}, direct+{float(dmrt_offset):.1f}) min"
+        print(f"  {route.route_id}: {len(route.stops)} stops, {cap_desc}, capacity={route.bus.capacity}")
     
     print(f"\n{'='*80}\n")

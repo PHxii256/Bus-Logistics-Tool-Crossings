@@ -1,0 +1,155 @@
+{
+  "_comment": "Crossings experiment: walk network + synthetic crossing overlay.",
+  "school": {
+    "name": "Victory College School",
+    "latitude": 29.964406,
+    "longitude": 31.270319
+  },
+
+  "n_students": 200,
+  "seed": 42,
+  "stage_distribution": {
+    "KG": 0.25,
+    "ELEMENTARY": 0.25,
+    "MIDDLE": 0.25,
+    "HIGH": 0.25
+  },
+
+  "disabled_percentage": 12.5,
+  "stage_walk_limits": {
+    "KG": 0,
+    "ELEMENTARY": 0,
+    "MIDDLE": 250,
+    "HIGH": 500
+  },
+
+  "buses": {
+    "count": 9,
+    "capacity": 28
+  },
+
+  "graph": {
+    "bbox": [
+      29.753694770217,
+      31.214796485023,
+      30.201444959827,
+      31.466764435799
+    ],
+    "boundary_mode": "polygon",
+    "boundary_polygon_path": "cairo_boundaries/cairo_boundary_points.csv",
+    "pkl_path": "",
+    "cache": {
+      "enabled": true
+    }
+  },
+
+  "constraints": {
+    "enabled": true,
+    "ride_time_multiplier": 2,
+    "floor_minutes": 60,
+    "ceiling_minutes": 60,
+    "daily_detour_budget_minutes": 10,
+    "bidirectional_check": false,
+    "mrt_enabled": true,
+    "mrt": 60,
+    "acceptable_offset_minutes": 30
+  },
+
+  "walk_graph": {
+    "enabled": true,
+    "coverage_mode": "bbox_strict",
+    "bbox_radius_scale": 1.0,
+    "radius_km": 10.0,
+    "cache": {
+      "enabled": true
+    }
+  },
+
+  "synthetic_crossings": {
+    "enabled": true,
+    "strategy": "drive_node_crossings",
+    "allowed_crossing_road_classes_by_stage": {
+      "HIGH": ["secondary", "tertiary"],
+      "MIDDLE": ["tertiary"],
+      "ELEMENTARY": [],
+      "KG": [],
+      "DISABLED": []
+    },
+    "min_dist_m": 0.0,
+    "max_dist_m": 60.0,
+    "min_opposite_bearing_deg": 70.0,
+    "max_crossing_angle_delta_deg": 30.0,
+    "min_perpendicular_deg": 10.0,
+    "max_perpendicular_deg": 200.0,
+    "min_spacing_m": 30.0,
+    "min_spacing_per_road_m": 30.0,
+    "max_per_road": 600,
+    "show_only_used": false,
+    "max_total": 3000,
+    "enable_guaranteed_connection": true,
+    "guaranteed_connection_distance_m": 6.0,
+    "fallback_mode": "adaptive",
+    "cache": {
+      "enabled": true
+    }
+  },
+
+  "crossings_injection": {
+    "enabled": true,
+    "pkl_path": "cache/crossings_3eab1f2e_0403-2023.pkl",
+    "strict_validation": false
+  },
+
+  "distance_matrix_cache": {
+    "enabled": false,
+    "pkl_path": ""
+  },
+
+  "distance_matrix_source": "osrm_scaled",
+
+  "algorithm": {
+    "iterations": 5000,
+    "time_budget_seconds": 720,
+    "min_iterations_floor": 200,
+    "max_candidates_per_student": 7,
+    "minimize_buses": true,
+    "repair_max_unassigned_per_call": 64,
+    "regret_scan_limit": 32,
+    "max_repair_seconds_per_iteration": 2,
+    "early_stop_patience": 80,
+    "early_stop_min_improvement": 5,
+    "early_stop_freeze_temp": 2,
+    "early_stop_freeze_patience": 16,
+    "fleet_search_followup_k_budget_scale": 0.6,
+    "fleet_search_max_per_k_seconds": 60
+  },
+
+  "annulus": {
+    "peak_km": 5.0,
+    "sigma_km": 10.0,
+    "min_km": 1.0,
+    "max_km": 12,
+    "dynamic_max_km": true,
+    "auto_from_bbox_circle": true,
+    "auto_peak_km": true,
+    "auto_sigma_km": true,
+    "peak_ratio": 0.3,
+    "sigma_ratio": 0.3,
+    "bbox_radius_scale": 1.0,
+    "max_attempts_per_student": 12000,
+    "attempts_log_every": 25000
+  },
+
+  "output": "comparison_map.html",
+  "debug": {
+    "run_mode_a": false,
+    "run_mode_b": true,
+    "run_mode_c": false,
+    "run_build_map": true,
+    "visualize_walk_graph": {
+      "enabled": false,
+      "sample_rate": 0.1
+    },
+    "_comment": "visualize_walk_graph: enabled=true/false, sample_rate=1.0 (all edges) or 0.2 (20% sample)"
+  }
+}

@@ -37,6 +37,9 @@ _CROSSING_BFS_STATS = {
     "students_checked": 0,
     "candidates_via_crossing": 0,  # drive nodes only reachable via synthetic crossing
     "students_with_crossing_benefit": 0,  # students who got extra candidates via crossings
+    "students_explored_crossing": 0,  # students whose BFS traversed >=1 synthetic crossing edge
+    "allowed_students_checked": 0,  # policy-eligible students checked by BFS
+    "allowed_students_explored_crossing": 0,  # eligible students whose BFS traversed crossings
 }
 # Cache: (student_node, stop_node) -> walk_distance_meters
 _WALK_DIST_CACHE = {}
@@ -57,6 +60,18 @@ _DRIVE_NODE_FILTERED_SIG_CACHE = {}
 _STUDENT_NODE_CACHE = {}
 
 _MAJOR_HIGHWAYS = {"motorway", "trunk", "primary", "secondary"}
+
+_DEFAULT_STAGE_CROSSING_POLICY = {
+    "HIGH": {"secondary", "tertiary"},
+    "MIDDLE": {"tertiary"},
+    "ELEMENTARY": set(),
+    "KG": set(),
+    "DISABLED": set(),
+    "UNKNOWN": set(),
+}
+_SYNTHETIC_STAGE_CROSSING_POLICY = {
+    key: set(values) for key, values in _DEFAULT_STAGE_CROSSING_POLICY.items()
+}
 
 
 def _is_valid_coordinate(value):
@@ -79,6 +94,74 @@ def _normalize_highway(hw):
         hw = hw[0] if hw else ""
     hw = str(hw or "").lower()
     return hw[:-5] if hw.endswith("_link") else hw
+
+
+def _normalize_crossing_road_class(value):
+    """Normalize a crossing road class token (e.g. secondary_link -> secondary)."""
+    return _normalize_highway(value)
+
+
+def _normalize_stage_crossing_policy(raw_policy):
+    """Return canonical stage->allowed crossing classes mapping."""
+    policy = {key: set(values) for key, values in _DEFAULT_STAGE_CROSSING_POLICY.items()}
+    if not isinstance(raw_policy, dict):
+        return policy
+
+    for raw_key, raw_classes in raw_policy.items():
+        key = str(raw_key or "").strip().upper()
+        if "DISABLED" in key:
+            key = "DISABLED"
+        if key not in policy:
+            continue
+
+        if raw_classes is None:
+            policy[key] = set()
+            continue
+        if not isinstance(raw_classes, (list, tuple, set)):
+            continue
+
+        normalized = set()
+        for cls in raw_classes:
+            token = _normalize_crossing_road_class(cls)
+            if token:
+                normalized.add(token)
+        policy[key] = normalized
+    return policy
+
+
+def _resolve_stage_crossing_policy_key(student_stage, student_disabled=False):
+    """Map student attributes to crossing policy key."""
+    if bool(student_disabled):
+        return "DISABLED"
+    if hasattr(student_stage, "name"):
+        stage_key = str(student_stage.name).strip().upper()
+    else:
+        stage_key = str(student_stage or "").strip().upper()
+    if stage_key in _SYNTHETIC_STAGE_CROSSING_POLICY:
+        return stage_key
+    return "UNKNOWN"
+
+
+def _allowed_synthetic_crossing_classes(student_stage, student_disabled=False):
+    """Return allowed crossing road classes for the given student."""
+    policy_key = _resolve_stage_crossing_policy_key(student_stage, student_disabled)
+    return _SYNTHETIC_STAGE_CROSSING_POLICY.get(policy_key, set())
+
+
+def _edge_allows_student_crossing(edge_data, student_stage, student_disabled=False):
+    """Return whether a synthetic crossing edge is allowed for this student."""
+    if not bool(edge_data.get("synthetic_crossing", False)):
+        return True
+
+    allowed_classes = _allowed_synthetic_crossing_classes(student_stage, student_disabled)
+    if not allowed_classes:
+        return False
+
+    road_class = _normalize_crossing_road_class(edge_data.get("road_class"))
+    if not road_class:
+        # Unknown synthetic crossing class: default deny for safety.
+        return False
+    return road_class in allowed_classes
 
 
 def _normalize_road_name(name):
@@ -380,12 +463,52 @@ def _map_to_walk_node(node_id, drive_graph, walk_graph, generate_synthetic=False
         lon = drive_graph.nodes[node_id]['x']
     except Exception:
         return None
-    # Avoid building a second huge BallTree for walk graph (memory-heavy).
-    mapped = ox.nearest_nodes(walk_graph, lon, lat)
+
+    mapped = _nearest_node_any_id(walk_graph, lon, lat)
+    
     _WALK_NODE_MAP_CACHE[cache_key] = mapped
     if generate_synthetic:
         _ensure_synthetic_near_drive_node(node_id, drive_graph, walk_graph, mapped)
     return mapped
+
+
+def _nearest_node_any_id(graph, lon, lat):
+    """Nearest node lookup that works with int and string node IDs.
+
+    osmnx.nearest_nodes may fail on some graphs when node IDs are non-numeric.
+    Fallback to BallTree/manual search to keep behavior robust.
+    """
+    try:
+        return ox.nearest_nodes(graph, lon, lat)
+    except Exception:
+        pass
+
+    try:
+        tree, node_ids = _get_or_build_ball_tree(graph)
+        import numpy as np
+        pt_rad = np.deg2rad([[lat, lon]])
+        _, pos = tree.query(pt_rad, k=1)
+        return node_ids[pos[0][0]]
+    except Exception:
+        pass
+
+    # Last resort: linear scan in degree space (small local fallback path only).
+    best = None
+    best_d2 = float('inf')
+    lat_rad = math.radians(lat)
+    cos_lat = max(1e-6, math.cos(lat_rad))
+    for n, d in graph.nodes(data=True):
+        nlat = d.get('y')
+        nlon = d.get('x')
+        if nlat is None or nlon is None:
+            continue
+        dy = float(nlat) - float(lat)
+        dx = (float(nlon) - float(lon)) * cos_lat
+        d2 = dx * dx + dy * dy
+        if d2 < best_d2:
+            best_d2 = d2
+            best = n
+    return best
 
 
 def _build_walk_spatial_index(walk_graph, cell_m):
@@ -1415,6 +1538,7 @@ def set_walk_graph(walk_graph, synthetic_cfg=None, drive_graph=None):
     global _DRIVE_NODE_FILTERED_SIG_CACHE
     global _SYNTHETIC_DIAGNOSTICS
     global _SYNTHETIC_REJECTED_UNSAFE
+    global _SYNTHETIC_STAGE_CROSSING_POLICY
     _WALK_GRAPH = walk_graph
     _WALK_DIST_CACHE.clear()
     _WALK_NODE_MAP_CACHE.clear()
@@ -1425,6 +1549,9 @@ def set_walk_graph(walk_graph, synthetic_cfg=None, drive_graph=None):
         "students_checked": 0,
         "candidates_via_crossing": 0,
         "students_with_crossing_benefit": 0,
+        "students_explored_crossing": 0,
+        "allowed_students_checked": 0,
+        "allowed_students_explored_crossing": 0,
     }
     _WALK_SPATIAL_INDEX = None
     _WALK_SPATIAL_INDEX_META = None
@@ -1451,6 +1578,11 @@ def set_walk_graph(walk_graph, synthetic_cfg=None, drive_graph=None):
     }
     cfg = synthetic_cfg or {}
     _SYNTHETIC_CFG = dict(cfg)
+    stage_policy_cfg = (
+        cfg.get("allowed_crossing_road_classes_by_stage")
+        or cfg.get("stage_based_crossing_policy")
+    )
+    _SYNTHETIC_STAGE_CROSSING_POLICY = _normalize_stage_crossing_policy(stage_policy_cfg)
     strategy = str(cfg.get('strategy', 'per_drive_node')).lower()
 
     if _WALK_GRAPH is not None and cfg.get("enabled") and strategy == 'drive_node_crossings':
@@ -1509,7 +1641,7 @@ def haversine_walk_distance(lat1, lon1, lat2, lon2):
     R = 6371000  # Earth radius in meters
     phi1 = math.radians(lat1)
     phi2 = math.radians(lat2)
-    dphi = math.radians(lon2 - lon1)
+    dphi = math.radians(lat2 - lat1)
     dlambda = math.radians(lon2 - lon1)
     a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
@@ -1780,8 +1912,6 @@ def find_shortest_path_with_turns(graph, source, target, weight='travel_time', i
     This prevents 180-degree turns and applies minor penalties for 90-degree turns.
     Uses a predecessor map instead of storing full paths on the heap for speed.
     """
-    return None, float('inf')
-
     if source == target:
         return [source], 0.0
 
@@ -1999,12 +2129,14 @@ def calculate_route_time_from_matrix(stops, graph=None):
         if pair in _MATRIX_CACHE:
             t = _MATRIX_CACHE[pair]
             if t == float('inf'):
+                print(f"[DEBUG] Pair {pair} in cache but value is inf")
                 return 9999.0
             total += t
         elif graph is not None:
             # Lazy compute: run A* once, result is cached for future lookups
             path, t = find_shortest_path_with_turns(graph, pair[0], pair[1])
             if t == float('inf'):
+                print(f"[DEBUG] A* for pair {pair} returned inf (no path found)")
                 return 9999.0
             # Also compute length while we have the path
             if path:
@@ -2017,6 +2149,7 @@ def calculate_route_time_from_matrix(stops, graph=None):
                 _MATRIX_CACHE_LENGTH[pair] = dist_m
             total += t
         else:
+            print(f"[DEBUG] calculate_route_time_from_matrix: No graph provided for pair {pair}, returning None")
             return None  # No graph provided, can't compute
     return total
 
@@ -2251,7 +2384,8 @@ def _candidate_points(graph, node) -> int:
 _safe_nodes_cache = {}
 
 def find_safe_nodes_within_radius(coords, graph, radius_meters, walk_distance_limit,
-                                   candidate_cfg=None, walk_graph=None):
+                                   candidate_cfg=None, walk_graph=None,
+                                   student_stage=None, student_disabled=False):
     """Find all nodes reachable by walking within *walk_distance_limit* metres.
 
     Walking semantics
@@ -2295,7 +2429,8 @@ def find_safe_nodes_within_radius(coords, graph, radius_meters, walk_distance_li
     lat, lon = coords
     # Include walk_graph identity in cache key to avoid stale results
     walk_graph_id = id(walk_graph) if walk_graph is not None else 0
-    cache_key = (lat, lon, walk_distance_limit, walk_graph_id)
+    stage_key = _resolve_stage_crossing_policy_key(student_stage, student_disabled)
+    cache_key = (lat, lon, walk_distance_limit, walk_graph_id, stage_key, bool(student_disabled))
     if cache_key in _safe_nodes_cache:
         all_reachable = _safe_nodes_cache[cache_key]
         # Apply scoring/truncation on the cached full result if config given
@@ -2305,11 +2440,30 @@ def find_safe_nodes_within_radius(coords, graph, radius_meters, walk_distance_li
             )
         return all_reachable
 
-    # If walk_graph provided, do BFS on walk graph and map results to drive nodes
+    # If walk_graph provided, do BFS on walk graph and map results to drive nodes.
+    # Also union with direct drive-graph BFS so candidate coverage doesn't collapse
+    # when walk->drive projection is overly coarse in sparse/simplified areas.
     if walk_graph is not None:
-        safe_nodes = _bfs_walk_graph_to_drive_nodes(
-            coords, graph, walk_graph, walk_distance_limit
+        safe_nodes_walk = _bfs_walk_graph_to_drive_nodes(
+            coords,
+            graph,
+            walk_graph,
+            walk_distance_limit,
+            student_stage=student_stage,
+            student_disabled=student_disabled,
         )
+        safe_nodes_drive = _bfs_on_drive_graph(coords, graph, walk_distance_limit)
+
+        merged = {}
+        for nid, dist in safe_nodes_walk:
+            d = float(dist)
+            if d < merged.get(nid, float("inf")):
+                merged[nid] = d
+        for nid, dist in safe_nodes_drive:
+            d = float(dist)
+            if d < merged.get(nid, float("inf")):
+                merged[nid] = d
+        safe_nodes = [(nid, dist) for nid, dist in merged.items()]
     else:
         # Legacy mode: BFS directly on drive graph
         safe_nodes = _bfs_on_drive_graph(coords, graph, walk_distance_limit)
@@ -2371,7 +2525,14 @@ def _bfs_on_drive_graph(coords, graph, walk_distance_limit):
     return safe_nodes
 
 
-def _bfs_walk_graph_to_drive_nodes(coords, drive_graph, walk_graph, walk_distance_limit):
+def _bfs_walk_graph_to_drive_nodes(
+    coords,
+    drive_graph,
+    walk_graph,
+    walk_distance_limit,
+    student_stage=None,
+    student_disabled=False,
+):
     """BFS on walk graph, mapping reachable walk nodes to drive nodes.
 
     This enables students to use synthetic crossings (on walk graph) to reach
@@ -2381,13 +2542,18 @@ def _bfs_walk_graph_to_drive_nodes(coords, drive_graph, walk_graph, walk_distanc
     """
     global _CROSSING_BFS_STATS
     lat, lon = coords
+    crossing_allowed_for_student = bool(
+        _allowed_synthetic_crossing_classes(student_stage, student_disabled)
+    )
 
     # Find starting walk node - map from nearest drive node
     drive_start = fast_nearest_node(drive_graph, lon, lat)
     walk_start = _map_to_walk_node(drive_start, drive_graph, walk_graph)
     if walk_start is None:
-        # Fallback: direct snap to walk graph
-        walk_start = ox.nearest_nodes(walk_graph, lon, lat)
+        # Fallback: direct snap to walk graph (robust to synthetic string node IDs)
+        walk_start = _nearest_node_any_id(walk_graph, lon, lat)
+    if walk_start is None:
+        return []
 
     # BFS on walk graph
     # Track: (walk_node, distance, crossed_synthetic)
@@ -2398,6 +2564,7 @@ def _bfs_walk_graph_to_drive_nodes(coords, drive_graph, walk_graph, walk_distanc
     drive_node_min_dist = {}  # drive_node -> dist
     drive_node_via_crossing = set()  # drive nodes reached ONLY via synthetic crossing
     drive_node_without_crossing = set()  # drive nodes reachable without synthetic crossing
+    explored_crossing = False
 
     while queue:
         current_walk_node, dist_so_far, crossed_synthetic = queue.pop(0)
@@ -2438,14 +2605,38 @@ def _bfs_walk_graph_to_drive_nodes(coords, drive_graph, walk_graph, walk_distanc
                 else:
                     drive_node_without_crossing.add(drive_node)
 
-        # Helper to check if edge is synthetic crossing
-        def _is_synthetic_edge(edge_data_dict):
+        def _iter_edge_variants(edge_data_dict):
+            if isinstance(edge_data_dict, dict) and 'length' in edge_data_dict:
+                yield edge_data_dict
+                return
             if isinstance(edge_data_dict, dict):
-                return edge_data_dict.get('synthetic_crossing', False)
-            for key, data in edge_data_dict.items():
-                if data.get('synthetic_crossing', False):
-                    return True
-            return False
+                for data in edge_data_dict.values():
+                    if isinstance(data, dict):
+                        yield data
+
+        def _edge_traversal_info(edge_data_dict):
+            """Return (is_traversable, edge_length, crossed_synthetic)."""
+            best_length = float('inf')
+            crossed_synthetic = False
+            found = False
+            for data in _iter_edge_variants(edge_data_dict):
+                if not data.get('is_safe_to_cross', True):
+                    continue
+                if not _edge_allows_student_crossing(
+                    data,
+                    student_stage=student_stage,
+                    student_disabled=student_disabled,
+                ):
+                    continue
+                edge_length = float(data.get('length', 0.0) or 0.0)
+                is_crossing = bool(data.get('synthetic_crossing', False))
+                if edge_length < best_length:
+                    best_length = edge_length
+                    crossed_synthetic = is_crossing
+                found = True
+            if not found:
+                return False, float('inf'), False
+            return True, best_length, crossed_synthetic
 
         # Walk along edges (bidirectional for pedestrians)
         # Handle both directed and undirected graphs
@@ -2453,44 +2644,26 @@ def _bfs_walk_graph_to_drive_nodes(coords, drive_graph, walk_graph, walk_distanc
         neighbors_iter = walk_graph.successors(current_walk_node) if is_directed else walk_graph.neighbors(current_walk_node)
         for neighbor in neighbors_iter:
             edge_data = walk_graph[current_walk_node][neighbor]
-            is_safe = False
-            edge_length = float('inf')
-            is_crossing_edge = _is_synthetic_edge(edge_data)
-
-            if isinstance(edge_data, dict) and 'length' in edge_data:
-                is_safe = edge_data.get('is_safe_to_cross', True)
-                edge_length = edge_data.get('length', 0)
-            else:
-                for key, data in edge_data.items():
-                    if data.get('is_safe_to_cross', True):
-                        is_safe = True
-                        edge_length = min(edge_length, data.get('length', 0))
+            is_safe, edge_length, is_crossing_edge = _edge_traversal_info(edge_data)
             if is_safe:
                 new_dist = dist_so_far + edge_length
                 if new_dist <= walk_distance_limit:
                     new_crossed = crossed_synthetic or is_crossing_edge
+                    if is_crossing_edge:
+                        explored_crossing = True
                     queue.append((neighbor, new_dist, new_crossed))
 
         # Also check predecessors (for directed graphs only)
         if is_directed:
             for predecessor in walk_graph.predecessors(current_walk_node):
                 edge_data = walk_graph[predecessor][current_walk_node]
-                is_safe = False
-                edge_length = float('inf')
-                is_crossing_edge = _is_synthetic_edge(edge_data)
-
-                if isinstance(edge_data, dict) and 'length' in edge_data:
-                    is_safe = edge_data.get('is_safe_to_cross', True)
-                    edge_length = edge_data.get('length', 0)
-                else:
-                    for key, data in edge_data.items():
-                        if data.get('is_safe_to_cross', True):
-                            is_safe = True
-                            edge_length = min(edge_length, data.get('length', 0))
+                is_safe, edge_length, is_crossing_edge = _edge_traversal_info(edge_data)
                 if is_safe:
                     new_dist = dist_so_far + edge_length
                     if new_dist <= walk_distance_limit:
                         new_crossed = crossed_synthetic or is_crossing_edge
+                        if is_crossing_edge:
+                            explored_crossing = True
                         queue.append((predecessor, new_dist, new_crossed))
 
     # Calculate crossing-only candidates (nodes reachable ONLY via crossing)
@@ -2501,6 +2674,12 @@ def _bfs_walk_graph_to_drive_nodes(coords, drive_graph, walk_graph, walk_distanc
     _CROSSING_BFS_STATS["candidates_via_crossing"] += len(crossing_only_nodes)
     if crossing_only_nodes:
         _CROSSING_BFS_STATS["students_with_crossing_benefit"] += 1
+    if explored_crossing:
+        _CROSSING_BFS_STATS["students_explored_crossing"] += 1
+    if crossing_allowed_for_student:
+        _CROSSING_BFS_STATS["allowed_students_checked"] += 1
+        if explored_crossing:
+            _CROSSING_BFS_STATS["allowed_students_explored_crossing"] += 1
 
     # Convert to list of (node, dist) tuples
     return [(node, dist) for node, dist in drive_node_min_dist.items()]
@@ -2518,6 +2697,9 @@ def reset_crossing_bfs_stats():
         "students_checked": 0,
         "candidates_via_crossing": 0,
         "students_with_crossing_benefit": 0,
+        "students_explored_crossing": 0,
+        "allowed_students_checked": 0,
+        "allowed_students_explored_crossing": 0,
     }
 
 
@@ -2992,7 +3174,13 @@ def calculate_afternoon_ride_time_potential(route, new_stop, insert_position, gr
             # Check 2: Path from student to stop is safe (details in find_safe_nodes_within_radius)
             walk_g = _get_walk_graph(graph)  # Use walk graph with crossings if available
             safe_nodes = find_safe_nodes_within_radius(
-                student.coords, graph, 500, student.walk_radius, walk_graph=walk_g
+                student.coords,
+                graph,
+                500,
+                student.walk_radius,
+                walk_graph=walk_g,
+                student_stage=getattr(student, "school_stage", None),
+                student_disabled=bool(getattr(student, "physically_mentally_disabled", False)),
             )
             safe_node_ids = [n[0] for n in safe_nodes]
             
@@ -3132,46 +3320,31 @@ def compute_afternoon_direct_time(student, school_node, graph):
 def compute_student_tmax(student, school_node, G,
                           multiplier=2.5,
                           floor_minutes=45,
-                          ceiling_minutes=60):  # changed default 30 → 60
+                                                    ceiling_minutes=60,
+                                                    base_mrt_minutes=None,
+                                                    acceptable_offset_minutes=None):
     """
-    Tiered per-student ride time cap (morning direction: home -> school):
+        DMRT per-student ride-time cap (morning direction: home -> school):
 
-        T_max(s) = clamp(k * T_direct, floor_minutes, T_direct + ceiling_minutes)
+                T_max(s) = max(base_mrt_minutes, T_direct + acceptable_offset_minutes)
 
-    ceiling_minutes = max EXTRA minutes allowed on top of T_direct.
-    The absolute upper bound grows with distance, not a fixed number.
-
-    Default parameters:  k=2.5,  floor=45,  ceiling_extra=60
-    ┌─────────────┬──────────────┬──────────────┬─────────────┬──────────────────────┐
-    │  T_direct   │  k×T_direct  │  T_d+ceiling │  Effective  │  Which rule binds    │
-    ├─────────────┼──────────────┼──────────────┼─────────────┼──────────────────────┤
-    │   2  min    │     5  min   │    62  min   │   45  min   │ FLOOR (student nearby)│
-    │   5  min    │    12.5 min  │    65  min   │   45  min   │ FLOOR                │
-    │  10  min    │    25  min   │    70  min   │   45  min   │ FLOOR                │
-    │  18  min    │    45  min   │    78  min   │   45  min   │ FLOOR / RATIO tie    │
-    │  20  min    │    50  min   │    80  min   │   50  min   │ RATIO (2.5x binds)   │
-    │  25  min    │    62.5 min  │    85  min   │   62.5 min  │ RATIO                │
-    │  30  min    │    75  min   │    90  min   │   75  min   │ RATIO                │
-    │  40  min    │   100  min   │   100  min   │  100  min   │ RATIO / CEILING tie  │
-    │  45  min    │   112.5 min  │   105  min   │  105  min   │ CEILING (+60 binds)  │
-    │  60  min    │   150  min   │   120  min   │  120  min   │ CEILING              │
-    │  90  min    │   225  min   │   150  min   │  150  min   │ CEILING              │
-    └─────────────┴──────────────┴──────────────┴─────────────┴──────────────────────┘
-
-    Breakpoints (where control transfers between rules):
-      FLOOR → RATIO  at  T_direct = floor / k = 45 / 2.5 = 18 min
-      RATIO → CEILING at  T_direct = ceiling / (k-1) = 60 / 1.5 = 40 min
+        Defaults:
+            base_mrt_minutes          -> floor_minutes (legacy fallback)
+            acceptable_offset_minutes -> ceiling_minutes (legacy fallback)
     """
     t_direct = compute_direct_time(student, school_node, G)
 
     if t_direct == float('inf'):
         return float('inf')
     if t_direct <= 0:
-        return floor_minutes
+        return float(base_mrt_minutes if base_mrt_minutes is not None else floor_minutes)
 
-    raw_cap          = multiplier * t_direct
-    absolute_ceiling = t_direct + ceiling_minutes
-    personal_tmax    = max(floor_minutes, min(raw_cap, absolute_ceiling))
+    if base_mrt_minutes is None:
+        base_mrt_minutes = floor_minutes
+    if acceptable_offset_minutes is None:
+        acceptable_offset_minutes = ceiling_minutes
+
+    personal_tmax = max(float(base_mrt_minutes), float(t_direct) + float(acceptable_offset_minutes))
 
     # Cache on student for visualization and logging
     student.direct_time_to_school = t_direct
@@ -3184,7 +3357,7 @@ def validate_permanent_student(new_stop, route, insert_position, delta_time_minu
     """Validate if a permanent student can be added to the route.
     
     Uses per-student ride-time caps when the student object is available:
-        T_ride \u2264 min(k * T_direct,  T_direct + Δmax)
+        T_ride \u2264 max(base_mrt, T_direct + acceptable_offset)
     Falls back to the flat route_tmax when no student object is provided.
     
     Also checks that no existing student on the route has their personal
@@ -3213,12 +3386,24 @@ def validate_permanent_student(new_stop, route, insert_position, delta_time_minu
     k            = getattr(route, 'ride_time_multiplier', 2.5)
     floor_min    = getattr(route, 'floor_minutes',        45)
     ceiling_min  = getattr(route, 'ceiling_minutes',      60)  # extra minutes over direct
+    dmrt_offset  = getattr(route, 'acceptable_offset_minutes', 30)
+    mrt_enabled  = bool(getattr(route, 'mrt_enabled', False))
+    mrt_minutes  = getattr(route, 'mrt_minutes', None)
+    try:
+        mrt_minutes = float(mrt_minutes) if mrt_minutes is not None else None
+    except (TypeError, ValueError):
+        mrt_minutes = None
+    try:
+        dmrt_offset = float(dmrt_offset)
+    except (TypeError, ValueError):
+        dmrt_offset = 30.0
+    # DMRT should only use fixed MRT minutes when hard MRT mode is enabled.
+    base_mrt = mrt_minutes if (mrt_enabled and mrt_minutes is not None and mrt_minutes > 0) else floor_min
 
     caps_enabled = getattr(route, 'ride_caps_enabled', True)
-    soft_caps    = getattr(route, 'soft_ride_caps', False)
 
-    if soft_caps or not caps_enabled:
-        # Skip all ride-time checks; caps are soft or disabled.
+    if not caps_enabled:
+        # Skip all ride-time checks when caps are disabled.
         new_student_ride_time = calculate_student_ride_time_potential(
             route, new_stop, insert_position, graph
         )
@@ -3237,25 +3422,41 @@ def validate_permanent_student(new_stop, route, insert_position, delta_time_minu
     bidir          = getattr(route, 'bidirectional_check',      True)
 
     if new_student is not None:
-        morning_cap = compute_student_tmax(new_student, school_node, graph, k, floor_min, ceiling_min)
-        t_direct    = compute_direct_time(new_student, school_node, graph)
-        am_violated = new_student_ride_time > morning_cap
+        if mrt_enabled and mrt_minutes is not None and mrt_minutes > 0:
+            # Hard MRT mode: reject if either AM or PM exceeds fixed MRT.
+            pm_ride = calculate_afternoon_ride_time_potential(route, new_stop, insert_position, graph)
+            if new_student_ride_time > mrt_minutes or pm_ride > mrt_minutes:
+                return (False, new_student_ride_time,
+                        f"Hard MRT exceeded: AM {new_student_ride_time:.1f}, PM {pm_ride:.1f} > {mrt_minutes:.1f} min")
+        else:
+            morning_cap = compute_student_tmax(
+                new_student,
+                school_node,
+                graph,
+                k,
+                floor_min,
+                ceiling_min,
+                base_mrt_minutes=base_mrt,
+                acceptable_offset_minutes=dmrt_offset,
+            )
+            t_direct    = compute_direct_time(new_student, school_node, graph)
+            am_violated = new_student_ride_time > morning_cap
 
-        if am_violated:
-            if not bidir:
-                # Strict one-direction check — reject immediately
-                return (False, new_student_ride_time,
-                        f"AM ride cap exceeded: "
-                        f"{new_student_ride_time:.1f}>{morning_cap:.1f} min "
-                        f"(direct={t_direct:.1f}, clamp({k}\u00d7, {floor_min}, +{ceiling_min}))")
-            # Bidirectional leniency: only reject if PM is also too long
-            pm_ride    = calculate_afternoon_ride_time_potential(route, new_stop, insert_position, graph)
-            pm_violated = pm_ride > morning_cap
-            if pm_violated:
-                return (False, new_student_ride_time,
-                        f"Ride cap exceeded in both directions — AM {new_student_ride_time:.1f} "
-                        f"PM {pm_ride:.1f} > {morning_cap:.1f} min")
-            # AM violated but PM is within cap → accept under bidirectional leniency
+            if am_violated:
+                if not bidir:
+                    # Strict one-direction check — reject immediately
+                    return (False, new_student_ride_time,
+                            f"AM ride cap exceeded: "
+                            f"{new_student_ride_time:.1f}>{morning_cap:.1f} min "
+                            f"(direct={t_direct:.1f}, max({base_mrt:.1f}, direct+{dmrt_offset:.1f}))")
+                # Bidirectional leniency: only reject if PM is also too long
+                pm_ride    = calculate_afternoon_ride_time_potential(route, new_stop, insert_position, graph)
+                pm_violated = pm_ride > morning_cap
+                if pm_violated:
+                    return (False, new_student_ride_time,
+                            f"Ride cap exceeded in both directions — AM {new_student_ride_time:.1f} "
+                            f"PM {pm_ride:.1f} > {morning_cap:.1f} min")
+                # AM violated but PM is within cap → accept under bidirectional leniency
     else:
         # Fallback: flat route_tmax
         if new_student_ride_time > route.route_tmax:
@@ -3290,25 +3491,35 @@ def validate_permanent_student(new_stop, route, insert_position, delta_time_minu
             morning_ride_check = old_ride_time + delta_time_minutes
 
             for existing_student in stop.students:
-                t_d = compute_direct_time(existing_student, school_node, graph)
-                if t_d == float('inf') or t_d <= 0:
-                    continue
-                    
-                ex_floor   = getattr(existing_student, 'floor_minutes',   floor_min)
-                ex_ceiling = getattr(existing_student, 'ceiling_minutes', ceiling_min)
-                existing_cap = max(ex_floor, min(k * t_d, t_d + ex_ceiling))
-
-                if morning_ride_check > existing_cap:
-                    if not bidir:
-                        return (False, morning_ride_check,
-                                f"Insertion pushes {existing_student.id} over AM cap")
-                    
-                    # Bidirectional: check PM for this existing student
-                    pm_ride_ex  = calculate_afternoon_ride_time_potential(
+                if mrt_enabled and mrt_minutes is not None and mrt_minutes > 0:
+                    pm_ride_ex = calculate_afternoon_ride_time_potential(
                         route, new_stop, insert_position, graph, target_stop=stop)
-                    if pm_ride_ex > existing_cap:
+                    if morning_ride_check > mrt_minutes or pm_ride_ex > mrt_minutes:
                         return (False, morning_ride_check,
-                                f"Insertion pushes {existing_student.id} over cap in both directions")
+                                f"Insertion pushes {existing_student.id} over hard MRT")
+                else:
+                    existing_cap = compute_student_tmax(
+                        existing_student,
+                        school_node,
+                        graph,
+                        k,
+                        floor_min,
+                        ceiling_min,
+                        base_mrt_minutes=base_mrt,
+                        acceptable_offset_minutes=dmrt_offset,
+                    )
+
+                    if morning_ride_check > existing_cap:
+                        if not bidir:
+                            return (False, morning_ride_check,
+                                    f"Insertion pushes {existing_student.id} over AM cap")
+
+                        # Bidirectional: check PM for this existing student
+                        pm_ride_ex  = calculate_afternoon_ride_time_potential(
+                            route, new_stop, insert_position, graph, target_stop=stop)
+                        if pm_ride_ex > existing_cap:
+                            return (False, morning_ride_check,
+                                    f"Insertion pushes {existing_student.id} over cap in both directions")
 
     return True, new_student_ride_time, "Permanent student accepted"
     
@@ -3420,7 +3631,15 @@ def cheapest_insertion(new_student, existing_routes, graph, detour_type='tempora
     # 2. Find other candidate nodes within walking distance (only if walk_limit > 0)
     if walk_limit > 0:
         walk_g = _get_walk_graph(graph)  # Use walk graph with crossings if available
-        safe_nodes = find_safe_nodes_within_radius(new_student.coords, graph, 500, walk_limit, walk_graph=walk_g)
+        safe_nodes = find_safe_nodes_within_radius(
+            new_student.coords,
+            graph,
+            500,
+            walk_limit,
+            walk_graph=walk_g,
+            student_stage=getattr(new_student, "school_stage", None),
+            student_disabled=bool(getattr(new_student, "physically_mentally_disabled", False)),
+        )
         for node_id, dist in sorted(safe_nodes, key=lambda x: x[1]):
             if node_id not in candidate_node_ids:
                 candidate_node_ids.append(node_id)

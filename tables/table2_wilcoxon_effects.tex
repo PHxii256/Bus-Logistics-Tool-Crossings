@@ -1,0 +1,47 @@
+\begin{table*}[!t]
+\centering
+\caption{Wilcoxon Paired Comparisons with Holm-Corrected p-values and Rank-Biserial Effect Size}
+\label{tab:wilcoxon_effects}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{rllrrrrrrrr}
+\toprule
+cohort & comparison & metric & n pairs & median delta & mean delta & wilcoxon W & p raw & effect rank biserial & p holm & significant alpha 0 05 \\
+\midrule
+100 & Mode A - Mode B & alns\_runtime\_seconds & 5 & -5.450000 & -11.424000 & 1.000000 & 0.125000 & -0.866667 & 1.000000 & False \\
+100 & Mode A - Mode B & routes\_created & 5 & 1.000000 & 0.800000 & 0.000000 & 0.125000 & 1.000000 & 1.000000 & False \\
+100 & Mode A - Mode B & served\_rate\_pct & 5 & 1.000000 & 0.400000 & 3.500000 & 0.750000 & 0.300000 & 1.000000 & False \\
+100 & Mode A - Mode B & total\_route\_dist\_km & 5 & 13.940000 & 12.832000 & 1.000000 & 0.125000 & 0.866667 & 1.000000 & False \\
+100 & Mode A - Mode B & total\_route\_time\_min & 5 & 36.160000 & 34.150000 & 0.000000 & 0.062500 & 1.000000 & 1.000000 & False \\
+100 & Mode B - Mode C & alns\_runtime\_seconds & 5 & 31.930000 & 33.106000 & 0.000000 & 0.062500 & 1.000000 & 1.000000 & False \\
+100 & Mode B - Mode C & avg\_walk\_dist\_m & 3 & 81.900000 & 87.500000 & 0.000000 & 0.250000 & 1.000000 & 1.000000 & False \\
+100 & Mode B - Mode C & routes\_created & 5 & -1.000000 & -0.800000 & 0.000000 & 0.125000 & -1.000000 & 1.000000 & False \\
+100 & Mode B - Mode C & served\_rate\_pct & 5 & 2.000000 & 2.200000 & 0.000000 & 0.125000 & 1.000000 & 1.000000 & False \\
+100 & Mode B - Mode C & total\_route\_dist\_km & 5 & -12.500000 & -14.794000 & 1.000000 & 0.125000 & -0.866667 & 1.000000 & False \\
+100 & Mode B - Mode C & total\_route\_time\_min & 5 & -43.780000 & -43.522000 & 0.000000 & 0.062500 & -1.000000 & 1.000000 & False \\
+200 & Mode A - Mode B & alns\_runtime\_seconds & 5 & -21.000000 & -18.856000 & 0.000000 & 0.125000 & -1.000000 & 1.000000 & False \\
+200 & Mode A - Mode B & routes\_created & 5 & 1.000000 & 0.800000 & 0.000000 & 0.125000 & 1.000000 & 1.000000 & False \\
+200 & Mode A - Mode B & served\_rate\_pct & 5 & 2.000000 & 1.600000 & 1.500000 & 0.187500 & 0.800000 & 1.000000 & False \\
+200 & Mode A - Mode B & total\_route\_dist\_km & 5 & 23.490000 & 22.926000 & 0.000000 & 0.062500 & 1.000000 & 1.000000 & False \\
+200 & Mode A - Mode B & total\_route\_time\_min & 5 & 56.850000 & 61.190000 & 0.000000 & 0.062500 & 1.000000 & 1.000000 & False \\
+200 & Mode B - Mode C & alns\_runtime\_seconds & 5 & 21.000000 & 35.170000 & 0.000000 & 0.062500 & 1.000000 & 1.000000 & False \\
+200 & Mode B - Mode C & routes\_created & 5 & -1.000000 & -1.200000 & 0.000000 & 0.062500 & -1.000000 & 1.000000 & False \\
+200 & Mode B - Mode C & served\_rate\_pct & 5 & -2.500000 & -2.300000 & 0.000000 & 0.125000 & -1.000000 & 1.000000 & False \\
+200 & Mode B - Mode C & total\_route\_dist\_km & 5 & -40.720000 & -37.026000 & 0.000000 & 0.062500 & -1.000000 & 1.000000 & False \\
+200 & Mode B - Mode C & total\_route\_time\_min & 5 & -104.110000 & -100.066000 & 0.000000 & 0.062500 & -1.000000 & 1.000000 & False \\
+400 & Mode A - Mode B & alns\_runtime\_seconds & 5 & -0.010000 & -14.538000 & 2.000000 & 0.250000 & -0.733333 & 1.000000 & False \\
+400 & Mode A - Mode B & routes\_created & 5 & 1.000000 & 0.600000 & 0.000000 & 0.250000 & 1.000000 & 1.000000 & False \\
+400 & Mode A - Mode B & served\_rate\_pct & 5 & 3.500000 & 3.150000 & 0.000000 & 0.062500 & 1.000000 & 1.000000 & False \\
+400 & Mode A - Mode B & total\_route\_dist\_km & 5 & 18.080000 & 19.260000 & 3.000000 & 0.312500 & 0.600000 & 1.000000 & False \\
+400 & Mode A - Mode B & total\_route\_time\_min & 5 & 94.330000 & 93.042000 & 0.000000 & 0.062500 & 1.000000 & 1.000000 & False \\
+400 & Mode B - Mode C & alns\_runtime\_seconds & 5 & 9.010000 & 47.170000 & 0.000000 & 0.062500 & 1.000000 & 1.000000 & False \\
+400 & Mode B - Mode C & routes\_created & 5 & -1.000000 & -1.000000 & 0.000000 & 0.062500 & -1.000000 & 1.000000 & False \\
+400 & Mode B - Mode C & served\_rate\_pct & 5 & -4.250000 & -4.100000 & 0.000000 & 0.062500 & -1.000000 & 1.000000 & False \\
+400 & Mode B - Mode C & total\_route\_dist\_km & 5 & -51.840000 & -45.094000 & 1.000000 & 0.125000 & -0.866667 & 1.000000 & False \\
+400 & Mode B - Mode C & total\_route\_time\_min & 5 & -150.190000 & -154.586000 & 0.000000 & 0.062500 & -1.000000 & 1.000000 & False \\
+\bottomrule
+\end{tabular}
+
+}
+\end{table*}

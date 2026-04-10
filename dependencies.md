@@ -4,3 +4,4 @@ osmnx
 folium
 scikit-learn
 geopy
+osmium

@@ -3,3 +3,5 @@ folium
 scikit-learn
 geopy
 filprofiler
+osmium
+pyshp

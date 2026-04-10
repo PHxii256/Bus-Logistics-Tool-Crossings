@@ -44,3 +44,5 @@ temp*.py
 
 osrm/
 *.osrm*
+
+*.pkl

@@ -1,0 +1,20 @@
+COMPARE: 50a05767_dmrt_1_0406-0538 vs 50a05767_mrt_1_0406-1010
+
+Key Metrics
+- served: DMRT=181 | MRT=199 | delta=18
+- unserved: DMRT=19 | MRT=1 | delta=-18
+- routes: DMRT=9 | MRT=8 | delta=-1
+- total_route_time_min: DMRT=595.23 | MRT=665.08 | delta=69.85000000000002
+- total_route_dist_km: DMRT=342.67 | MRT=354.08 | delta=11.409999999999968
+- avg_ride_time_min: DMRT=23.69 | MRT=36.95 | delta=13.260000000000002
+- max_ride_time_min: DMRT=57.67 | MRT=84.56 | delta=26.89
+- objective_value: DMRT=1764403.15 | MRT=1949323.43 | delta=184920.28000000003
+- alns_runtime_seconds: DMRT=173.78 | MRT=171.14 | delta=-2.640000000000015
+- mode_wall_time_seconds: DMRT=None | MRT=379.95 | delta=None
+
+Walk Stats
+- avg_walk_dist_m: DMRT=46.1 | MRT=23.1 | delta=-23.0
+- median_walk_dist_m: DMRT=0.0 | MRT=0.0 | delta=0.0
+- max_walk_dist_m: DMRT=489.6 | MRT=195.9 | delta=-293.70000000000005
+- avg_walk_time_min: DMRT=0.58 | MRT=0.29 | delta=-0.29
+- avg_walk_utilisation_pct: DMRT=26.6 | MRT=12.2 | delta=-14.400000000000002

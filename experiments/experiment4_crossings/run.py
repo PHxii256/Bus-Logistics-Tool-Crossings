@@ -19,6 +19,8 @@ import json
 import os
 import shutil
 import sys
+from datetime import datetime
+from io import StringIO
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.abspath(os.path.join(_DIR, os.pardir, os.pardir))
@@ -38,21 +40,27 @@ def _strip_comments(obj):
 
 
 def _input_hash(input_path: str) -> str:
+    """Generate hash from input config, excluding mrt_enabled from constraints."""
     with open(input_path, encoding="utf-8") as f:
         raw = json.load(f)
-    canonical = json.dumps(
-        _strip_comments(raw), sort_keys=True, separators=(",", ":")
-    )
+    
+    # Remove mrt_enabled from constraints before hashing
+    hash_data = _strip_comments(raw)
+    if "constraints" in hash_data and "mrt_enabled" in hash_data["constraints"]:
+        hash_data = json.loads(json.dumps(hash_data))  # deep copy
+        del hash_data["constraints"]["mrt_enabled"]
+    
+    canonical = json.dumps(hash_data, sort_keys=True, separators=(",", ":"))
     return hashlib.md5(canonical.encode()).hexdigest()[:8]
 
 
-def _get_crossings_status(input_path: str) -> str:
-    """Return 'crossings_enabled' or 'crossings_disabled' based on input config."""
+def _get_mrt_status(input_path: str) -> str:
+    """Return 'mrt_enabled' or 'mrt_disabled' based on input config."""
     with open(input_path, encoding="utf-8") as f:
         raw = json.load(f)
-    synth_cfg = raw.get("synthetic_crossings", {})
-    enabled = synth_cfg.get("enabled", False)
-    return "crossings_enabled" if enabled else "crossings_disabled"
+    constraints_cfg = raw.get("constraints", {})
+    enabled = constraints_cfg.get("mrt_enabled", False)
+    return "mrt" if enabled else "dmrt"
 
 
 def main():
@@ -73,29 +81,89 @@ def main():
         sys.exit(f"[ERROR] config file not found: {input_path}")
 
     h = _input_hash(input_path)
-    crossings_status = _get_crossings_status(input_path)
-    run_dir = os.path.join(_DIR, f"{h}_{crossings_status}")
-    os.makedirs(run_dir, exist_ok=True)
+    mrt_status = _get_mrt_status(input_path)
+    timestamp = datetime.now().strftime("%m%d-%H%M")  # Removed YY
+    base_dir = os.path.join(_DIR, f"{h}_{mrt_status}")
+    run_dir = f"{base_dir}_1_{timestamp}"
+    
+    i = 1
+    while os.path.exists(run_dir):
+        i += 1
+        run_dir = f"{base_dir}_{i}_{timestamp}"
+    os.makedirs(run_dir)
 
-    dest_input = os.path.join(run_dir, "input.json")
+
+
+    dest_input = os.path.join(run_dir, "snapshot_input.json")
     output_path = os.path.join(run_dir, "comparison_map.html")
+    log_path = os.path.join(run_dir, "terminal_log.txt")
 
     if os.path.abspath(input_path) != os.path.abspath(dest_input):
         shutil.copy2(input_path, dest_input)
 
-    print("Experiment 4 – Crossings")
-    print(f"  Config hash  : {h}")
-    print(f"  Crossings    : {crossings_status.replace('_', ' ')}")
-    print(f"  Run folder   : {run_dir}")
-    print(f"  Input config : {input_path}")
-    print(f"  Output map   : {output_path}")
-    print()
+    # Capture terminal output
+    log_buffer = StringIO()
+    original_stdout = sys.stdout
+    original_stderr = sys.stderr
+    
+    class TeeOutput:
+        def __init__(self, *outputs):
+            self.outputs = outputs
+        def write(self, data):
+            for output in self.outputs:
+                output.write(data)
+        def flush(self):
+            for output in self.outputs:
+                output.flush()
+    
+    sys.stdout = TeeOutput(original_stdout, log_buffer)
+    sys.stderr = TeeOutput(original_stderr, log_buffer)
 
-    from run_comparison import run as _run_comparison
-    _run_comparison(
-        input_path=dest_input,
-        output_path=output_path,
-    )
+    try:
+        print("Experiment 4 – Crossings")
+        print(f"  Config hash  : {h}")
+        print(f"  MRT Status   : {mrt_status.replace('_', ' ')}")
+        print(f"  Run folder   : {run_dir}")
+        print(f"  Input config : {input_path}")
+        print(f"  Output map   : {output_path}")
+        print()
+
+        from run_comparison import run as _run_comparison
+        _run_comparison(
+            input_path=dest_input,
+            output_path=output_path,
+        )
+    finally:
+        # Restore original stdout/stderr
+        sys.stdout = original_stdout
+        sys.stderr = original_stderr
+        
+        # Get complete log content
+        log_content = log_buffer.getvalue()
+        
+        # Split debug logs to separate file
+        debug_log_path = os.path.join(run_dir, "debug.txt")
+        terminal_lines = []
+        debug_lines = []
+        
+        for line in log_content.splitlines(keepends=True):
+            if '[DEBUG]' in line:
+                debug_lines.append(line)
+            else:
+                terminal_lines.append(line)
+        
+        # Write non-debug lines to terminal_log.txt
+        with open(log_path, 'w', encoding='utf-8') as f:
+            f.writelines(terminal_lines)
+        
+        # Write debug lines to debug.txt
+        if debug_lines:
+            with open(debug_log_path, 'w', encoding='utf-8') as f:
+                f.writelines(debug_lines)
+        
+        print(f"\n[Log saved to: {log_path}]")
+        if debug_lines:
+            print(f"[Debug log saved to: {debug_log_path}] ({len(debug_lines)} lines)")
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ from detour_engine import (
     calculate_route_time_from_matrix,
     calculate_route_distance_from_matrix,
     calculate_walk_penalty,
+    walk_distance_on_roads,
     get_walk_absolute_max
 )
 from entities import Stop
@@ -229,19 +230,43 @@ def _remove_student_from_solution(solution, student):
 #             _apply_insertion(solution, student, result)
 
 
-def random_order_best_repair(solution, deadline=None):
+def _select_repair_workset(unassigned, limit):
+    """Return a bounded workset for one repair call.
+
+    Prioritize hard students (walk_radius <= 0) and fill remaining slots with a
+    random sample so each ALNS iteration stays fast on large instances.
+    """
+    if not unassigned or limit is None or limit <= 0 or len(unassigned) <= limit:
+        return list(unassigned)
+
+    hard = [s for s in unassigned if getattr(s, "walk_radius", 0) <= 0]
+    easy = [s for s in unassigned if getattr(s, "walk_radius", 0) > 0]
+
+    hard_cap = max(1, min(len(hard), int(limit * 0.5)))
+    keep_hard = random.sample(hard, hard_cap) if len(hard) > hard_cap else list(hard)
+    remaining = max(0, limit - len(keep_hard))
+    keep_easy = random.sample(easy, remaining) if len(easy) > remaining else list(easy)
+
+    workset = keep_hard + keep_easy
+    random.shuffle(workset)
+    return workset
+
+
+def random_order_best_repair(solution, deadline=None, respect_batch_limit=True):
     """I5-style insertion: random customer order, best insertion position."""
     unassigned = [s for s in solution.students if not s.is_served]
     if not unassigned:
         return
 
-    random.shuffle(unassigned)
+    batch_limit = _alns_candidate_cfg.get("repair_max_unassigned_per_call") if respect_batch_limit else None
+    workset = _select_repair_workset(unassigned, batch_limit)
+    random.shuffle(workset)
 
     student_frontages = {}
-    for s in unassigned:
+    for s in workset:
         student_frontages[s.id] = snap_address_to_edge(s.coords, solution.graph)
 
-    for student in unassigned:
+    for student in workset:
         if deadline is not None and time.time() >= deadline:
             break
         all_options = []
@@ -265,13 +290,18 @@ def random_order_best_repair(solution, deadline=None):
 
 def greedy_repair(solution, deadline=None):
     """Backwards-compatible alias for the random-order best-position insertion."""
-    random_order_best_repair(solution, deadline=deadline)
+    random_order_best_repair(solution, deadline=deadline, respect_batch_limit=False)
 
 def regret_repair(solution, k=2, deadline=None):
     """Inserts students with the highest 'regret' cost between best and k-best options.
     Optimized to minimize redundant calculations.
     """
     unassigned = [s for s in solution.students if not s.is_served]
+    if not unassigned:
+        return
+
+    batch_limit = _alns_candidate_cfg.get("repair_max_unassigned_per_call")
+    unassigned = _select_repair_workset(unassigned, batch_limit)
     if not unassigned:
         return
 
@@ -303,7 +333,9 @@ def regret_repair(solution, k=2, deadline=None):
         target_insertion = None
         timeout_hit = False
 
-        for student in unassigned:
+        scan_limit = _alns_candidate_cfg.get("regret_scan_limit")
+        scan_students = _select_repair_workset(unassigned, scan_limit)
+        for student in scan_students:
             if deadline is not None and time.time() >= deadline:
                 timeout_hit = True
                 break
@@ -366,6 +398,7 @@ _insertion_debug_stats = {
     "routes_checked": 0,
     "routes_bbox_pruned": 0,
     "candidates_considered": 0,
+    "matrix_pair_skips": 0,
     "valid_insertions": 0,
 }
 
@@ -374,6 +407,7 @@ def reset_insertion_debug_stats():
     _insertion_debug_stats["routes_checked"] = 0
     _insertion_debug_stats["routes_bbox_pruned"] = 0
     _insertion_debug_stats["candidates_considered"] = 0
+    _insertion_debug_stats["matrix_pair_skips"] = 0
     _insertion_debug_stats["valid_insertions"] = 0
 
 
@@ -453,18 +487,28 @@ def _get_insertions_for_route(student, route, graph, frontage_info, deadline=Non
         
         if student.walk_radius > 0:
             from detour_engine import find_safe_nodes_within_radius, _get_walk_graph
+            walk_limit_for_candidates = get_walk_absolute_max(student.walk_radius)
             # Pass candidate_cfg so results are scored (intersections/arterials preferred)
             # and already returned in (-points, dist) order.
             cand_cfg = _alns_candidate_cfg if _alns_candidate_cfg else None
             walk_g = _get_walk_graph(graph)  # Use walk graph with crossings if available
             safe_nodes = find_safe_nodes_within_radius(
-                student.coords, graph, 500, student.walk_radius, candidate_cfg=cand_cfg, walk_graph=walk_g
+                student.coords,
+                graph,
+                500,
+                walk_limit_for_candidates,
+                candidate_cfg=cand_cfg,
+                walk_graph=walk_g,
+                student_stage=getattr(student, "school_stage", None),
+                student_disabled=bool(getattr(student, "physically_mentally_disabled", False)),
             )
             for node_id, dist in safe_nodes:  # already sorted by scoring function
                 if node_id != frontage_node_id:
                     coords = (graph.nodes[node_id]['y'], graph.nodes[node_id]['x'])
                     candidate_nodes.append((node_id, coords))
                     dist_map[node_id] = float(dist)
+                    if len(candidate_nodes) >= max_k:
+                        break
         
         # Bus-reachable fallback: if frontage is unreachable, find nearby reachable nodes
         # via bidirectional BFS (walking ignores one-way constraints)
@@ -548,13 +592,38 @@ def _get_insertions_for_route(student, route, graph, frontage_info, deadline=Non
     # to be incorrectly marked as completely un-routable.
     reachable_candidates = candidate_nodes
     _insertion_debug_stats["candidates_considered"] += len(reachable_candidates)
+    walk_radius = float(getattr(student, "walk_radius", 0) or 0)
+    # Keep strict door-to-door behavior for zero-radius students, but allow
+    # stage-specific absolute max for students who are allowed to walk.
+    hard_walk_limit_m = 0.0 if walk_radius <= 0 else float(get_walk_absolute_max(walk_radius))
+    strict_walk_cache = {}
         
     for pos in range(start_pos, end_pos):
         if deadline is not None and time.time() >= deadline:
             break
+        u_node = route.stops[pos - 1].node_id
+        v_node = route.stops[pos].node_id
         for cand_node_id, cand_coords in reachable_candidates:
             if deadline is not None and time.time() >= deadline:
                 break
+            # Hard feasibility check: only allow insertions whose network walk
+            # distance from student frontage node to stop node is within limit.
+            if cand_node_id not in strict_walk_cache:
+                strict_walk_cache[cand_node_id] = walk_distance_on_roads(
+                    graph, frontage_node_id, cand_node_id
+                )
+            strict_walk_m = strict_walk_cache[cand_node_id]
+            if not np.isfinite(strict_walk_m) or strict_walk_m > hard_walk_limit_m:
+                continue
+            # Skip candidates that would force cold graph routing in the ALNS
+            # hot loop. This keeps insertion checks matrix-only and predictable.
+            if (
+                (u_node, cand_node_id) not in _MATRIX_CACHE
+                or (cand_node_id, v_node) not in _MATRIX_CACHE
+                or (u_node, v_node) not in _MATRIX_CACHE
+            ):
+                _insertion_debug_stats["matrix_pair_skips"] += 1
+                continue
             # Check if an existing stop at this node can be reused
             existing_stop = next((s for s in route.stops if s.node_id == cand_node_id), None)
             eval_stop = existing_stop if existing_stop else Stop(cand_node_id, cand_coords[0], cand_coords[1])
@@ -564,6 +633,8 @@ def _get_insertions_for_route(student, route, graph, frontage_info, deadline=Non
             
             cost, is_valid, _ = res
             if not is_valid: continue
+            if cost is None:
+                continue
             
             valid, _, _ = validate_permanent_student(eval_stop, route, pos, cost, graph,
                                                      new_student=student)
@@ -621,7 +692,14 @@ class ALNSEngine:
                  time_budget_seconds=None, max_candidates_per_student=None,
                  early_stop_patience=None, min_improvement=1e-6,
                  freeze_temp_threshold=0.05, freeze_patience=None,
-                 merge_tail_iterations=30):
+                 merge_tail_iterations=30,
+                 min_early_stop_iterations=None,
+                 min_iterations_floor=None,
+                 max_repair_seconds_per_iteration=None,
+                 destroy_fraction_min=None,
+                 destroy_fraction_max=None,
+                 repair_max_unassigned_per_call=None,
+                 regret_scan_limit=None):
         # Configure module-level candidate settings.
         # NOTE: do NOT clear _student_candidate_cache here — the cache is
         # keyed by student-id and stays valid across fleet-search iterations
@@ -644,7 +722,90 @@ class ALNSEngine:
         self.freeze_temp_threshold = float(freeze_temp_threshold)
         self.freeze_patience = int(freeze_patience) if freeze_patience else None
         self.merge_tail_iterations = max(0, int(merge_tail_iterations or 0))
+        self.min_early_stop_iterations = max(0, int(min_early_stop_iterations or 0))
+        self.min_iterations_floor = max(0, int(min_iterations_floor or 0))
+
+        # Optional guardrail: cap repair work per iteration so one expensive
+        # regret-repair call cannot consume nearly the full run budget.
+        self.max_repair_seconds_per_iteration = (
+            float(max_repair_seconds_per_iteration)
+            if max_repair_seconds_per_iteration is not None
+            else None
+        )
+
+        # Optional fixed destroy fractions. If not provided, run() uses
+        # adaptive bounds by problem size.
+        self.destroy_fraction_min = (
+            float(destroy_fraction_min) if destroy_fraction_min is not None else None
+        )
+        self.destroy_fraction_max = (
+            float(destroy_fraction_max) if destroy_fraction_max is not None else None
+        )
+
+        n_students = len(initial_solution.students)
+        if self.max_repair_seconds_per_iteration is None and self.time_budget_seconds:
+            if n_students >= 250:
+                self.max_repair_seconds_per_iteration = max(
+                    2.0, min(10.0, float(self.time_budget_seconds) * 0.20)
+                )
+            elif n_students >= 120:
+                self.max_repair_seconds_per_iteration = max(
+                    1.5, min(8.0, float(self.time_budget_seconds) * 0.18)
+                )
+
+        if self.destroy_fraction_min is not None:
+            self.destroy_fraction_min = max(0.01, min(0.6, self.destroy_fraction_min))
+        if self.destroy_fraction_max is not None:
+            self.destroy_fraction_max = max(0.01, min(0.6, self.destroy_fraction_max))
+        if (
+            self.destroy_fraction_min is not None
+            and self.destroy_fraction_max is not None
+            and self.destroy_fraction_min > self.destroy_fraction_max
+        ):
+            self.destroy_fraction_min, self.destroy_fraction_max = (
+                self.destroy_fraction_max,
+                self.destroy_fraction_min,
+            )
+
+        self.repair_max_unassigned_per_call = (
+            int(repair_max_unassigned_per_call)
+            if repair_max_unassigned_per_call is not None
+            else None
+        )
+        self.regret_scan_limit = (
+            int(regret_scan_limit) if regret_scan_limit is not None else None
+        )
+        if self.repair_max_unassigned_per_call is not None:
+            self.repair_max_unassigned_per_call = max(8, self.repair_max_unassigned_per_call)
+        if self.regret_scan_limit is not None:
+            self.regret_scan_limit = max(8, self.regret_scan_limit)
+
+        if n_students >= 500:
+            if self.repair_max_unassigned_per_call is None:
+                self.repair_max_unassigned_per_call = 64
+            if self.regret_scan_limit is None:
+                self.regret_scan_limit = 40
+        elif n_students >= 300:
+            if self.repair_max_unassigned_per_call is None:
+                self.repair_max_unassigned_per_call = 120
+            if self.regret_scan_limit is None:
+                self.regret_scan_limit = 80
+        elif n_students >= 150:
+            if self.repair_max_unassigned_per_call is None:
+                self.repair_max_unassigned_per_call = 90
+            if self.regret_scan_limit is None:
+                self.regret_scan_limit = 60
+
+        if self.repair_max_unassigned_per_call is not None:
+            _alns_candidate_cfg["repair_max_unassigned_per_call"] = self.repair_max_unassigned_per_call
+        if self.regret_scan_limit is not None:
+            _alns_candidate_cfg["regret_scan_limit"] = self.regret_scan_limit
+
         self.run_diagnostics = {
+            "stop_reason": None,
+            "stop_iteration": 0,
+            "stop_no_improve_iters": 0,
+            "destroy_skipped_iterations": 0,
             "merge_tail": {
                 "enabled": self.merge_tail_iterations > 0,
                 "ran": False,
@@ -725,9 +886,10 @@ class ALNSEngine:
     def run(self):
         reset_insertion_debug_stats()
         t = self.temp
-        start_time = time.time()
-        deadline = (start_time + self.time_budget_seconds) if self.time_budget_seconds else None
-        block_start_time = start_time
+        start_wall = time.time()
+        start_perf = time.perf_counter()
+        deadline = (start_wall + self.time_budget_seconds) if self.time_budget_seconds else None
+        block_start_perf = start_perf
         best_obj = self.best_sol.calculate_objective()
         no_improve_iters = 0
         executed_iters = 0
@@ -741,8 +903,12 @@ class ALNSEngine:
 
         for i in range(self.iterations):
             # ── Time-budget early exit ──
-            if self.time_budget_seconds and (time.time() - start_time) >= self.time_budget_seconds:
+            floor_reached = (i + 1) > self.min_iterations_floor
+            if self.time_budget_seconds and floor_reached and (time.time() - start_wall) >= self.time_budget_seconds:
                 print(f"  Time budget of {self.time_budget_seconds}s reached at iteration {i+1} — stopping.")
+                self.run_diagnostics["stop_reason"] = "time_budget"
+                self.run_diagnostics["stop_iteration"] = i + 1
+                self.run_diagnostics["stop_no_improve_iters"] = no_improve_iters
                 break
             # Selection
             d_idx = self._select_op(self.d_weights)
@@ -750,17 +916,90 @@ class ALNSEngine:
             executed_iters = i + 1
             
             new_sol = self.curr_sol.clone()
+            total_students = len(new_sol.students)
+            served_curr = sum(1 for s in new_sol.students if s.is_served)
+            served_ratio = (served_curr / total_students) if total_students > 0 else 0.0
             
-            # Destroy: Remove between 5% and 25% of students
-            n_remove = max(1, int(len(new_sol.students) * random.uniform(0.05, 0.25)))
-            _td = time.time()
-            self.destroy_ops[d_idx](new_sol, n_remove)
-            self._record_op_timing("destroy", self.destroy_ops[d_idx].__name__, time.time() - _td)
+            # Destroy size: adaptive by instance size to avoid massive per-iteration
+            # repairs on large problems while preserving diversification.
+            if self.destroy_fraction_min is not None and self.destroy_fraction_max is not None:
+                frac_min, frac_max = self.destroy_fraction_min, self.destroy_fraction_max
+            else:
+                n_students = total_students
+                if n_students >= 300:
+                    frac_min, frac_max = 0.02, 0.10
+                elif n_students >= 150:
+                    frac_min, frac_max = 0.03, 0.15
+                elif n_students >= 80:
+                    frac_min, frac_max = 0.04, 0.20
+                else:
+                    frac_min, frac_max = 0.05, 0.25
+
+            # Scale destruction by currently served students (not total students).
+            # This avoids repeatedly wiping out a sparse partial solution.
+            n_remove = max(1, int(served_curr * random.uniform(frac_min, frac_max))) if served_curr > 0 else 0
+
+            # Construction phase: when still sparse, usually skip destroy and focus on insertion.
+            # If sparse progress stalls, allow a light destroy kick to escape local minima.
+            sparse_target_served = max(12, int(total_students * 0.15))
+            sparse_phase = served_curr < sparse_target_served
+            sparse_stall_patience = max(18, int(total_students * 0.12))
+            sparse_escape = sparse_phase and served_curr > 0 and no_improve_iters >= sparse_stall_patience
+
+            if sparse_escape and n_remove > 0:
+                n_remove = max(1, min(n_remove, max(1, int(served_curr * 0.2))))
+
+            destroy_executed = False
+            d_elapsed = 0.0
+            if n_remove <= 0 or (sparse_phase and not sparse_escape):
+                self.run_diagnostics["destroy_skipped_iterations"] = int(
+                    self.run_diagnostics.get("destroy_skipped_iterations", 0)
+                ) + 1
+            else:
+                _td = time.perf_counter()
+                self.destroy_ops[d_idx](new_sol, n_remove)
+                d_elapsed = time.perf_counter() - _td
+                destroy_executed = True
+            if destroy_executed:
+                self._record_op_timing("destroy", self.destroy_ops[d_idx].__name__, d_elapsed)
             
             # Repair
-            _tr = time.time()
-            self.repair_ops[r_idx](new_sol, deadline=deadline)
-            self._record_op_timing("repair", self.repair_ops[r_idx].__name__, time.time() - _tr)
+            enforce_budget_deadline = (self.min_iterations_floor <= 0) or ((i + 1) >= self.min_iterations_floor)
+            repair_deadline = deadline if enforce_budget_deadline else None
+            # Apply per-iteration repair cap from the start so one expensive
+            # sparse-phase regret pass cannot consume almost the full run budget.
+            if self.max_repair_seconds_per_iteration is not None:
+                iter_repair_deadline = time.time() + self.max_repair_seconds_per_iteration
+                repair_deadline = min(repair_deadline, iter_repair_deadline) if repair_deadline else iter_repair_deadline
+
+            # In sparse phase, mix faster random-order repair with regret to avoid
+            # pathological long first iterations on medium/large instances.
+            if sparse_phase:
+                if sparse_escape:
+                    # When sparse search stalls, prefer aggressive constructive repair.
+                    use_fast = True
+                elif total_students >= 500:
+                    use_fast = (i % 3) != 0
+                elif total_students >= 100:
+                    use_fast = (i % 2) == 0
+                else:
+                    use_fast = False
+
+                if use_fast:
+                    fast_idx = next((ix for ix, op in enumerate(self.repair_ops) if op.__name__ == "random_order_best_repair"), r_idx)
+                    r_idx = fast_idx
+                else:
+                    regret_idx = next((ix for ix, op in enumerate(self.repair_ops) if op.__name__ == "regret_repair"), r_idx)
+                    r_idx = regret_idx
+
+            _tr = time.perf_counter()
+            # During sparse-stall escape, run random-order repair without batch limits
+            # so the iteration can evaluate a broader unassigned set within deadline.
+            if sparse_escape and self.repair_ops[r_idx].__name__ == "random_order_best_repair":
+                random_order_best_repair(new_sol, deadline=repair_deadline, respect_batch_limit=False)
+            else:
+                self.repair_ops[r_idx](new_sol, deadline=repair_deadline)
+            self._record_op_timing("repair", self.repair_ops[r_idx].__name__, time.perf_counter() - _tr)
             
             # Score calculation
             new_obj = new_sol.calculate_objective()
@@ -815,33 +1054,41 @@ class ALNSEngine:
             else:
                 effective_patience = self.early_stop_patience
 
-            if effective_patience and no_improve_iters >= effective_patience:
-                if effective_patience == 30 and self.early_stop_patience != 30:
-                    print(
-                        f"  Early stop: Theoretical Optimum hit! Polished for "
-                        f"{no_improve_iters} iterations with no further objective improvement."
-                    )
-                else:
-                    print(
-                        f"  Early stop: no best-objective improvement for "
-                        f"{no_improve_iters} iterations."
-                    )
-                break
+            if (i + 1) >= max(self.min_early_stop_iterations, self.min_iterations_floor):
+                if effective_patience and no_improve_iters >= effective_patience:
+                    if effective_patience == 30 and self.early_stop_patience != 30:
+                        print(
+                            f"  Early stop: Theoretical Optimum hit! Polished for "
+                            f"{no_improve_iters} iterations with no further objective improvement."
+                        )
+                        self.run_diagnostics["stop_reason"] = "theoretical_optimum_polish"
+                    else:
+                        print(
+                            f"  Early stop: no best-objective improvement for "
+                            f"{no_improve_iters} iterations."
+                        )
+                        self.run_diagnostics["stop_reason"] = "no_improve_patience"
+                    self.run_diagnostics["stop_iteration"] = i + 1
+                    self.run_diagnostics["stop_no_improve_iters"] = no_improve_iters
+                    break
 
-            if (
-                self.freeze_patience
-                and t <= self.freeze_temp_threshold
-                and no_improve_iters >= self.freeze_patience
-            ):
-                print(
-                    f"  Early stop: temperature <= {self.freeze_temp_threshold:g} and "
-                    f"no improvement for {no_improve_iters} iterations."
-                )
-                break
+                if (
+                    self.freeze_patience
+                    and t <= self.freeze_temp_threshold
+                    and no_improve_iters >= self.freeze_patience
+                ):
+                    print(
+                        f"  Early stop: temperature <= {self.freeze_temp_threshold:g} and "
+                        f"no improvement for {no_improve_iters} iterations."
+                    )
+                    self.run_diagnostics["stop_reason"] = "freeze_patience"
+                    self.run_diagnostics["stop_iteration"] = i + 1
+                    self.run_diagnostics["stop_no_improve_iters"] = no_improve_iters
+                    break
             
             if (i+1) % 10 == 0:
-                block_end_time = time.time()
-                block_elapsed = block_end_time - block_start_time
+                block_end_perf = time.perf_counter()
+                block_elapsed = block_end_perf - block_start_perf
                 print(f"Iteration {i+1}: Best Obj = {best_obj:.2f}, Temp = {t:.1f}, Last 10 iter: {block_elapsed:.2f}s")
                 self.iteration_log.append({
                     "iteration":             i + 1,
@@ -851,9 +1098,14 @@ class ALNSEngine:
                     "students_served":       sum(1 for s in self.best_sol.students if s.is_served),
                     "block_elapsed_seconds": round(block_elapsed, 3)
                 })
-                block_start_time = block_end_time
+                block_start_perf = block_end_perf
 
-        total_elapsed = time.time() - start_time
+        if self.run_diagnostics.get("stop_reason") is None:
+            self.run_diagnostics["stop_reason"] = "iterations_completed"
+            self.run_diagnostics["stop_iteration"] = executed_iters
+            self.run_diagnostics["stop_no_improve_iters"] = no_improve_iters
+
+        total_elapsed = time.perf_counter() - start_perf
 
         # Short post-loop phase: force fleet-consolidation attempts while preserving speed.
         total_students = len(self.best_sol.students)
@@ -871,13 +1123,13 @@ class ALNSEngine:
         )
         if should_run_tail:
             if self.time_budget_seconds:
-                remaining = self.time_budget_seconds - (time.time() - start_time)
+                remaining = self.time_budget_seconds - (time.time() - start_wall)
                 if remaining <= 0:
                     should_run_tail = False
             if should_run_tail:
                 self._run_merge_focused_tail(best_obj, deadline)
 
-        total_elapsed = time.time() - start_time
+        total_elapsed = time.perf_counter() - start_perf
         print(f"Optimization Complete.")
         print(f"Total Time: {total_elapsed:.2f}s")
         print(f"Final State: {self.best_sol}")

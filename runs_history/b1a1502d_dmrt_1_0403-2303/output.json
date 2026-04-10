@@ -1,0 +1,2039 @@
+{
+  "generated_at": "03/04/26 11:22 pm",
+  "total_wall_time_seconds": 1151.66,
+  "debug_stats": {
+    "step_times": {
+      "generate_dataset_s": 435.4,
+      "build_constrained_graph_s": 3.69,
+      "build_unconstrained_graph_s": 3.25,
+      "build_walk_graph_s": 532.04,
+      "synthetic_edges_prepare_s": 532.0375,
+      "synthetic_edges_generate_s": 519.8349,
+      "synthetic_edges_pkl_load_s": 0.0,
+      "synthetic_edges_auto_save_pkl_s": 0.1835,
+      "build_map_s": 41.97
+    },
+    "mode_breakdown": {
+      "A": {
+        "skipped": true
+      },
+      "B": {
+        "skipped": true
+      },
+      "C": {
+        "mode_wall_time_s": 135.28,
+        "total_alns_solve_s": 130.07,
+        "successful_run_s": 55.79,
+        "actual_setup_overhead_s": 5.21,
+        "alns_iterations": null,
+        "operator_performance": {
+          "executed_iterations": 253,
+          "destroy": {
+            "random_removal": {
+              "count": 129,
+              "frequency_pct": 50.99,
+              "avg_time_s": 0.000252,
+              "best_time_s": 0.000104,
+              "worst_time_s": 0.000682,
+              "total_time_s": 0.032495
+            },
+            "worst_cost_removal": {
+              "count": 94,
+              "frequency_pct": 37.15,
+              "avg_time_s": 0.001214,
+              "best_time_s": 0.0,
+              "worst_time_s": 0.002599,
+              "total_time_s": 0.114077
+            },
+            "shaw_related_removal": {
+              "count": 9,
+              "frequency_pct": 3.56,
+              "avg_time_s": 0.000505,
+              "best_time_s": 0.000374,
+              "worst_time_s": 0.000714,
+              "total_time_s": 0.004545
+            },
+            "sequence_removal": {
+              "count": 12,
+              "frequency_pct": 4.74,
+              "avg_time_s": 0.000187,
+              "best_time_s": 0.000122,
+              "worst_time_s": 0.000263,
+              "total_time_s": 0.002241
+            },
+            "route_merge_removal": {
+              "count": 9,
+              "frequency_pct": 3.56,
+              "avg_time_s": 0.000141,
+              "best_time_s": 0.000115,
+              "worst_time_s": 0.000228,
+              "total_time_s": 0.001267
+            }
+          },
+          "repair": {
+            "random_order_best_repair": {
+              "count": 211,
+              "frequency_pct": 83.4,
+              "avg_time_s": 0.212782,
+              "best_time_s": 0.089312,
+              "worst_time_s": 0.341582,
+              "total_time_s": 44.897036
+            },
+            "regret_repair": {
+              "count": 42,
+              "frequency_pct": 16.6,
+              "avg_time_s": 0.213019,
+              "best_time_s": 0.086913,
+              "worst_time_s": 0.397324,
+              "total_time_s": 8.946796
+            }
+          }
+        },
+        "matrix_precompute_total_s": 0.1882,
+        "matrix_precompute_source": "loaded_from_pkl",
+        "matrix_precompute_load_s": 0.0287,
+        "matrix_precompute_compute_s": 0.0,
+        "matrix_precompute_save_s": 0.0,
+        "matrix_critical_nodes_count": 199,
+        "matrix_nodes_count": 199,
+        "matrix_cache_key_prefix": "4401ffcf9e3f",
+        "matrix_cache_entry_node_count": 199,
+        "matrix_cache_loaded_finite_ratio": 1.0,
+        "synthetic_edges_source": "generated_synthetic",
+        "synthetic_edges_prepare_s": 532.0375,
+        "synthetic_edges_pkl_load_s": 0.0,
+        "synthetic_edges_generate_s": 519.8349,
+        "synthetic_edges_auto_save_pkl_s": 0.1835,
+        "insertion_debug": {
+          "routes_checked": 205051,
+          "routes_bbox_pruned": 12499,
+          "candidates_considered": 192552,
+          "valid_insertions": 7845
+        },
+        "alns_diagnostics": {
+          "stop_reason": "no_improve_patience",
+          "stop_iteration": 253,
+          "stop_no_improve_iters": 100,
+          "merge_tail": {
+            "enabled": true,
+            "ran": false,
+            "iterations": 0,
+            "accepted": 0,
+            "best_improvements": 0,
+            "served_start": 0,
+            "served_end": 0,
+            "active_buses_start": 0,
+            "active_buses_end": 0
+          }
+        },
+        "n_candidates_per_student": 1.0
+      }
+    },
+    "synthetic_crossings": {
+      "strategy": "drive_node_crossings",
+      "drive_edges_found": 9044,
+      "drive_nodes_extracted": 9991,
+      "roads_found": 519,
+      "roads_with_both_directions": 337,
+      "real_to_real_crossings": 1316,
+      "real_to_synthetic_crossings": 3037,
+      "synthetic_nodes_created": 3037,
+      "rejected_no_opposite": 182,
+      "pairing_attempts": 57017,
+      "pairing_rejected_distance_too_short": 0,
+      "pairing_rejected_distance_too_long": 53444,
+      "pairing_rejected_angle": 106,
+      "pairing_rejected_bearing_calc_failed": 0,
+      "rejected_distance": 0,
+      "rejected_angle": 0,
+      "rejected_spacing": 234,
+      "skipped_global_connection_lock": 2286,
+      "rejected_fallback_geometry": 0,
+      "fallback_reused_existing_nodes": 1896,
+      "fallback_projected_with_spacing": 1354,
+      "fallback_projected_no_spacing": 847,
+      "fallback_guaranteed": 1078,
+      "fallback_failed_completely": 4
+    }
+  },
+  "config": {
+    "n_students": 200,
+    "seed": 2000,
+    "iterations": 10000,
+    "buses_count": 10,
+    "buses_capacity": 28,
+    "minimize_buses": true,
+    "force_fleet_size": null,
+    "constraints_enabled": true,
+    "soft_ride_caps": false,
+    "time_budget_seconds": 60,
+    "max_candidates_per_student": 3,
+    "merge_tail_iterations": 30,
+    "distance_matrix_cache": {
+      "enabled": false,
+      "force_disable": false,
+      "isolate_per_run": false,
+      "min_finite_ratio": 0.0001,
+      "pkl_path": ""
+    },
+    "stage_walk_limits": {
+      "KG": 0,
+      "ELEMENTARY": 0,
+      "MIDDLE": 250,
+      "HIGH": 500
+    },
+    "stage_distribution": {
+      "KG": 0.25,
+      "ELEMENTARY": 0.25,
+      "MIDDLE": 0.25,
+      "HIGH": 0.25
+    },
+    "constraints": {
+      "enabled": true,
+      "soft_ride_caps": false,
+      "ride_time_multiplier": 2,
+      "floor_minutes": 30,
+      "ceiling_minutes": 60,
+      "bidirectional_check": true,
+      "mrt_enabled": false,
+      "mrt": 120
+    },
+    "algorithm": {
+      "time_budget_seconds": 60,
+      "max_candidates_per_student": 3,
+      "minimize_buses": true,
+      "force_fleet_size": null,
+      "dwell_time_seconds_per_stop": 30
+    }
+  },
+  "modes": {
+    "strictly_constrained": {
+      "skipped": true
+    },
+    "weakly_constrained": {
+      "skipped": true
+    },
+    "door_to_door": {
+      "routes_created": 10,
+      "students_served": 131,
+      "students_unserved": 69,
+      "total_route_time_min": 719.74,
+      "base_route_time_min": 654.74,
+      "total_dwell_time_min": 65.0,
+      "dwell_time_per_stop_seconds": 30.0,
+      "total_route_dist_km": 490.26,
+      "avg_route_time_min": 71.97,
+      "avg_ride_time_min": 23.2,
+      "max_ride_time_min": 55.44,
+      "objective_value": 1259221.75,
+      "alns_runtime_seconds": 55.79,
+      "mode_wall_time_seconds": null,
+      "operator_performance": {
+        "executed_iterations": 253,
+        "destroy": {
+          "random_removal": {
+            "count": 129,
+            "frequency_pct": 50.99,
+            "avg_time_s": 0.000252,
+            "best_time_s": 0.000104,
+            "worst_time_s": 0.000682,
+            "total_time_s": 0.032495
+          },
+          "worst_cost_removal": {
+            "count": 94,
+            "frequency_pct": 37.15,
+            "avg_time_s": 0.001214,
+            "best_time_s": 0.0,
+            "worst_time_s": 0.002599,
+            "total_time_s": 0.114077
+          },
+          "shaw_related_removal": {
+            "count": 9,
+            "frequency_pct": 3.56,
+            "avg_time_s": 0.000505,
+            "best_time_s": 0.000374,
+            "worst_time_s": 0.000714,
+            "total_time_s": 0.004545
+          },
+          "sequence_removal": {
+            "count": 12,
+            "frequency_pct": 4.74,
+            "avg_time_s": 0.000187,
+            "best_time_s": 0.000122,
+            "worst_time_s": 0.000263,
+            "total_time_s": 0.002241
+          },
+          "route_merge_removal": {
+            "count": 9,
+            "frequency_pct": 3.56,
+            "avg_time_s": 0.000141,
+            "best_time_s": 0.000115,
+            "worst_time_s": 0.000228,
+            "total_time_s": 0.001267
+          }
+        },
+        "repair": {
+          "random_order_best_repair": {
+            "count": 211,
+            "frequency_pct": 83.4,
+            "avg_time_s": 0.212782,
+            "best_time_s": 0.089312,
+            "worst_time_s": 0.341582,
+            "total_time_s": 44.897036
+          },
+          "regret_repair": {
+            "count": 42,
+            "frequency_pct": 16.6,
+            "avg_time_s": 0.213019,
+            "best_time_s": 0.086913,
+            "worst_time_s": 0.397324,
+            "total_time_s": 8.946796
+          }
+        }
+      },
+      "alns_diagnostics": {
+        "stop_reason": "no_improve_patience",
+        "stop_iteration": 253,
+        "stop_no_improve_iters": 100,
+        "merge_tail": {
+          "enabled": true,
+          "ran": false,
+          "iterations": 0,
+          "accepted": 0,
+          "best_improvements": 0,
+          "served_start": 0,
+          "served_end": 0,
+          "active_buses_start": 0,
+          "active_buses_end": 0
+        }
+      },
+      "insertion_debug": {
+        "routes_checked": 205051,
+        "routes_bbox_pruned": 12499,
+        "candidates_considered": 192552,
+        "valid_insertions": 7845
+      },
+      "matrix_precompute": {
+        "source": "loaded_from_pkl",
+        "loaded_from_pkl": true,
+        "saved_to_pkl": false,
+        "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/cache/distance_matrix_6446e64c_0403-2303.pkl",
+        "load_time_s": 0.0287,
+        "compute_time_s": 0.0,
+        "save_time_s": 0.0,
+        "total_time_s": 0.1882,
+        "critical_nodes_count": 199,
+        "matrix_nodes_count": 199,
+        "cache_key_prefix": "4401ffcf9e3f",
+        "cache_entry_node_count": 199,
+        "cache_loaded_finite_ratio": 1.0,
+        "cache_loaded_inf_pairs": 0,
+        "cache_loaded_finite_pairs": 39402,
+        "cache_guard_min_finite_ratio": 0.0001,
+        "cache_load_rejected": false,
+        "cache_load_reject_reason": null,
+        "cache_recomputed_after_reject": false,
+        "cache_context_seed": null,
+        "cache_context_student_count": 200
+      },
+      "synthetic_edges_timing": {
+        "source": "generated_synthetic",
+        "prepare_time_s": 532.0375,
+        "pkl_load_time_s": 0.0,
+        "generate_time_s": 519.8349,
+        "auto_save_pkl_time_s": 0.1835,
+        "pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/cache/crossings_3eab1f2e_0403-2310.pkl",
+        "cache_hash": "3eab1f2e"
+      },
+      "unsafe_crossings": 0,
+      "walk_stats": {
+        "avg_walk_dist_m": 20.7,
+        "median_walk_dist_m": 0.0,
+        "max_walk_dist_m": 373.7,
+        "min_walk_dist_m": 0.0,
+        "avg_walk_time_min": 0.26,
+        "avg_walk_utilisation_pct": null
+      },
+      "routes": [
+        {
+          "route_id": "R1",
+          "students_count": 13,
+          "total_time_min": 71.34,
+          "total_distance_km": 57.53
+        },
+        {
+          "route_id": "R2",
+          "students_count": 12,
+          "total_time_min": 83.02,
+          "total_distance_km": 66.89
+        },
+        {
+          "route_id": "R3",
+          "students_count": 14,
+          "total_time_min": 58.05,
+          "total_distance_km": 46.72
+        },
+        {
+          "route_id": "R4",
+          "students_count": 13,
+          "total_time_min": 59.67,
+          "total_distance_km": 38.17
+        },
+        {
+          "route_id": "R5",
+          "students_count": 12,
+          "total_time_min": 85.96,
+          "total_distance_km": 61.53
+        },
+        {
+          "route_id": "R6",
+          "students_count": 14,
+          "total_time_min": 54.67,
+          "total_distance_km": 40.87
+        },
+        {
+          "route_id": "R7",
+          "students_count": 10,
+          "total_time_min": 35.8,
+          "total_distance_km": 24.91
+        },
+        {
+          "route_id": "R8",
+          "students_count": 14,
+          "total_time_min": 74.03,
+          "total_distance_km": 49.37
+        },
+        {
+          "route_id": "R9",
+          "students_count": 13,
+          "total_time_min": 64.92,
+          "total_distance_km": 53.26
+        },
+        {
+          "route_id": "R10",
+          "students_count": 16,
+          "total_time_min": 67.28,
+          "total_distance_km": 51.01
+        }
+      ],
+      "students": [
+        {
+          "id": "S150",
+          "stage": "MIDDLE",
+          "route_id": "R1",
+          "pickup_order": 1,
+          "ride_time_min": 48.38,
+          "ride_distance_km": 32.9,
+          "direct_potential_min": 24.65,
+          "direct_distance_km": 22.12,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S060",
+          "stage": "KG",
+          "route_id": "R1",
+          "pickup_order": 2,
+          "ride_time_min": 45.93,
+          "ride_distance_km": 31.88,
+          "direct_potential_min": 23.04,
+          "direct_distance_km": 19.14,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S067",
+          "stage": "MIDDLE",
+          "route_id": "R1",
+          "pickup_order": 3,
+          "ride_time_min": 43.64,
+          "ride_distance_km": 31.06,
+          "direct_potential_min": 23.48,
+          "direct_distance_km": 19.26,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S170",
+          "stage": "HIGH",
+          "route_id": "R1",
+          "pickup_order": 4,
+          "ride_time_min": 37.54,
+          "ride_distance_km": 28.25,
+          "direct_potential_min": 19.2,
+          "direct_distance_km": 16.86,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S197",
+          "stage": "MIDDLE",
+          "route_id": "R1",
+          "pickup_order": 5,
+          "ride_time_min": 33.2,
+          "ride_distance_km": 25.64,
+          "direct_potential_min": 16.95,
+          "direct_distance_km": 14.8,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S076",
+          "stage": "HIGH",
+          "route_id": "R1",
+          "pickup_order": 6,
+          "ride_time_min": 31.12,
+          "ride_distance_km": 24.44,
+          "direct_potential_min": 16.62,
+          "direct_distance_km": 14.93,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S134",
+          "stage": "KG",
+          "route_id": "R1",
+          "pickup_order": 7,
+          "ride_time_min": 28.8,
+          "ride_distance_km": 22.73,
+          "direct_potential_min": 15.46,
+          "direct_distance_km": 13.95,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S146",
+          "stage": "MIDDLE",
+          "route_id": "R1",
+          "pickup_order": 8,
+          "ride_time_min": 27.29,
+          "ride_distance_km": 21.63,
+          "direct_potential_min": 13.95,
+          "direct_distance_km": 12.85,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S108",
+          "stage": "ELEMENTARY",
+          "route_id": "R1",
+          "pickup_order": 9,
+          "ride_time_min": 26.68,
+          "ride_distance_km": 21.17,
+          "direct_potential_min": 13.52,
+          "direct_distance_km": 12.39,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S179",
+          "stage": "KG",
+          "route_id": "R1",
+          "pickup_order": 10,
+          "ride_time_min": 20.15,
+          "ride_distance_km": 14.4,
+          "direct_potential_min": 13.99,
+          "direct_distance_km": 12.41,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S135",
+          "stage": "KG",
+          "route_id": "R1",
+          "pickup_order": 11,
+          "ride_time_min": 18.3,
+          "ride_distance_km": 13.2,
+          "direct_potential_min": 15.23,
+          "direct_distance_km": 13.05,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S045",
+          "stage": "KG",
+          "route_id": "R1",
+          "pickup_order": 12,
+          "ride_time_min": 17.25,
+          "ride_distance_km": 12.79,
+          "direct_potential_min": 15.82,
+          "direct_distance_km": 13.68,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S145",
+          "stage": "ELEMENTARY",
+          "route_id": "R1",
+          "pickup_order": 13,
+          "ride_time_min": 11.13,
+          "ride_distance_km": 8.07,
+          "direct_potential_min": 11.13,
+          "direct_distance_km": 8.07,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S035",
+          "stage": "KG",
+          "route_id": "R2",
+          "pickup_order": 1,
+          "ride_time_min": 53.13,
+          "ride_distance_km": 40.84,
+          "direct_potential_min": 30.28,
+          "direct_distance_km": 27.81,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S107",
+          "stage": "ELEMENTARY",
+          "route_id": "R2",
+          "pickup_order": 2,
+          "ride_time_min": 43.49,
+          "ride_distance_km": 33.64,
+          "direct_potential_min": 21.85,
+          "direct_distance_km": 21.69,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S072",
+          "stage": "MIDDLE",
+          "route_id": "R2",
+          "pickup_order": 3,
+          "ride_time_min": 41.68,
+          "ride_distance_km": 32.7,
+          "direct_potential_min": 21.21,
+          "direct_distance_km": 21.76,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S132",
+          "stage": "HIGH",
+          "route_id": "R2",
+          "pickup_order": 4,
+          "ride_time_min": 38.96,
+          "ride_distance_km": 30.36,
+          "direct_potential_min": 20.61,
+          "direct_distance_km": 20.52,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S075",
+          "stage": "MIDDLE",
+          "route_id": "R2",
+          "pickup_order": 5,
+          "ride_time_min": 29.01,
+          "ride_distance_km": 17.79,
+          "direct_potential_min": 13.53,
+          "direct_distance_km": 12.15,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S004",
+          "stage": "ELEMENTARY",
+          "route_id": "R2",
+          "pickup_order": 6,
+          "ride_time_min": 18.5,
+          "ride_distance_km": 8.59,
+          "direct_potential_min": 7.95,
+          "direct_distance_km": 5.6,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S190",
+          "stage": "MIDDLE",
+          "route_id": "R2",
+          "pickup_order": 7,
+          "ride_time_min": 17.17,
+          "ride_distance_km": 8.1,
+          "direct_potential_min": 7.04,
+          "direct_distance_km": 5.26,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S026",
+          "stage": "ELEMENTARY",
+          "route_id": "R2",
+          "pickup_order": 8,
+          "ride_time_min": 15.27,
+          "ride_distance_km": 7.11,
+          "direct_potential_min": 7.99,
+          "direct_distance_km": 4.71,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S078",
+          "stage": "HIGH",
+          "route_id": "R2",
+          "pickup_order": 9,
+          "ride_time_min": 10.87,
+          "ride_distance_km": 4.76,
+          "direct_potential_min": 4.48,
+          "direct_distance_km": 2.53,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S196",
+          "stage": "MIDDLE",
+          "route_id": "R2",
+          "pickup_order": 10,
+          "ride_time_min": 8.97,
+          "ride_distance_km": 3.87,
+          "direct_potential_min": 3.04,
+          "direct_distance_km": 1.7,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S103",
+          "stage": "MIDDLE",
+          "route_id": "R2",
+          "pickup_order": 11,
+          "ride_time_min": 4.99,
+          "ride_distance_km": 2.01,
+          "direct_potential_min": 3.41,
+          "direct_distance_km": 1.6,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S094",
+          "stage": "HIGH",
+          "route_id": "R2",
+          "pickup_order": 12,
+          "ride_time_min": 3.31,
+          "ride_distance_km": 1.34,
+          "direct_potential_min": 3.31,
+          "direct_distance_km": 1.34,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S010",
+          "stage": "MIDDLE",
+          "route_id": "R3",
+          "pickup_order": 1,
+          "ride_time_min": 38.42,
+          "ride_distance_km": 28.56,
+          "direct_potential_min": 19.41,
+          "direct_distance_km": 18.42,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S157",
+          "stage": "KG",
+          "route_id": "R3",
+          "pickup_order": 2,
+          "ride_time_min": 35.98,
+          "ride_distance_km": 27.33,
+          "direct_potential_min": 18.97,
+          "direct_distance_km": 18.52,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S082",
+          "stage": "MIDDLE",
+          "route_id": "R3",
+          "pickup_order": 3,
+          "ride_time_min": 35.21,
+          "ride_distance_km": 26.82,
+          "direct_potential_min": 18.2,
+          "direct_distance_km": 18.01,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S177",
+          "stage": "HIGH",
+          "route_id": "R3",
+          "pickup_order": 4,
+          "ride_time_min": 34.73,
+          "ride_distance_km": 26.64,
+          "direct_potential_min": 19.0,
+          "direct_distance_km": 18.9,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S118",
+          "stage": "HIGH",
+          "route_id": "R3",
+          "pickup_order": 5,
+          "ride_time_min": 29.54,
+          "ride_distance_km": 23.39,
+          "direct_potential_min": 20.1,
+          "direct_distance_km": 17.65,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S036",
+          "stage": "KG",
+          "route_id": "R3",
+          "pickup_order": 6,
+          "ride_time_min": 27.25,
+          "ride_distance_km": 22.44,
+          "direct_potential_min": 19.69,
+          "direct_distance_km": 18.34,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S080",
+          "stage": "ELEMENTARY",
+          "route_id": "R3",
+          "pickup_order": 7,
+          "ride_time_min": 25.5,
+          "ride_distance_km": 21.43,
+          "direct_potential_min": 18.73,
+          "direct_distance_km": 17.26,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S063",
+          "stage": "MIDDLE",
+          "route_id": "R3",
+          "pickup_order": 8,
+          "ride_time_min": 24.91,
+          "ride_distance_km": 20.78,
+          "direct_potential_min": 18.44,
+          "direct_distance_km": 17.11,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S102",
+          "stage": "KG",
+          "route_id": "R3",
+          "pickup_order": 9,
+          "ride_time_min": 15.38,
+          "ride_distance_km": 11.65,
+          "direct_potential_min": 13.5,
+          "direct_distance_km": 10.94,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S183",
+          "stage": "MIDDLE",
+          "route_id": "R3",
+          "pickup_order": 9,
+          "ride_time_min": 15.38,
+          "ride_distance_km": 11.65,
+          "direct_potential_min": 13.5,
+          "direct_distance_km": 10.94,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S099",
+          "stage": "HIGH",
+          "route_id": "R3",
+          "pickup_order": 10,
+          "ride_time_min": 13.45,
+          "ride_distance_km": 10.47,
+          "direct_potential_min": 11.58,
+          "direct_distance_km": 9.77,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S169",
+          "stage": "HIGH",
+          "route_id": "R3",
+          "pickup_order": 11,
+          "ride_time_min": 8.25,
+          "ride_distance_km": 6.22,
+          "direct_potential_min": 7.26,
+          "direct_distance_km": 5.86,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S161",
+          "stage": "KG",
+          "route_id": "R3",
+          "pickup_order": 12,
+          "ride_time_min": 7.01,
+          "ride_distance_km": 5.5,
+          "direct_potential_min": 6.02,
+          "direct_distance_km": 5.14,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S017",
+          "stage": "KG",
+          "route_id": "R3",
+          "pickup_order": 13,
+          "ride_time_min": 2.1,
+          "ride_distance_km": 1.48,
+          "direct_potential_min": 2.1,
+          "direct_distance_km": 1.48,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S173",
+          "stage": "MIDDLE",
+          "route_id": "R4",
+          "pickup_order": 1,
+          "ride_time_min": 40.85,
+          "ride_distance_km": 22.19,
+          "direct_potential_min": 20.62,
+          "direct_distance_km": 17.47,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S005",
+          "stage": "ELEMENTARY",
+          "route_id": "R4",
+          "pickup_order": 2,
+          "ride_time_min": 38.64,
+          "ride_distance_km": 21.3,
+          "direct_potential_min": 20.63,
+          "direct_distance_km": 14.66,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S093",
+          "stage": "ELEMENTARY",
+          "route_id": "R4",
+          "pickup_order": 3,
+          "ride_time_min": 36.94,
+          "ride_distance_km": 20.64,
+          "direct_potential_min": 20.03,
+          "direct_distance_km": 14.4,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S046",
+          "stage": "ELEMENTARY",
+          "route_id": "R4",
+          "pickup_order": 4,
+          "ride_time_min": 34.82,
+          "ride_distance_km": 19.82,
+          "direct_potential_min": 17.97,
+          "direct_distance_km": 13.57,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S064",
+          "stage": "ELEMENTARY",
+          "route_id": "R4",
+          "pickup_order": 5,
+          "ride_time_min": 34.34,
+          "ride_distance_km": 19.65,
+          "direct_potential_min": 17.96,
+          "direct_distance_km": 13.52,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S178",
+          "stage": "MIDDLE",
+          "route_id": "R4",
+          "pickup_order": 6,
+          "ride_time_min": 27.77,
+          "ride_distance_km": 16.79,
+          "direct_potential_min": 13.85,
+          "direct_distance_km": 12.04,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S090",
+          "stage": "KG",
+          "route_id": "R4",
+          "pickup_order": 7,
+          "ride_time_min": 26.22,
+          "ride_distance_km": 16.2,
+          "direct_potential_min": 14.8,
+          "direct_distance_km": 13.88,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S044",
+          "stage": "MIDDLE",
+          "route_id": "R4",
+          "pickup_order": 8,
+          "ride_time_min": 24.28,
+          "ride_distance_km": 15.18,
+          "direct_potential_min": 15.4,
+          "direct_distance_km": 13.33,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S191",
+          "stage": "MIDDLE",
+          "route_id": "R4",
+          "pickup_order": 9,
+          "ride_time_min": 18.62,
+          "ride_distance_km": 11.36,
+          "direct_potential_min": 13.59,
+          "direct_distance_km": 12.52,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S165",
+          "stage": "MIDDLE",
+          "route_id": "R4",
+          "pickup_order": 10,
+          "ride_time_min": 16.73,
+          "ride_distance_km": 10.25,
+          "direct_potential_min": 13.22,
+          "direct_distance_km": 12.3,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S172",
+          "stage": "HIGH",
+          "route_id": "R4",
+          "pickup_order": 11,
+          "ride_time_min": 14.49,
+          "ride_distance_km": 8.05,
+          "direct_potential_min": 12.48,
+          "direct_distance_km": 10.99,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S088",
+          "stage": "HIGH",
+          "route_id": "R4",
+          "pickup_order": 12,
+          "ride_time_min": 8.26,
+          "ride_distance_km": 3.21,
+          "direct_potential_min": 8.04,
+          "direct_distance_km": 3.14,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S066",
+          "stage": "HIGH",
+          "route_id": "R4",
+          "pickup_order": 13,
+          "ride_time_min": 3.9,
+          "ride_distance_km": 1.57,
+          "direct_potential_min": 3.9,
+          "direct_distance_km": 1.57,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S113",
+          "stage": "MIDDLE",
+          "route_id": "R5",
+          "pickup_order": 1,
+          "ride_time_min": 55.44,
+          "ride_distance_km": 39.19,
+          "direct_potential_min": 29.3,
+          "direct_distance_km": 22.02,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S159",
+          "stage": "ELEMENTARY",
+          "route_id": "R5",
+          "pickup_order": 2,
+          "ride_time_min": 46.05,
+          "ride_distance_km": 33.82,
+          "direct_potential_min": 23.51,
+          "direct_distance_km": 18.38,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S131",
+          "stage": "ELEMENTARY",
+          "route_id": "R5",
+          "pickup_order": 3,
+          "ride_time_min": 43.5,
+          "ride_distance_km": 32.74,
+          "direct_potential_min": 22.82,
+          "direct_distance_km": 16.98,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S034",
+          "stage": "KG",
+          "route_id": "R5",
+          "pickup_order": 4,
+          "ride_time_min": 39.1,
+          "ride_distance_km": 31.05,
+          "direct_potential_min": 20.36,
+          "direct_distance_km": 15.49,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S151",
+          "stage": "KG",
+          "route_id": "R5",
+          "pickup_order": 5,
+          "ride_time_min": 35.51,
+          "ride_distance_km": 29.11,
+          "direct_potential_min": 18.86,
+          "direct_distance_km": 14.57,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S053",
+          "stage": "HIGH",
+          "route_id": "R5",
+          "pickup_order": 6,
+          "ride_time_min": 17.95,
+          "ride_distance_km": 7.76,
+          "direct_potential_min": 10.69,
+          "direct_distance_km": 10.48,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S120",
+          "stage": "ELEMENTARY",
+          "route_id": "R5",
+          "pickup_order": 7,
+          "ride_time_min": 13.19,
+          "ride_distance_km": 4.94,
+          "direct_potential_min": 9.4,
+          "direct_distance_km": 4.92,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S115",
+          "stage": "MIDDLE",
+          "route_id": "R5",
+          "pickup_order": 8,
+          "ride_time_min": 11.5,
+          "ride_distance_km": 4.33,
+          "direct_potential_min": 9.23,
+          "direct_distance_km": 4.84,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S081",
+          "stage": "MIDDLE",
+          "route_id": "R5",
+          "pickup_order": 9,
+          "ride_time_min": 7.48,
+          "ride_distance_km": 2.77,
+          "direct_potential_min": 6.53,
+          "direct_distance_km": 2.51,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S019",
+          "stage": "KG",
+          "route_id": "R5",
+          "pickup_order": 10,
+          "ride_time_min": 6.86,
+          "ride_distance_km": 2.58,
+          "direct_potential_min": 5.94,
+          "direct_distance_km": 2.32,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S085",
+          "stage": "KG",
+          "route_id": "R5",
+          "pickup_order": 11,
+          "ride_time_min": 3.88,
+          "ride_distance_km": 1.53,
+          "direct_potential_min": 3.7,
+          "direct_distance_km": 1.53,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S011",
+          "stage": "ELEMENTARY",
+          "route_id": "R5",
+          "pickup_order": 12,
+          "ride_time_min": 3.28,
+          "ride_distance_km": 1.34,
+          "direct_potential_min": 3.28,
+          "direct_distance_km": 1.34,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S041",
+          "stage": "ELEMENTARY",
+          "route_id": "R6",
+          "pickup_order": 1,
+          "ride_time_min": 37.65,
+          "ride_distance_km": 22.73,
+          "direct_potential_min": 18.85,
+          "direct_distance_km": 16.21,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S184",
+          "stage": "KG",
+          "route_id": "R6",
+          "pickup_order": 2,
+          "ride_time_min": 36.47,
+          "ride_distance_km": 21.96,
+          "direct_potential_min": 18.53,
+          "direct_distance_km": 16.84,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S083",
+          "stage": "HIGH",
+          "route_id": "R6",
+          "pickup_order": 3,
+          "ride_time_min": 34.42,
+          "ride_distance_km": 21.2,
+          "direct_potential_min": 17.92,
+          "direct_distance_km": 15.55,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S194",
+          "stage": "HIGH",
+          "route_id": "R6",
+          "pickup_order": 4,
+          "ride_time_min": 32.57,
+          "ride_distance_km": 19.82,
+          "direct_potential_min": 16.44,
+          "direct_distance_km": 14.57,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S039",
+          "stage": "HIGH",
+          "route_id": "R6",
+          "pickup_order": 5,
+          "ride_time_min": 31.6,
+          "ride_distance_km": 19.25,
+          "direct_potential_min": 16.63,
+          "direct_distance_km": 14.65,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S171",
+          "stage": "MIDDLE",
+          "route_id": "R6",
+          "pickup_order": 6,
+          "ride_time_min": 28.36,
+          "ride_distance_km": 17.11,
+          "direct_potential_min": 16.3,
+          "direct_distance_km": 14.43,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S141",
+          "stage": "ELEMENTARY",
+          "route_id": "R6",
+          "pickup_order": 7,
+          "ride_time_min": 27.07,
+          "ride_distance_km": 16.08,
+          "direct_potential_min": 15.91,
+          "direct_distance_km": 14.0,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S079",
+          "stage": "HIGH",
+          "route_id": "R6",
+          "pickup_order": 8,
+          "ride_time_min": 24.49,
+          "ride_distance_km": 14.73,
+          "direct_potential_min": 14.94,
+          "direct_distance_km": 12.98,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S114",
+          "stage": "HIGH",
+          "route_id": "R6",
+          "pickup_order": 9,
+          "ride_time_min": 21.64,
+          "ride_distance_km": 13.55,
+          "direct_potential_min": 13.81,
+          "direct_distance_km": 11.68,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S133",
+          "stage": "MIDDLE",
+          "route_id": "R6",
+          "pickup_order": 10,
+          "ride_time_min": 19.66,
+          "ride_distance_km": 12.57,
+          "direct_potential_min": 12.98,
+          "direct_distance_km": 11.47,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S105",
+          "stage": "HIGH",
+          "route_id": "R6",
+          "pickup_order": 11,
+          "ride_time_min": 11.16,
+          "ride_distance_km": 6.36,
+          "direct_potential_min": 6.47,
+          "direct_distance_km": 2.65,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S148",
+          "stage": "KG",
+          "route_id": "R6",
+          "pickup_order": 12,
+          "ride_time_min": 7.37,
+          "ride_distance_km": 4.53,
+          "direct_potential_min": 3.19,
+          "direct_distance_km": 1.43,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S071",
+          "stage": "MIDDLE",
+          "route_id": "R6",
+          "pickup_order": 13,
+          "ride_time_min": 5.82,
+          "ride_distance_km": 3.95,
+          "direct_potential_min": 4.15,
+          "direct_distance_km": 2.07,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S175",
+          "stage": "KG",
+          "route_id": "R6",
+          "pickup_order": 14,
+          "ride_time_min": 3.09,
+          "ride_distance_km": 2.41,
+          "direct_potential_min": 3.09,
+          "direct_distance_km": 2.41,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S128",
+          "stage": "MIDDLE",
+          "route_id": "R7",
+          "pickup_order": 1,
+          "ride_time_min": 29.82,
+          "ride_distance_km": 20.43,
+          "direct_potential_min": 5.74,
+          "direct_distance_km": 4.12,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S008",
+          "stage": "HIGH",
+          "route_id": "R7",
+          "pickup_order": 2,
+          "ride_time_min": 28.2,
+          "ride_distance_km": 19.84,
+          "direct_potential_min": 6.04,
+          "direct_distance_km": 4.22,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S059",
+          "stage": "ELEMENTARY",
+          "route_id": "R7",
+          "pickup_order": 3,
+          "ride_time_min": 24.53,
+          "ride_distance_km": 17.24,
+          "direct_potential_min": 6.53,
+          "direct_distance_km": 5.88,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S091",
+          "stage": "MIDDLE",
+          "route_id": "R7",
+          "pickup_order": 4,
+          "ride_time_min": 19.61,
+          "ride_distance_km": 14.41,
+          "direct_potential_min": 12.0,
+          "direct_distance_km": 9.0,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S062",
+          "stage": "KG",
+          "route_id": "R7",
+          "pickup_order": 5,
+          "ride_time_min": 18.2,
+          "ride_distance_km": 13.91,
+          "direct_potential_min": 10.95,
+          "direct_distance_km": 8.6,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S152",
+          "stage": "KG",
+          "route_id": "R7",
+          "pickup_order": 6,
+          "ride_time_min": 15.08,
+          "ride_distance_km": 11.04,
+          "direct_potential_min": 9.12,
+          "direct_distance_km": 7.92,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S110",
+          "stage": "ELEMENTARY",
+          "route_id": "R7",
+          "pickup_order": 7,
+          "ride_time_min": 10.46,
+          "ride_distance_km": 6.45,
+          "direct_potential_min": 7.43,
+          "direct_distance_km": 4.04,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S137",
+          "stage": "ELEMENTARY",
+          "route_id": "R7",
+          "pickup_order": 8,
+          "ride_time_min": 6.51,
+          "ride_distance_km": 4.47,
+          "direct_potential_min": 5.91,
+          "direct_distance_km": 3.74,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S002",
+          "stage": "KG",
+          "route_id": "R7",
+          "pickup_order": 9,
+          "ride_time_min": 5.42,
+          "ride_distance_km": 4.05,
+          "direct_potential_min": 5.01,
+          "direct_distance_km": 3.31,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S096",
+          "stage": "MIDDLE",
+          "route_id": "R7",
+          "pickup_order": 10,
+          "ride_time_min": 3.74,
+          "ride_distance_km": 2.96,
+          "direct_potential_min": 3.74,
+          "direct_distance_km": 2.96,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S176",
+          "stage": "KG",
+          "route_id": "R8",
+          "pickup_order": 1,
+          "ride_time_min": 50.29,
+          "ride_distance_km": 31.9,
+          "direct_potential_min": 26.52,
+          "direct_distance_km": 19.55,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S032",
+          "stage": "ELEMENTARY",
+          "route_id": "R8",
+          "pickup_order": 2,
+          "ride_time_min": 47.91,
+          "ride_distance_km": 30.9,
+          "direct_potential_min": 24.14,
+          "direct_distance_km": 18.55,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S111",
+          "stage": "KG",
+          "route_id": "R8",
+          "pickup_order": 3,
+          "ride_time_min": 43.94,
+          "ride_distance_km": 28.81,
+          "direct_potential_min": 23.53,
+          "direct_distance_km": 17.9,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S200",
+          "stage": "KG",
+          "route_id": "R8",
+          "pickup_order": 4,
+          "ride_time_min": 22.74,
+          "ride_distance_km": 12.42,
+          "direct_potential_min": 5.73,
+          "direct_distance_km": 4.2,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S092",
+          "stage": "MIDDLE",
+          "route_id": "R8",
+          "pickup_order": 5,
+          "ride_time_min": 18.45,
+          "ride_distance_km": 9.26,
+          "direct_potential_min": 5.04,
+          "direct_distance_km": 3.39,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S016",
+          "stage": "KG",
+          "route_id": "R8",
+          "pickup_order": 6,
+          "ride_time_min": 17.12,
+          "ride_distance_km": 8.32,
+          "direct_potential_min": 6.53,
+          "direct_distance_km": 4.75,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S050",
+          "stage": "MIDDLE",
+          "route_id": "R8",
+          "pickup_order": 7,
+          "ride_time_min": 14.88,
+          "ride_distance_km": 7.06,
+          "direct_potential_min": 6.33,
+          "direct_distance_km": 4.52,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S126",
+          "stage": "KG",
+          "route_id": "R8",
+          "pickup_order": 8,
+          "ride_time_min": 13.55,
+          "ride_distance_km": 6.45,
+          "direct_potential_min": 5.58,
+          "direct_distance_km": 4.15,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S164",
+          "stage": "ELEMENTARY",
+          "route_id": "R8",
+          "pickup_order": 9,
+          "ride_time_min": 12.73,
+          "ride_distance_km": 6.08,
+          "direct_potential_min": 6.05,
+          "direct_distance_km": 4.03,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S181",
+          "stage": "HIGH",
+          "route_id": "R8",
+          "pickup_order": 10,
+          "ride_time_min": 9.91,
+          "ride_distance_km": 4.45,
+          "direct_potential_min": 3.26,
+          "direct_distance_km": 2.11,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S007",
+          "stage": "KG",
+          "route_id": "R8",
+          "pickup_order": 11,
+          "ride_time_min": 8.81,
+          "ride_distance_km": 4.03,
+          "direct_potential_min": 3.89,
+          "direct_distance_km": 2.26,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S086",
+          "stage": "ELEMENTARY",
+          "route_id": "R8",
+          "pickup_order": 12,
+          "ride_time_min": 7.02,
+          "ride_distance_km": 3.33,
+          "direct_potential_min": 3.03,
+          "direct_distance_km": 1.89,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S160",
+          "stage": "KG",
+          "route_id": "R8",
+          "pickup_order": 13,
+          "ride_time_min": 4.75,
+          "ride_distance_km": 2.28,
+          "direct_potential_min": 2.84,
+          "direct_distance_km": 1.51,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S158",
+          "stage": "KG",
+          "route_id": "R8",
+          "pickup_order": 14,
+          "ride_time_min": 3.3,
+          "ride_distance_km": 1.7,
+          "direct_potential_min": 3.3,
+          "direct_distance_km": 1.7,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S140",
+          "stage": "KG",
+          "route_id": "R9",
+          "pickup_order": 1,
+          "ride_time_min": 43.73,
+          "ride_distance_km": 32.12,
+          "direct_potential_min": 21.94,
+          "direct_distance_km": 19.14,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S042",
+          "stage": "ELEMENTARY",
+          "route_id": "R9",
+          "pickup_order": 2,
+          "ride_time_min": 37.76,
+          "ride_distance_km": 28.17,
+          "direct_potential_min": 20.29,
+          "direct_distance_km": 20.4,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S009",
+          "stage": "KG",
+          "route_id": "R9",
+          "pickup_order": 3,
+          "ride_time_min": 34.95,
+          "ride_distance_km": 26.55,
+          "direct_potential_min": 20.08,
+          "direct_distance_km": 18.1,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S154",
+          "stage": "MIDDLE",
+          "route_id": "R9",
+          "pickup_order": 4,
+          "ride_time_min": 30.69,
+          "ride_distance_km": 23.2,
+          "direct_potential_min": 16.19,
+          "direct_distance_km": 14.75,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S155",
+          "stage": "MIDDLE",
+          "route_id": "R9",
+          "pickup_order": 5,
+          "ride_time_min": 24.95,
+          "ride_distance_km": 18.64,
+          "direct_potential_min": 12.12,
+          "direct_distance_km": 10.9,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S006",
+          "stage": "KG",
+          "route_id": "R9",
+          "pickup_order": 6,
+          "ride_time_min": 23.85,
+          "ride_distance_km": 17.94,
+          "direct_potential_min": 11.02,
+          "direct_distance_km": 10.2,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S047",
+          "stage": "KG",
+          "route_id": "R9",
+          "pickup_order": 7,
+          "ride_time_min": 22.57,
+          "ride_distance_km": 17.23,
+          "direct_potential_min": 10.54,
+          "direct_distance_km": 9.74,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S058",
+          "stage": "ELEMENTARY",
+          "route_id": "R9",
+          "pickup_order": 8,
+          "ride_time_min": 15.52,
+          "ride_distance_km": 11.76,
+          "direct_potential_min": 7.86,
+          "direct_distance_km": 6.54,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S043",
+          "stage": "KG",
+          "route_id": "R9",
+          "pickup_order": 9,
+          "ride_time_min": 14.13,
+          "ride_distance_km": 10.68,
+          "direct_potential_min": 8.21,
+          "direct_distance_km": 6.62,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S052",
+          "stage": "MIDDLE",
+          "route_id": "R9",
+          "pickup_order": 10,
+          "ride_time_min": 13.33,
+          "ride_distance_km": 10.32,
+          "direct_potential_min": 8.33,
+          "direct_distance_km": 6.85,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S174",
+          "stage": "HIGH",
+          "route_id": "R9",
+          "pickup_order": 11,
+          "ride_time_min": 11.61,
+          "ride_distance_km": 9.31,
+          "direct_potential_min": 9.73,
+          "direct_distance_km": 7.78,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S074",
+          "stage": "ELEMENTARY",
+          "route_id": "R9",
+          "pickup_order": 12,
+          "ride_time_min": 10.63,
+          "ride_distance_km": 8.66,
+          "direct_potential_min": 8.75,
+          "direct_distance_km": 7.13,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S068",
+          "stage": "MIDDLE",
+          "route_id": "R9",
+          "pickup_order": 13,
+          "ride_time_min": 6.78,
+          "ride_distance_km": 5.63,
+          "direct_potential_min": 6.78,
+          "direct_distance_km": 5.63,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S195",
+          "stage": "HIGH",
+          "route_id": "R10",
+          "pickup_order": 1,
+          "ride_time_min": 48.28,
+          "ride_distance_km": 31.12,
+          "direct_potential_min": 20.79,
+          "direct_distance_km": 18.04,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S143",
+          "stage": "HIGH",
+          "route_id": "R10",
+          "pickup_order": 2,
+          "ride_time_min": 42.49,
+          "ride_distance_km": 26.74,
+          "direct_potential_min": 18.58,
+          "direct_distance_km": 15.96,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S188",
+          "stage": "ELEMENTARY",
+          "route_id": "R10",
+          "pickup_order": 3,
+          "ride_time_min": 40.29,
+          "ride_distance_km": 25.46,
+          "direct_potential_min": 17.45,
+          "direct_distance_km": 15.1,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S033",
+          "stage": "HIGH",
+          "route_id": "R10",
+          "pickup_order": 4,
+          "ride_time_min": 38.53,
+          "ride_distance_km": 24.27,
+          "direct_potential_min": 17.62,
+          "direct_distance_km": 15.18,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S116",
+          "stage": "HIGH",
+          "route_id": "R10",
+          "pickup_order": 5,
+          "ride_time_min": 36.05,
+          "ride_distance_km": 21.95,
+          "direct_potential_min": 16.13,
+          "direct_distance_km": 13.33,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S186",
+          "stage": "HIGH",
+          "route_id": "R10",
+          "pickup_order": 6,
+          "ride_time_min": 32.1,
+          "ride_distance_km": 18.73,
+          "direct_potential_min": 14.62,
+          "direct_distance_km": 11.99,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S029",
+          "stage": "KG",
+          "route_id": "R10",
+          "pickup_order": 7,
+          "ride_time_min": 29.38,
+          "ride_distance_km": 17.46,
+          "direct_potential_min": 14.45,
+          "direct_distance_km": 11.41,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S051",
+          "stage": "HIGH",
+          "route_id": "R10",
+          "pickup_order": 8,
+          "ride_time_min": 26.53,
+          "ride_distance_km": 15.26,
+          "direct_potential_min": 13.05,
+          "direct_distance_km": 10.56,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S048",
+          "stage": "MIDDLE",
+          "route_id": "R10",
+          "pickup_order": 9,
+          "ride_time_min": 20.2,
+          "ride_distance_km": 9.9,
+          "direct_potential_min": 11.67,
+          "direct_distance_km": 6.09,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S142",
+          "stage": "KG",
+          "route_id": "R10",
+          "pickup_order": 10,
+          "ride_time_min": 17.88,
+          "ride_distance_km": 8.73,
+          "direct_potential_min": 10.32,
+          "direct_distance_km": 8.28,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S087",
+          "stage": "MIDDLE",
+          "route_id": "R10",
+          "pickup_order": 11,
+          "ride_time_min": 15.65,
+          "ride_distance_km": 7.29,
+          "direct_potential_min": 9.4,
+          "direct_distance_km": 4.89,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S153",
+          "stage": "MIDDLE",
+          "route_id": "R10",
+          "pickup_order": 12,
+          "ride_time_min": 14.92,
+          "ride_distance_km": 6.8,
+          "direct_potential_min": 8.67,
+          "direct_distance_km": 4.4,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S166",
+          "stage": "MIDDLE",
+          "route_id": "R10",
+          "pickup_order": 13,
+          "ride_time_min": 12.44,
+          "ride_distance_km": 5.46,
+          "direct_potential_min": 9.52,
+          "direct_distance_km": 3.59,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S144",
+          "stage": "HIGH",
+          "route_id": "R10",
+          "pickup_order": 14,
+          "ride_time_min": 10.38,
+          "ride_distance_km": 4.49,
+          "direct_potential_min": 8.68,
+          "direct_distance_km": 4.62,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S109",
+          "stage": "KG",
+          "route_id": "R10",
+          "pickup_order": 15,
+          "ride_time_min": 4.3,
+          "ride_distance_km": 1.69,
+          "direct_potential_min": 3.65,
+          "direct_distance_km": 1.51,
+          "walk_distance_m": 0.0
+        },
+        {
+          "id": "S124",
+          "stage": "MIDDLE",
+          "route_id": "R10",
+          "pickup_order": 16,
+          "ride_time_min": 3.55,
+          "ride_distance_km": 1.45,
+          "direct_potential_min": 3.55,
+          "direct_distance_km": 1.45,
+          "walk_distance_m": 0.0
+        }
+      ],
+      "buses_available": 10,
+      "bus_capacity": 28,
+      "buses_used": 10,
+      "ride_cap_violations_am": 6,
+      "ride_cap_checked_am": 131,
+      "ride_cap_violation_pct_am": 4.6,
+      "ride_cap_violations_pm": 45,
+      "ride_cap_checked_pm": 131,
+      "ride_cap_violation_pct_pm": 34.4,
+      "total_walk_time_min": 34.06,
+      "total_time_with_walks_min": 753.8,
+      "fleet_search": {
+        "buses_used": 10,
+        "summary": "No fleet size in range 8..10 served all students. Best: k=10 with 131/200 served, 69 unserved. 69 student(s) have walk_radius=0 but no valid insertion was found under current constraints/pruning.",
+        "search_log": [
+          {
+            "k": 8,
+            "served": 108,
+            "unserved": 92,
+            "feasible": false,
+            "runtime_s": 24.06,
+            "time_budget_s": 150.0,
+            "executed_iterations": 228,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 2,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 108,
+              "served_after": 108,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "computed_osrm",
+              "loaded_from_pkl": false,
+              "saved_to_pkl": true,
+              "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/cache/distance_matrix_6446e64c_0403-2303.pkl",
+              "load_time_s": 0.0001,
+              "compute_time_s": 0.2707,
+              "save_time_s": 0.0351,
+              "total_time_s": 0.6524,
+              "critical_nodes_count": 199,
+              "matrix_nodes_count": 199,
+              "cache_key_prefix": "4401ffcf9e3f",
+              "cache_entry_node_count": null,
+              "cache_loaded_finite_ratio": null,
+              "cache_loaded_inf_pairs": null,
+              "cache_loaded_finite_pairs": null,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 200
+            },
+            "rejection_reasons": {
+              "zero_walk_radius_no_valid_insertion": 92
+            }
+          },
+          {
+            "k": 9,
+            "served": 125,
+            "unserved": 75,
+            "feasible": false,
+            "runtime_s": 53.62,
+            "time_budget_s": 120.0,
+            "executed_iterations": 342,
+            "stop_reason": "freeze_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 1,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 125,
+              "served_after": 125,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "loaded_from_pkl",
+              "loaded_from_pkl": true,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/cache/distance_matrix_6446e64c_0403-2303.pkl",
+              "load_time_s": 0.0284,
+              "compute_time_s": 0.0,
+              "save_time_s": 0.0,
+              "total_time_s": 0.185,
+              "critical_nodes_count": 199,
+              "matrix_nodes_count": 199,
+              "cache_key_prefix": "4401ffcf9e3f",
+              "cache_entry_node_count": 199,
+              "cache_loaded_finite_ratio": 1.0,
+              "cache_loaded_inf_pairs": 0,
+              "cache_loaded_finite_pairs": 39402,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 200
+            },
+            "rejection_reasons": {
+              "zero_walk_radius_no_valid_insertion": 75
+            }
+          },
+          {
+            "k": 10,
+            "served": 131,
+            "unserved": 69,
+            "feasible": false,
+            "runtime_s": 52.39,
+            "time_budget_s": 120.0,
+            "executed_iterations": 253,
+            "stop_reason": "no_improve_patience",
+            "spare_bus_rescue": {
+              "enabled": true,
+              "ran": false,
+              "eligible": false,
+              "extra_buses_available": 0,
+              "budget_seconds": 24.0,
+              "repair_calls": 3,
+              "strategy": "multi_phase_repair_with_kick",
+              "served_before": 131,
+              "served_after": 131,
+              "rescued_students": 0,
+              "kick_attempts": 0,
+              "trigger_reason": null
+            },
+            "matrix_precompute": {
+              "source": "loaded_from_pkl",
+              "loaded_from_pkl": true,
+              "saved_to_pkl": false,
+              "matrix_cache_pkl_path": "/home/hero/studies/SafeRoute/iamsotired/Bus-Logistics-Tool-Crossings/cache/distance_matrix_6446e64c_0403-2303.pkl",
+              "load_time_s": 0.0287,
+              "compute_time_s": 0.0,
+              "save_time_s": 0.0,
+              "total_time_s": 0.1882,
+              "critical_nodes_count": 199,
+              "matrix_nodes_count": 199,
+              "cache_key_prefix": "4401ffcf9e3f",
+              "cache_entry_node_count": 199,
+              "cache_loaded_finite_ratio": 1.0,
+              "cache_loaded_inf_pairs": 0,
+              "cache_loaded_finite_pairs": 39402,
+              "cache_guard_min_finite_ratio": 0.0001,
+              "cache_load_rejected": false,
+              "cache_load_reject_reason": null,
+              "cache_recomputed_after_reject": false,
+              "cache_context_seed": null,
+              "cache_context_student_count": 200
+            },
+            "rejection_reasons": {
+              "zero_walk_radius_no_valid_insertion": 69
+            }
+          }
+        ]
+      }
+    }
+  },
+  "comparison": {
+    "efficiency_gain_vs_d2d_pct": 100.0,
+    "safety_cost_vs_weakly_constrained_pct": null,
+    "crossings_eliminated_vs_weakly_constrained": 0,
+    "strictly_constrained_total_time_min": 0,
+    "weakly_constrained_total_time_min": 0,
+    "door_to_door_total_time_min": 719.74
+  }
+}

@@ -8,7 +8,10 @@ Dispatches based on the 'mode' field in the input JSON:
 
 import sys
 import os
+import glob
 import json
+import csv
+import re
 import time as _t
 import hashlib
 import pickle
@@ -16,6 +19,9 @@ import shutil
 import osmnx as ox
 import networkx as nx
 import argparse
+from datetime import datetime
+from typing import Optional
+from shapely.geometry import Polygon
 
 from data_loader import (
     load_json, load_mode1_input, load_mode2_input,
@@ -77,19 +83,151 @@ def save_run(input_data: dict, output_data: dict, report_data: dict,
 # GRAPH SETUP
 # ============================================================================
 
-_DEFAULT_BBOX = [31.229084, 29.925630, 31.331909, 29.991682]
-_ROAD_SPEEDS_CONFIG_PATH = 'road_speeds_config.json'
 
-def _load_road_speeds(override: dict = None) -> dict:
+# FORMAT: [min_lat, min_lon, max_lat, max_lon]
+# South-West Corner: Al Abadiah Al Bahriya (29.925630, 31.229084)
+# North-East Corner: International Park (30.051972, 31.338611)
+_DEFAULT_BBOX = [29.925630, 31.229084, 30.051972, 31.338611]
+_ROAD_SPEEDS_CONFIG_PATH = 'road_speeds_config.json'
+_REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
+def _cache_timestamp_tag() -> str:
+    return datetime.now().strftime('%m%d-%H%M')
+
+
+def _cache_hash(seed: str) -> str:
+    return hashlib.md5(seed.encode()).hexdigest()[:8]
+
+
+def _find_latest_cache_file(cache_dir: str, prefix: str, hash_key: str):
+    pattern = os.path.join(cache_dir, f"{prefix}_{hash_key}_*.pkl")
+    candidates = sorted(glob.glob(pattern), key=os.path.getmtime, reverse=True)
+    if candidates:
+        return candidates[0]
+
+    # Backward compatibility with older single-file naming.
+    legacy = os.path.join(cache_dir, f"{prefix}_{hash_key}.pkl")
+    if os.path.exists(legacy):
+        return legacy
+    return None
+
+
+def _write_cache_metadata_sidecar(cache_path: str, metadata: dict):
+    try:
+        meta_path = os.path.splitext(cache_path)[0] + ".meta.json"
+        with open(meta_path, "w", encoding="utf-8") as fh:
+            json.dump(metadata, fh, indent=2, ensure_ascii=True)
+    except Exception as e:
+        print(f"Warning: failed to write cache metadata sidecar for {cache_path}: {e}")
+
+
+def _resolve_boundary_polygon_path(raw_path: str):
+    if not raw_path:
+        return None
+    if os.path.isabs(raw_path):
+        return raw_path
+    candidates = [
+        os.path.abspath(os.path.join(_REPO_ROOT, raw_path)),
+        os.path.abspath(raw_path),
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            return p
+    return candidates[0]
+
+
+def _load_boundary_polygon_points_from_csv(csv_path: str):
+    points = []
+    with open(csv_path, newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        if reader.fieldnames and {"lat", "lon"}.issubset(set(reader.fieldnames)):
+            for row in reader:
+                lat = float(row["lat"])
+                lon = float(row["lon"])
+                points.append((lat, lon))
+        else:
+            fh.seek(0)
+            plain = csv.reader(fh)
+            rows = list(plain)
+            for row in rows:
+                if len(row) < 2:
+                    continue
+                try:
+                    lon = float(row[0])
+                    lat = float(row[1])
+                except Exception:
+                    continue
+                points.append((lat, lon))
+
+    if len(points) < 3:
+        raise ValueError(f"Boundary polygon CSV must contain at least 3 points: {csv_path}")
+    if points[0] != points[-1]:
+        points.append(points[0])
+    return points
+
+
+def _resolve_graph_boundary(graph_cfg: dict):
+    cfg = graph_cfg or {}
+    mode = str(cfg.get("boundary_mode", "bbox")).strip().lower()
+    bbox = cfg.get("bbox", _DEFAULT_BBOX)
+    boundary_polygon = None
+    boundary_points = None
+
+    if mode == "polygon":
+        polygon_cfg = cfg.get("boundary_polygon")
+        polygon_path_raw = str(cfg.get("boundary_polygon_path", "")).strip()
+
+        if isinstance(polygon_cfg, list) and len(polygon_cfg) >= 3:
+            parsed = []
+            for pt in polygon_cfg:
+                if not isinstance(pt, (list, tuple)) or len(pt) < 2:
+                    continue
+                parsed.append((float(pt[0]), float(pt[1])))  # [lat, lon]
+            if len(parsed) >= 3:
+                if parsed[0] != parsed[-1]:
+                    parsed.append(parsed[0])
+                boundary_points = parsed
+        elif polygon_path_raw:
+            polygon_path = _resolve_boundary_polygon_path(polygon_path_raw)
+            if polygon_path and os.path.exists(polygon_path):
+                boundary_points = _load_boundary_polygon_points_from_csv(polygon_path)
+            else:
+                print(f"Warning: boundary_polygon_path not found: {polygon_path}")
+
+        if boundary_points and len(boundary_points) >= 3:
+            boundary_polygon = Polygon([(lon, lat) for lat, lon in boundary_points])
+            if not boundary_polygon.is_valid:
+                boundary_polygon = boundary_polygon.buffer(0)
+            min_lon, min_lat, max_lon, max_lat = boundary_polygon.bounds
+            bbox = [float(min_lat), float(min_lon), float(max_lat), float(max_lon)]
+        else:
+            print("Warning: boundary_mode='polygon' requested but no valid polygon provided; falling back to bbox mode.")
+            mode = "bbox"
+
+    if not isinstance(bbox, (list, tuple)) or len(bbox) != 4:
+        bbox = list(_DEFAULT_BBOX)
+    else:
+        bbox = [float(v) for v in bbox]
+
+    seed_payload = {
+        "mode": mode,
+        "bbox": bbox,
+        "polygon_points": boundary_points if mode == "polygon" else None,
+    }
+    boundary_seed = json.dumps(seed_payload, sort_keys=True, ensure_ascii=True)
+    return mode, bbox, boundary_polygon, boundary_seed
+
+def _load_road_speeds(override: Optional[dict] = None) -> dict:
     builtin = {
         'default_speed_kph': 30,
         'road_types': {
-            'primary':       {'speed_multiplier': 0.8, 'safe_to_cross': False},
-            'trunk':         {'speed_multiplier': 0.8, 'safe_to_cross': False},
-            'secondary':     {'speed_multiplier': 0.6, 'safe_to_cross': False},
-            'tertiary':      {'speed_multiplier': 0.6, 'safe_to_cross': True},
-            'residential':   {'speed_multiplier': 0.3, 'safe_to_cross': True},
-            'living_street': {'speed_multiplier': 0.3, 'safe_to_cross': True},
+            'primary':       {'speed_multiplier': 0.6, 'safe_to_cross': False},
+            'trunk':         {'speed_multiplier': 0.6, 'safe_to_cross': False},
+            'secondary':     {'speed_multiplier': 0.4, 'safe_to_cross': False},
+            'tertiary':      {'speed_multiplier': 0.4, 'safe_to_cross': True},
+            'residential':   {'speed_multiplier': 0.2, 'safe_to_cross': True},
+            'living_street': {'speed_multiplier': 0.2, 'safe_to_cross': True},
             'default':       {'speed_multiplier': 0.2, 'safe_to_cross': True},
         }
     }
@@ -103,39 +241,180 @@ def _load_road_speeds(override: dict = None) -> dict:
         builtin.update(override)
     return builtin
 
+
+def _resolve_matrix_source(meta: Optional[dict] = None) -> str:
+    """Resolve matrix precompute backend.
+
+    Defaults to OSRM distances with graph-speed-adjusted durations so
+    road_speeds_config multipliers influence direct/bus times while
+    preserving fast OSRM matrix distances.
+    """
+    meta = meta or {}
+    matrix_cfg = meta.get("distance_matrix", {})
+    source = meta.get("distance_matrix_source")
+    if source is None and isinstance(matrix_cfg, dict):
+        source = matrix_cfg.get("source")
+        if source is None and matrix_cfg.get("use_osrm") is True:
+            source = "osrm"
+
+    source = str(source or "osrm_scaled").strip().lower()
+    if source == "osrm":
+        # Backward-compatible alias: OSRM with speed-aware time scaling.
+        return "osrm_scaled"
+    if source in {"graph", "osrm_raw", "osrm_scaled"}:
+        return source
+    return "osrm_scaled"
+
+
+def _road_speeds_signature(meta: Optional[dict] = None) -> str:
+    """Stable short signature of active road speed configuration."""
+    cfg = _load_road_speeds((meta or {}).get("road_speeds"))
+    canonical = json.dumps(cfg, sort_keys=True, ensure_ascii=True)
+    return hashlib.md5(canonical.encode("utf-8")).hexdigest()[:12]
+
+
+def _parse_speed_kph(value, fallback: float) -> float:
+    if value is None:
+        return float(fallback)
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, list) and value:
+        return _parse_speed_kph(value[0], fallback)
+    if isinstance(value, str):
+        txt = value.strip().lower()
+        m = re.search(r"\d+(?:\.\d+)?", txt)
+        if not m:
+            return float(fallback)
+        spd = float(m.group(0))
+        if "mph" in txt:
+            spd *= 1.60934
+        return spd
+    return float(fallback)
+
+
+def _estimate_osrm_speed_scale_factor(graph, road_speeds_override: Optional[dict] = None) -> float:
+    """Estimate a global time scale factor from road speed multipliers.
+
+    factor > 1.0 means configured speeds are slower than baseline.
+    """
+    road_cfg = _load_road_speeds(road_speeds_override)
+    road_types = road_cfg.get("road_types", {})
+    default_spd = float(road_cfg.get("default_speed_kph", 30) or 30)
+
+    base_total_min = 0.0
+    cfg_total_min = 0.0
+
+    for _, _, _, data in graph.edges(keys=True, data=True):
+        length_m = float(data.get("length", 0.0) or 0.0)
+        if length_m <= 0:
+            continue
+
+        base_speed_kph = _parse_speed_kph(data.get("maxspeed"), default_spd)
+        if base_speed_kph <= 0:
+            base_speed_kph = default_spd
+
+        highway = data.get("highway", "unclassified")
+        if isinstance(highway, list):
+            highway = highway[0] if highway else "unclassified"
+
+        cfg = road_types.get(highway, road_types.get("default", {}))
+        speed_mult = float(cfg.get("speed_multiplier", 1.0) or 1.0)
+        if speed_mult <= 0:
+            continue
+
+        cfg_speed_kph = base_speed_kph * speed_mult
+        if cfg_speed_kph <= 0:
+            continue
+
+        base_total_min += length_m / ((base_speed_kph * 1000.0) / 60.0)
+        cfg_total_min += length_m / ((cfg_speed_kph * 1000.0) / 60.0)
+
+    if base_total_min <= 0:
+        return 1.0
+
+    factor = cfg_total_min / base_total_min
+    # Defensive clamp against malformed metadata.
+    return max(0.1, min(10.0, float(factor)))
+
+
+def _apply_osrm_time_scale(nodes, factor: float) -> int:
+    """Scale existing OSRM matrix travel times in-place, keep distances intact."""
+    scaled = 0
+    for src in nodes:
+        for dst in nodes:
+            if src == dst:
+                continue
+            key = (src, dst)
+            t = _MATRIX_CACHE.get(key)
+            if t is None or t == float("inf"):
+                continue
+            _MATRIX_CACHE[key] = float(t) * factor
+            scaled += 1
+    return scaled
+
 def setup_graph(meta: dict = None, unconstrained: bool = False):
     graph_cfg    = (meta or {}).get('graph', {})
-    bbox         = graph_cfg.get('bbox', _DEFAULT_BBOX)
-    
-    # Simple hash of bbox for caching
-    bbox_hash = hashlib.md5(str(bbox).encode()).hexdigest()[:8]
-    cache_dir   = 'cache'
-    pkl_file    = os.path.join(cache_dir, f"graph_{bbox_hash}.pkl")
-    cache_file  = os.path.join(cache_dir, f"graph_{bbox_hash}.graphml")
-    os.makedirs(cache_dir, exist_ok=True)
+    boundary_mode, bbox, boundary_polygon, boundary_seed = _resolve_graph_boundary(graph_cfg)
+    cache_enabled = graph_cfg.get('cache', {}).get('enabled', True)
+    graph_pkl_path = graph_cfg.get('pkl_path')
 
-    if os.path.exists(pkl_file):
-        import pickle
-        print(f"Loading cached road network (pickle): {pkl_file}")
-        with open(pkl_file, 'rb') as fh:
-            G = pickle.load(fh)
-    elif os.path.exists(cache_file):
-        print(f"Loading cached road network: {cache_file}")
-        G = ox.load_graphml(cache_file)
-        # Save as pickle for faster future loads
-        import pickle
-        print(f"Saving pickle cache for faster future loads...")
-        with open(pkl_file, 'wb') as fh:
-            pickle.dump(G, fh, protocol=pickle.HIGHEST_PROTOCOL)
+    if graph_pkl_path:
+        pkl_abs = os.path.abspath(graph_pkl_path)
+        if not os.path.exists(pkl_abs):
+            raise FileNotFoundError(f"graph.pkl_path not found: {pkl_abs}")
+        print(f"Loading drive graph from configured pickle: {pkl_abs}")
+        with open(pkl_abs, 'rb') as fh:
+            loaded = pickle.load(fh)
+        G = loaded.get('graph') if isinstance(loaded, dict) and 'graph' in loaded else loaded
+        if not isinstance(G, nx.MultiDiGraph):
+            raise TypeError(f"Unsupported graph object in {pkl_abs}: {type(G)}")
     else:
-        print("Downloading road network...")
-        north, south, east, west = bbox[3], bbox[1], bbox[2], bbox[0]
-        # OSMnx 2.0+ expects a single tuple (north, south, east, west)
-        G = ox.graph_from_bbox((north, south, east, west), network_type='drive')
-        ox.save_graphml(G, cache_file)
-        import pickle
-        with open(pkl_file, 'wb') as fh:
-            pickle.dump(G, fh, protocol=pickle.HIGHEST_PROTOCOL)
+        # Hash boundary seed for caching (supports both bbox and polygon modes)
+        bbox_hash = _cache_hash(boundary_seed)
+        cache_dir   = 'cache'
+        os.makedirs(cache_dir, exist_ok=True)
+        
+        # Generate timestamp for new cache files (MMDD-HHMM format)
+        timestamp = datetime.now().strftime('%m%d-%H%M')
+        
+        pkl_file    = os.path.join(cache_dir, f"graph_{bbox_hash}.pkl")
+        pkl_file_ts = os.path.join(cache_dir, f"graph_{timestamp}_{bbox_hash}.pkl")
+        cache_file  = os.path.join(cache_dir, f"graph_{bbox_hash}.graphml")
+    
+        if cache_enabled and os.path.exists(pkl_file):
+            print(f"Loading cached road network (pickle): {pkl_file}")
+            with open(pkl_file, 'rb') as fh:
+                G = pickle.load(fh)
+        elif cache_enabled and os.path.exists(cache_file):
+            print(f"Loading cached road network: {cache_file}")
+            G = ox.load_graphml(cache_file)
+            # Save as pickle for faster future loads
+            print(f"Saving pickle cache for faster future loads...")
+            with open(pkl_file, 'wb') as fh:
+                pickle.dump(G, fh, protocol=pickle.HIGHEST_PROTOCOL)
+        else:
+            if not cache_enabled:
+                print("Cache disabled - downloading road network...")
+            else:
+                print("Downloading road network...")
+            if boundary_mode == 'polygon' and boundary_polygon is not None:
+                print("Using configured boundary polygon for drive graph download...")
+                G = ox.graph_from_polygon(boundary_polygon, network_type='drive')
+            else:
+                # bbox format is [min_lat, min_lon, max_lat, max_lon]
+                west, south, east, north = bbox[1], bbox[0], bbox[3], bbox[2]
+                # OSMnx 2.x expects bbox tuple in (left, bottom, right, top) order.
+                G = ox.graph_from_bbox((west, south, east, north), network_type='drive')
+            
+            if cache_enabled:
+                ox.save_graphml(G, cache_file)
+                # Save with timestamp to track when it was created
+                with open(pkl_file_ts, 'wb') as fh:
+                    pickle.dump(G, fh, protocol=pickle.HIGHEST_PROTOCOL)
+                # Also save without timestamp for backward compatibility
+                with open(pkl_file, 'wb') as fh:
+                    pickle.dump(G, fh, protocol=pickle.HIGHEST_PROTOCOL)
+                print(f"Saved cache: {pkl_file_ts}")
 
     road_cfg     = _load_road_speeds((meta or {}).get('road_speeds'))
     road_types   = road_cfg['road_types']
@@ -163,48 +442,71 @@ def setup_graph(meta: dict = None, unconstrained: bool = False):
     return G
 
 
-def setup_walk_graph(meta: dict = None, center: tuple = None, radius_m: float = None):
+def setup_walk_graph(meta: Optional[dict] = None, center: Optional[tuple] = None, radius_m: Optional[float] = None):
     """Build/load a walking graph (pedestrian network).
 
     This is cached separately from the drive graph so it can be reused
     across runs and used for walk-path visualization or walking BFS.
     """
     graph_cfg = (meta or {}).get('graph', {})
-    bbox = graph_cfg.get('bbox', _DEFAULT_BBOX)
-    if center is not None and radius_m is not None:
-        cache_seed = f"center={center}|radius={int(radius_m)}"
+    walk_cfg = (meta or {}).get('walk_graph', {})
+    cache_enabled = walk_cfg.get('cache', {}).get('enabled', True)
+    boundary_mode, bbox, boundary_polygon, boundary_seed = _resolve_graph_boundary(graph_cfg)
+    coverage_mode = str(walk_cfg.get('coverage_mode', 'radius')).strip().lower()
+    
+    if center is not None and radius_m is not None and coverage_mode not in {'bbox', 'strict_bbox', 'bbox_strict', 'bbox_rectangle'}:
+        cache_seed = f"mode=radius|center={center}|radius={int(radius_m)}"
     else:
-        cache_seed = str(bbox)
-    bbox_hash = hashlib.md5(cache_seed.encode()).hexdigest()[:8]
+        cache_seed = f"mode={boundary_mode}|seed={boundary_seed}"
+    bbox_hash = _cache_hash(cache_seed)
     cache_dir = 'cache'
-    pkl_file = os.path.join(cache_dir, f"graph_walk_{bbox_hash}.pkl")
-    cache_file = os.path.join(cache_dir, f"graph_walk_{bbox_hash}.graphml")
     os.makedirs(cache_dir, exist_ok=True)
 
-    if os.path.exists(pkl_file):
-        import pickle
-        print(f"Loading cached walking network (pickle): {pkl_file}")
-        with open(pkl_file, 'rb') as fh:
-            G_walk = pickle.load(fh)
-    elif os.path.exists(cache_file):
-        print(f"Loading cached walking network: {cache_file}")
-        G_walk = ox.load_graphml(cache_file)
-        import pickle
-        print("Saving walk pickle cache for faster future loads...")
-        with open(pkl_file, 'wb') as fh:
-            pickle.dump(G_walk, fh, protocol=pickle.HIGHEST_PROTOCOL)
+    latest_cache = _find_latest_cache_file(cache_dir, "walk_graph", bbox_hash)
+    if cache_enabled and latest_cache:
+        print(f"Loading cached walking network (pickle): {latest_cache}")
+        with open(latest_cache, 'rb') as fh:
+            loaded = pickle.load(fh)
+        G_walk = loaded.get('graph') if isinstance(loaded, dict) and 'graph' in loaded else loaded
+        if not isinstance(G_walk, nx.MultiDiGraph):
+            raise TypeError(f"Unsupported walk graph object in {latest_cache}: {type(G_walk)}")
     else:
-        print("Downloading walking network...")
-        if center is not None and radius_m is not None:
+        if not cache_enabled:
+            print("Walk cache disabled - regenerating walking network and writing a fresh cache...")
+        else:
+            print("Downloading walking network...")
+        
+        if center is not None and radius_m is not None and coverage_mode not in {'bbox', 'strict_bbox', 'bbox_strict', 'bbox_rectangle'}:
             # Radius-based walk graph is much smaller than full-bbox graph.
             G_walk = ox.graph_from_point(center, dist=radius_m, network_type='walk', simplify=True)
         else:
-            north, south, east, west = bbox[3], bbox[1], bbox[2], bbox[0]
-            G_walk = ox.graph_from_bbox((north, south, east, west), network_type='walk')
-        ox.save_graphml(G_walk, cache_file)
-        import pickle
-        with open(pkl_file, 'wb') as fh:
-            pickle.dump(G_walk, fh, protocol=pickle.HIGHEST_PROTOCOL)
+            if boundary_mode == 'polygon' and boundary_polygon is not None:
+                print("Using configured boundary polygon for walk graph download...")
+                G_walk = ox.graph_from_polygon(boundary_polygon, network_type='walk')
+            else:
+                # bbox format is [min_lat, min_lon, max_lat, max_lon]
+                west, south, east, north = bbox[1], bbox[0], bbox[3], bbox[2]
+                G_walk = ox.graph_from_bbox((west, south, east, north), network_type='walk')
+
+        timestamp = _cache_timestamp_tag()
+        walk_cache_path = os.path.join(cache_dir, f"walk_graph_{bbox_hash}_{timestamp}.pkl")
+        walk_meta = {
+            "type": "walk_graph",
+            "hash": bbox_hash,
+            "timestamp": timestamp,
+            "created_unix": _t.time(),
+            "cache_seed": cache_seed,
+            "coverage_mode": coverage_mode,
+            "bbox": list(bbox),
+            "center": list(center) if center is not None else None,
+            "radius_m": float(radius_m) if radius_m is not None else None,
+            "nodes": int(G_walk.number_of_nodes()),
+            "edges": int(G_walk.number_of_edges()),
+        }
+        with open(walk_cache_path, 'wb') as fh:
+            pickle.dump({"graph": G_walk, "meta": walk_meta}, fh, protocol=pickle.HIGHEST_PROTOCOL)
+        _write_cache_metadata_sidecar(walk_cache_path, walk_meta)
+        print(f"Saved walk cache: {walk_cache_path}")
 
     print(f"Walk graph ready: {G_walk.number_of_nodes()} nodes, {G_walk.number_of_edges()} edges\n")
     return G_walk
@@ -226,7 +528,9 @@ def _set_last_matrix_precompute_stats(stats):
 
 def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
                       max_candidates=15, matrix_cache_pkl_path=None,
-                      matrix_cache_min_finite_ratio=0.0001):
+                      matrix_cache_min_finite_ratio=0.0001,
+                      cache_context=None, matrix_source="osrm_scaled",
+                      road_speeds_override=None):
     """Build the distance matrix for ALNS.
 
     Parameters
@@ -243,10 +547,16 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
     """
     if G_drive is None:
         G_drive = G
+    matrix_source = str(matrix_source or "osrm_scaled").strip().lower()
+    if matrix_source == "osrm":
+        matrix_source = "osrm_scaled"
+    if matrix_source not in {"graph", "osrm_raw", "osrm_scaled"}:
+        matrix_source = "osrm_scaled"
     print("[Optimization] Preparing distance matrix...")
     _t_start = _t.time()
     _stats = {
-        "source": "computed_osrm",
+        "source": f"computed_{matrix_source}",
+        "matrix_source": matrix_source,
         "loaded_from_pkl": False,
         "saved_to_pkl": False,
         "matrix_cache_pkl_path": matrix_cache_pkl_path,
@@ -265,19 +575,42 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
         "cache_load_rejected": False,
         "cache_load_reject_reason": None,
         "cache_recomputed_after_reject": False,
+        "cache_context_seed": None,
+        "cache_context_student_count": None,
+        "osrm_time_scale_factor": None,
+        "osrm_time_scaled_pairs": 0,
     }
+    if isinstance(cache_context, dict):
+        _stats["cache_context_seed"] = cache_context.get("seed")
+        _stats["cache_context_student_count"] = cache_context.get("student_count")
     critical_nodes = set()
     student_frontages = {}
     # Collect ALL candidate nodes ALNS will actually use so the precomputed
     # matrix covers every node the optimizer can insert at.  The old [:5]
     # limit caused massive A* fallback spikes on 600K-node graphs.
     for s in students:
-        node_id, _ = snap_address_to_edge(s.coords, G)
+        # Keep matrix critical nodes in the same node space used by ALNS insertions
+        # (solution.graph == G_drive). This avoids Mode A candidate/matrix mismatches.
+        node_id, _ = snap_address_to_edge(s.coords, G_drive)
         critical_nodes.add(node_id)
+        # Ride-cap checks call compute_direct_time(), which uses nearest drive node,
+        # not frontage. Include it so validators stay matrix-only.
+        nearest_node = _det_eng.fast_nearest_node(G_drive, s.coords[1], s.coords[0])
+        critical_nodes.add(nearest_node)
         student_frontages[s.id] = node_id
         if s.walk_radius > 0:
-            walk_g = _get_walk_graph(G)  # Use walk graph with crossings if available
-            safe_nodes = find_safe_nodes_within_radius(s.coords, G, 500, s.walk_radius, walk_graph=walk_g)
+            walk_limit_for_candidates = get_walk_absolute_max(s.walk_radius)
+            walk_g = _get_walk_graph(G_drive)  # Uses configured walk graph when provided
+            safe_nodes = find_safe_nodes_within_radius(
+                s.coords,
+                G_drive,
+                500,
+                walk_limit_for_candidates,
+                candidate_cfg={"max_candidates_per_student": max_candidates},
+                walk_graph=walk_g,
+                student_stage=getattr(s, "school_stage", None),
+                student_disabled=bool(getattr(s, "physically_mentally_disabled", False)),
+            )
             for safe_node_id, _ in safe_nodes[:max_candidates]:
                 critical_nodes.add(safe_node_id)
     school_node = None
@@ -302,7 +635,7 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
     matrix_nodes = sorted(critical_nodes, key=lambda x: str(x))
     _stats["matrix_nodes_count"] = len(matrix_nodes)
     if matrix_cache_pkl_path:
-        cache_key = _build_matrix_cache_key(G_drive, matrix_nodes)
+        cache_key = _build_matrix_cache_key(G_drive, matrix_nodes, cache_context=cache_context)
         _stats["cache_key_prefix"] = cache_key[:12]
         _tl = _t.time()
         loaded = _load_matrix_cache_from_disk(matrix_cache_pkl_path, cache_key)
@@ -336,10 +669,10 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
                 _stats["cache_load_reject_reason"] = reject_reason
                 _stats["cache_recomputed_after_reject"] = True
                 _stats["loaded_from_pkl"] = False
-                _stats["source"] = "computed_osrm"
+                _stats["source"] = f"computed_{matrix_source}"
                 print(
                     "[Optimization] Warning: rejecting persisted matrix cache "
-                    f"({reject_reason}). Recomputing via OSRM."
+                    f"({reject_reason}). Recomputing via {matrix_source.upper()}."
                 )
                 # Defensive clear: avoid stale/poisoned pairs affecting this solve.
                 _MATRIX_CACHE.clear()
@@ -353,19 +686,35 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
                     f"(finite_ratio={finite_ratio}, finite_pairs={finite_pairs})"
                 )
                 return critical_nodes, student_frontages
-    # Bus distance matrix ALWAYS uses the full driving graph
-    # precalculate_distance_matrix(G_drive, list(critical_nodes), fast_mode=fast_mode)
-    
-    # OSRM-based precomputation: much faster on large graphs, but requires a local OSRM instance running with the same graph data.  Falls back to in-memory if OSRM fails for any reason (e.g. not running, different graph, etc.) — in that case a warning is printed and the function behaves like the old version, precomputing only the critical nodes with in-memory Dijkstra.
-    from detour_engine import precalculate_distance_matrix_osrm
+    # Bus distance matrix ALWAYS uses the full driving graph.
+    # graph: pure graph travel_time.
+    # osrm_raw: pure OSRM durations/distances.
+    # osrm_scaled: OSRM distances + durations scaled by road speed multipliers.
     _tc = _t.time()
-    precalculate_distance_matrix_osrm(G_drive, list(critical_nodes))
+    if matrix_source in {"osrm_raw", "osrm_scaled"}:
+        from detour_engine import precalculate_distance_matrix_osrm
+        precalculate_distance_matrix_osrm(G_drive, list(critical_nodes))
+        if matrix_source == "osrm_scaled":
+            scale_factor = _estimate_osrm_speed_scale_factor(
+                G_drive,
+                road_speeds_override=road_speeds_override,
+            )
+            scaled_pairs = _apply_osrm_time_scale(critical_nodes, scale_factor)
+            _stats["osrm_time_scale_factor"] = round(scale_factor, 6)
+            _stats["osrm_time_scaled_pairs"] = int(scaled_pairs)
+    else:
+        precalculate_distance_matrix(G_drive, list(critical_nodes), fast_mode=fast_mode)
     _stats["compute_time_s"] = round(_t.time() - _tc, 4)
 
     if matrix_cache_pkl_path:
-        cache_key = _build_matrix_cache_key(G_drive, matrix_nodes)
+        cache_key = _build_matrix_cache_key(G_drive, matrix_nodes, cache_context=cache_context)
         _ts = _t.time()
-        _stats["saved_to_pkl"] = _save_matrix_cache_to_disk(matrix_cache_pkl_path, cache_key, matrix_nodes)
+        _stats["saved_to_pkl"] = _save_matrix_cache_to_disk(
+            matrix_cache_pkl_path,
+            cache_key,
+            matrix_nodes,
+            cache_context=cache_context,
+        )
         _stats["save_time_s"] = round(_t.time() - _ts, 4)
 
     _stats["total_time_s"] = round(_t.time() - _t_start, 4)
@@ -373,10 +722,23 @@ def precompute_matrix(students, routes, G, fast_mode=None, G_drive=None,
     return critical_nodes, student_frontages
 
 
-def _build_matrix_cache_key(graph, node_ids):
+def _build_matrix_cache_key(graph, node_ids, cache_context=None):
     graph_sig = f"n={graph.number_of_nodes()}|e={graph.number_of_edges()}|k={len(node_ids)}"
     node_sig = "|".join(str(n) for n in node_ids)
-    return hashlib.sha1(f"{graph_sig}|{node_sig}".encode("utf-8")).hexdigest()
+    seed = None
+    student_count = None
+    matrix_source = "osrm_scaled"
+    road_speeds_signature = None
+    if isinstance(cache_context, dict):
+        seed = cache_context.get("seed")
+        student_count = cache_context.get("student_count")
+        matrix_source = str(cache_context.get("matrix_source") or "osrm_scaled").strip().lower()
+        road_speeds_signature = cache_context.get("road_speeds_signature")
+    ctx_sig = (
+        f"seed={seed}|students={student_count}|matrix={matrix_source}|"
+        f"speeds={road_speeds_signature}"
+    )
+    return hashlib.sha1(f"{graph_sig}|{ctx_sig}|{node_sig}".encode("utf-8")).hexdigest()
 
 
 def _load_matrix_cache_from_disk(pkl_path, cache_key):
@@ -438,7 +800,7 @@ def _load_matrix_cache_from_disk(pkl_path, cache_key):
         return False
 
 
-def _save_matrix_cache_to_disk(pkl_path, cache_key, node_ids):
+def _save_matrix_cache_to_disk(pkl_path, cache_key, node_ids, cache_context=None):
     try:
         if not pkl_path:
             return False
@@ -479,10 +841,29 @@ def _save_matrix_cache_to_disk(pkl_path, cache_key, node_ids):
             "distances_m": distances,
             "created_unix": _t.time(),
             "size": size,
+            "seed": (cache_context or {}).get("seed") if isinstance(cache_context, dict) else None,
+            "student_count": (cache_context or {}).get("student_count") if isinstance(cache_context, dict) else None,
         }
+
+        filename = os.path.basename(pkl_path)
+        payload.setdefault("metadata", {})
+        payload["metadata"].update({
+            "type": "distance_matrix",
+            "path": os.path.abspath(pkl_path),
+            "filename": filename,
+            "updated_unix": _t.time(),
+            "cache_key_count": len(payload.get("entries", {})),
+        })
+
+        stem = os.path.splitext(filename)[0]
+        parts = stem.split("_")
+        if len(parts) >= 4 and parts[0] == "distance" and parts[1] == "matrix":
+            payload["metadata"]["hash"] = parts[2]
+            payload["metadata"]["timestamp"] = parts[3]
 
         with open(pkl_path, "wb") as fh:
             pickle.dump(payload, fh, protocol=pickle.HIGHEST_PROTOCOL)
+        _write_cache_metadata_sidecar(pkl_path, payload.get("metadata", {}))
         print(f"[Optimization] Saved matrix cache to: {pkl_path}")
         return True
     except Exception as e:
@@ -497,7 +878,21 @@ def run_generate_routes(data, G, input_file_path):
     _run_start = _t.time()
     students, buses, routes, school_coords, constraints, algo_config = load_mode1_input(data, G)
     print_input_summary(students, buses, routes, school_coords)
-    precompute_matrix(students, routes, G)
+    meta_cfg = data.get("meta", {}) if isinstance(data, dict) else {}
+    matrix_source = _resolve_matrix_source(meta_cfg)
+    precompute_matrix(
+        students,
+        routes,
+        G,
+        matrix_source=matrix_source,
+        road_speeds_override=meta_cfg.get("road_speeds"),
+        cache_context={
+            "seed": data.get("seed", data.get("meta", {}).get("seed")),
+            "student_count": len(students),
+            "matrix_source": matrix_source,
+            "road_speeds_signature": _road_speeds_signature(meta_cfg),
+        },
+    )
     print(f"\nRUNNING ALNS OPTIMIZATION ({algo_config.get('iterations', 60)} iters)")
     initial_sol = ServiceSolution(students, routes, G)
     optimizer = ALNSEngine(initial_sol, iterations=algo_config.get('iterations', 60))
@@ -578,21 +973,57 @@ def run_algorithm(data: dict, G, iterations: int = None,
 
     iters  = iterations or algo_cfg.get("iterations", 60)
     budget = time_budget_seconds or algo_cfg.get("time_budget_seconds", None)
+    min_iterations_floor = int(algo_cfg.get("min_iterations_floor", 100))
+    min_iterations_floor = max(0, min_iterations_floor)
+
+    # For large instances, raise default runtime budget so the solver can
+    # realistically hit the iteration floor and escape shallow local basins.
+    n_students_local = len(students)
+    floor_sec_per_iter = algo_cfg.get("min_iterations_floor_seconds_per_iteration", None)
+    if floor_sec_per_iter is None:
+        if n_students_local >= 500:
+            floor_sec_per_iter = 5.0
+        elif n_students_local >= 300:
+            floor_sec_per_iter = 3.0
+        else:
+            floor_sec_per_iter = 1.5
+    floor_sec_per_iter = max(0.1, float(floor_sec_per_iter))
+    if budget is not None and min_iterations_floor > 0:
+        min_budget_for_floor = float(min_iterations_floor) * floor_sec_per_iter
+        budget = max(float(budget), min_budget_for_floor)
+
     max_cands = algo_cfg.get("max_candidates_per_student", 15)
     early_stop_patience = algo_cfg.get("early_stop_patience", None)
     min_improvement = algo_cfg.get("early_stop_min_improvement", 1e-6)
     freeze_temp_threshold = algo_cfg.get("early_stop_freeze_temp", 0.05)
     freeze_patience = algo_cfg.get("early_stop_freeze_patience", None)
     merge_tail_iterations = algo_cfg.get("merge_tail_iterations", 30)
+    min_early_stop_iterations = algo_cfg.get("min_early_stop_iterations", None)
+    max_repair_seconds_per_iteration = algo_cfg.get("max_repair_seconds_per_iteration", None)
+    destroy_fraction_min = algo_cfg.get("destroy_fraction_min", None)
+    destroy_fraction_max = algo_cfg.get("destroy_fraction_max", None)
+    repair_max_unassigned_per_call = algo_cfg.get("repair_max_unassigned_per_call", None)
+    regret_scan_limit = algo_cfg.get("regret_scan_limit", None)
+    meta_cfg = data.get("meta", {}) if isinstance(data, dict) else {}
+    matrix_source = _resolve_matrix_source(meta_cfg)
+    cache_context = {
+        "seed": data.get("seed", data.get("meta", {}).get("seed")),
+        "student_count": len(students),
+        "matrix_source": matrix_source,
+        "road_speeds_signature": _road_speeds_signature(meta_cfg),
+    }
     # Walking BFS uses G (may be constrained); bus routing uses G_drive (unconstrained)
     precompute_matrix(
         students,
         routes,
         G,
         G_drive=G_drive,
+        matrix_source=matrix_source,
+        road_speeds_override=meta_cfg.get("road_speeds"),
         max_candidates=max_cands,
         matrix_cache_pkl_path=matrix_cache_pkl_path,
         matrix_cache_min_finite_ratio=matrix_cache_min_finite_ratio,
+        cache_context=cache_context,
     )
     matrix_precompute = get_last_matrix_precompute_stats()
 
@@ -603,7 +1034,14 @@ def run_algorithm(data: dict, G, iterations: int = None,
                          min_improvement=min_improvement,
                          freeze_temp_threshold=freeze_temp_threshold,
                          freeze_patience=freeze_patience,
-                         merge_tail_iterations=merge_tail_iterations)
+                         merge_tail_iterations=merge_tail_iterations,
+                         min_early_stop_iterations=min_early_stop_iterations,
+                         min_iterations_floor=min_iterations_floor,
+                         max_repair_seconds_per_iteration=max_repair_seconds_per_iteration,
+                         destroy_fraction_min=destroy_fraction_min,
+                         destroy_fraction_max=destroy_fraction_max,
+                         repair_max_unassigned_per_call=repair_max_unassigned_per_call,
+                         regret_scan_limit=regret_scan_limit)
     t0      = _time.time()
     best    = engine.run()
     elapsed = _time.time() - t0
@@ -623,16 +1061,20 @@ def run_algorithm(data: dict, G, iterations: int = None,
     active = [r for r in best.routes if r.get_student_count() > 0]
     total_time = sum(r.total_time for r in active)
     total_dist = sum(r.total_distance for r in active)
+    op_perf = dict(getattr(engine, "operator_stats_summary", {}))
+    executed_iterations = int(op_perf.get("executed_iterations") or 0)
 
     stats = {
         "served": served, "total": total,
         "routes": len(active),
+        "buses_used": len(active),
         "total_time": round(total_time, 2),
         "total_dist": round(total_dist, 2),
         "objective": round(best.calculate_objective(), 2),
         "runtime": round(elapsed, 2),
+        "iterations": executed_iterations,
         "alns_iteration_log": list(getattr(engine, "iteration_log", [])),
-        "operator_performance": dict(getattr(engine, "operator_stats_summary", {})),
+        "operator_performance": op_perf,
         "alns_diagnostics": dict(getattr(engine, "run_diagnostics", {})),
         "insertion_debug": _alns.get_insertion_debug_stats(),
         "matrix_precompute": matrix_precompute,
@@ -664,7 +1106,8 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
     -------
     tuple : (best_k, ServiceSolution, stats_dict, school_coords)
         ``best_k`` is the minimum fleet size found.
-        ``stats["buses_used"]`` is set to *best_k*.
+        ``stats["fleet_size_selected"]`` stores that selected fleet size,
+        while ``stats["buses_used"]`` remains the count of non-empty routes.
     """
     import copy as _copy
 
@@ -683,24 +1126,76 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
     constraints = data.get("meta", {}).get("constraints", {})
     algo_cfg = data.get("meta", {}).get("algorithm", {})
     base_budget_s = time_budget_seconds if time_budget_seconds is not None else algo_cfg.get("time_budget_seconds", None)
-    first_k_budget_scale = float(algo_cfg.get("fleet_search_first_k_budget_scale", 1.0))
-    followup_k_budget_scale = float(algo_cfg.get("fleet_search_followup_k_budget_scale", 0.65))
+    min_iterations_floor = int(algo_cfg.get("min_iterations_floor", 100))
+    min_iterations_floor = max(0, min_iterations_floor)
+    floor_sec_per_iter = algo_cfg.get("min_iterations_floor_seconds_per_iteration", None)
+    if floor_sec_per_iter is None:
+        if n_students >= 500:
+            floor_sec_per_iter = 5.0
+        elif n_students >= 300:
+            floor_sec_per_iter = 3.0
+        else:
+            floor_sec_per_iter = 1.5
+    floor_sec_per_iter = max(0.1, float(floor_sec_per_iter))
+    if base_budget_s is not None and min_iterations_floor > 0:
+        min_budget_for_floor = float(min_iterations_floor) * floor_sec_per_iter
+        base_budget_s = max(float(base_budget_s), min_budget_for_floor)
+    # Budget policy for per-k fleet search runs:
+    # default is "full" to inherit the configured ALNS time budget at each k.
+    # "scaled" keeps the legacy scaled/capped behavior.
+    fleet_search_budget_mode = str(algo_cfg.get("fleet_search_budget_mode", "full")).strip().lower()
+    use_scaled_fleet_budget = bool(algo_cfg.get("fleet_search_use_scaled_budget", False)) or (fleet_search_budget_mode == "scaled")
+
+    first_k_budget_scale = float(algo_cfg.get("fleet_search_first_k_budget_scale", 1.0)) if use_scaled_fleet_budget else 1.0
+    followup_k_budget_scale = float(algo_cfg.get("fleet_search_followup_k_budget_scale", 0.8)) if use_scaled_fleet_budget else 1.0
     trailing_early_stop_ratio = float(algo_cfg.get("fleet_search_trailing_early_stop_ratio", 0.9))
     trailing_min_gap = int(algo_cfg.get("fleet_search_trailing_min_served_gap", 1))
-    max_per_k_s_cfg = algo_cfg.get("fleet_search_max_per_k_seconds", None)
+    max_per_k_s_cfg = algo_cfg.get("fleet_search_max_per_k_seconds", None) if use_scaled_fleet_budget else None
     max_per_k_s = float(max_per_k_s_cfg) if max_per_k_s_cfg is not None else None
+    rescue_enabled = bool(algo_cfg.get("fleet_search_spare_bus_rescue_enabled", True))
+    rescue_min_extra_buses = int(algo_cfg.get("fleet_search_spare_bus_rescue_min_extra_buses", 1))
+    default_rescue_budget_s = 8.0
+    if base_budget_s is not None:
+        # Keep rescue bounded but meaningful for large instances.
+        default_rescue_budget_s = max(8.0, min(24.0, float(base_budget_s) * 0.35))
+    rescue_budget_s = float(algo_cfg.get("fleet_search_spare_bus_rescue_budget_seconds", default_rescue_budget_s))
+    default_rescue_calls = 4 if n_students >= 250 else 3
+    rescue_repair_calls = int(algo_cfg.get("fleet_search_spare_bus_rescue_repair_calls", default_rescue_calls))
+    rescue_repair_calls = max(1, rescue_repair_calls)
+    rescue_budget_s = max(1.0, rescue_budget_s)
 
     fleet_log   = []
     total_fleet_search_runtime = 0.0
+    prev_executed_iters = None
+    prev_stop_reason = None
+    prev_served = None
+    prev_total = None
 
     for k in range(k_min, k_max + 1):
         k_budget_s = None
         if base_budget_s is not None:
-            scale = first_k_budget_scale if k == k_min else followup_k_budget_scale
-            scale = max(0.05, float(scale))
-            k_budget_s = max(1.0, float(base_budget_s) * scale)
-            if max_per_k_s is not None:
-                k_budget_s = min(k_budget_s, max_per_k_s)
+            if use_scaled_fleet_budget:
+                scale = first_k_budget_scale if k == k_min else followup_k_budget_scale
+                # If the previous k run barely executed any ALNS iterations, avoid
+                # starving this k with an aggressively downscaled follow-up budget.
+                if k > k_min and prev_executed_iters is not None and prev_executed_iters <= 3:
+                    scale = max(scale, 0.9)
+                # If previous k ran out of time with unserved students, keep a higher
+                # follow-up budget to reduce local-optimum lock-in at larger k.
+                if (
+                    k > k_min
+                    and prev_stop_reason == "time_budget"
+                    and prev_served is not None
+                    and prev_total is not None
+                    and prev_served < prev_total
+                ):
+                    scale = max(scale, 0.85)
+                scale = max(0.05, float(scale))
+                k_budget_s = max(1.0, float(base_budget_s) * scale)
+                if max_per_k_s is not None:
+                    k_budget_s = min(k_budget_s, max_per_k_s)
+            else:
+                k_budget_s = max(1.0, float(base_budget_s))
 
         trial = _copy.deepcopy(data)
         trial["data"]["buses"] = trial["data"]["buses"][:k]
@@ -720,17 +1215,126 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
         served  = stats["served"]
         total   = stats["total"]
         capacity_k = trial["data"]["buses"][0].get("capacity", 60)
+        op_perf = stats.get("operator_performance") or {}
+        executed_iters = int(op_perf.get("executed_iterations") or 0)
+        stop_reason = (stats.get("alns_diagnostics") or {}).get("stop_reason")
+
+        rescue_diag = {
+            "enabled": rescue_enabled,
+            "ran": False,
+            "eligible": False,
+            "extra_buses_available": max(0, k_max - k),
+            "budget_seconds": rescue_budget_s,
+            "repair_calls": rescue_repair_calls,
+            "strategy": "multi_phase_repair_with_kick",
+            "served_before": served,
+            "served_after": served,
+            "rescued_students": 0,
+            "kick_attempts": 0,
+            "trigger_reason": None,
+        }
+
+        # If spare buses still exist and solver hit time-budget with unserved students,
+        # run a short pure-construction rescue pass (no destroy) to exploit empty buses.
+        if (
+            rescue_enabled
+            and served < total
+            and rescue_diag["extra_buses_available"] >= max(1, rescue_min_extra_buses)
+            and stop_reason == "time_budget"
+        ):
+            rescue_diag["eligible"] = True
+            rescue_diag["ran"] = True
+            rescue_diag["trigger_reason"] = "time_budget_with_spare_buses"
+            _rescue_deadline = _t.time() + rescue_budget_s
+            rescued_total = 0
+            for _ in range(rescue_repair_calls):
+                if _t.time() >= _rescue_deadline:
+                    break
+                before = sum(1 for s in sol.students if s.is_served)
+
+                # Work on a clone and only accept non-worse states; this lets us
+                # try disruptive rescue moves without sacrificing already served students.
+                cand = sol.clone()
+                _alns.regret_repair(cand, deadline=_rescue_deadline)
+                if _t.time() < _rescue_deadline:
+                    _alns.greedy_repair(cand, deadline=_rescue_deadline)
+
+                cand_after = sum(1 for s in cand.students if s.is_served)
+                if cand_after > before:
+                    rescued_total += (cand_after - before)
+                    sol = cand
+                    continue
+
+                # Plateau handling: keep non-worse candidate state, then still
+                # try a bounded kick to escape flat local minima.
+                if cand_after == before:
+                    sol = cand
+
+                # Fallback: small kick-and-repair to escape local minima where
+                # pure insertion cannot place remaining students.
+                if _t.time() < _rescue_deadline:
+                    rescue_diag["kick_attempts"] += 1
+                    kick = sol.clone()
+                    served_now = sum(1 for s in kick.students if s.is_served)
+                    kick_n = max(1, min(12, int(max(1, served_now) * 0.03)))
+                    removed = _alns.worst_cost_removal(kick, kick_n)
+                    if removed:
+                        _alns.regret_repair(kick, deadline=_rescue_deadline)
+                        if _t.time() < _rescue_deadline:
+                            _alns.greedy_repair(kick, deadline=_rescue_deadline)
+                        kick_after = sum(1 for s in kick.students if s.is_served)
+                        if kick_after >= before:
+                            if kick_after > before:
+                                rescued_total += (kick_after - before)
+                            sol = kick
+                            continue
+
+                # No gain this attempt; keep current incumbent and continue trying
+                # until budget/call limit is reached.
+                if _t.time() >= _rescue_deadline:
+                    break
+
+            # Refresh route metrics and stats from the potentially updated solution.
+            for r in sol.routes:
+                from detour_engine import (
+                    calculate_route_time_from_matrix,
+                    calculate_route_distance_from_matrix,
+                )
+                tt = calculate_route_time_from_matrix(r.stops, sol.graph)
+                r.total_time = tt if tt is not None else 0.0
+                dd = calculate_route_distance_from_matrix(r.stops, sol.graph)
+                r.total_distance = dd if dd is not None else 0.0
+
+            served = sum(1 for s in sol.students if s.is_served)
+            active = [r for r in sol.routes if r.get_student_count() > 0]
+            stats["served"] = served
+            stats["routes"] = len(active)
+            stats["total_time"] = round(sum(r.total_time for r in active), 2)
+            stats["total_dist"] = round(sum(r.total_distance for r in active), 2)
+            stats["objective"] = round(sol.calculate_objective(), 2)
+
+            rescue_diag["served_after"] = served
+            rescue_diag["rescued_students"] = max(0, int(rescued_total))
 
         unserved_students = [s for s in sol.students if not s.is_served]
         reasons = _diagnose_unserved(unserved_students, sol, capacity_k, constraints)
+        prev_executed_iters = executed_iters
+        prev_stop_reason = stop_reason
+        prev_served = served
+        prev_total = total
 
         fleet_log.append({
             "k":                k,
+            "fleet_size_selected": k,
+            "active_buses_used": stats.get("buses_used", stats.get("routes")),
             "served":           served,
             "unserved":         total - served,
             "feasible":         served == total,
             "runtime_s":        stats["runtime"],
             "time_budget_s":    round(k_budget_s, 2) if k_budget_s is not None else None,
+            "executed_iterations": executed_iters,
+            "stop_reason":      stop_reason,
+            "spare_bus_rescue": rescue_diag,
             "matrix_precompute": stats.get("matrix_precompute"),
             "rejection_reasons": reasons,
         })
@@ -760,17 +1364,27 @@ def find_minimum_fleet(data: dict, G, iterations: int = None,
                 )
                 break
 
-    best_stats["buses_used"]           = best_k
+    best_stats["fleet_size_selected"]  = best_k
+    if best_stats.get("buses_used") is None:
+        best_stats["buses_used"] = int(best_stats.get("routes", 0) or 0)
     best_stats["total_fleet_search_runtime"] = total_fleet_search_runtime
     best_stats["fleet_search_log"]     = fleet_log
     best_stats["fleet_search_summary"] = _summarise_fleet_search(fleet_log)
     best_stats["fleet_search_budget_policy"] = {
         "base_time_budget_seconds": base_budget_s,
+        "budget_mode": fleet_search_budget_mode,
+        "use_scaled_budget": use_scaled_fleet_budget,
+        "min_iterations_floor": min_iterations_floor,
+        "min_iterations_floor_seconds_per_iteration": floor_sec_per_iter,
         "first_k_budget_scale": first_k_budget_scale,
         "followup_k_budget_scale": followup_k_budget_scale,
         "max_per_k_seconds": max_per_k_s,
         "trailing_early_stop_ratio": trailing_early_stop_ratio,
         "trailing_min_served_gap": trailing_min_gap,
+        "spare_bus_rescue_enabled": rescue_enabled,
+        "spare_bus_rescue_min_extra_buses": rescue_min_extra_buses,
+        "spare_bus_rescue_budget_seconds": rescue_budget_s,
+        "spare_bus_rescue_repair_calls": rescue_repair_calls,
     }
     return best_k, best_sol, best_stats, best_school
 
@@ -785,9 +1399,18 @@ def _diagnose_unserved(unserved_students, sol, capacity, constraints):
 
     con     = constraints or {}
     enabled = bool(con.get("enabled", True))
-    k_mult  = float(con.get("ride_time_multiplier", 2.5))
     fl      = float(con.get("floor_minutes", 45))
-    ce      = float(con.get("ceiling_minutes", 60))
+    try:
+        dmrt_offset = float(con.get("acceptable_offset_minutes", 30))
+    except (TypeError, ValueError):
+        dmrt_offset = 30.0
+    mrt_enabled = bool(con.get("mrt_enabled", con.get("mrt enabled", False)))
+    mrt_raw = con.get("mrt", None)
+    try:
+        mrt_minutes = float(mrt_raw) if mrt_raw is not None else None
+    except (TypeError, ValueError):
+        mrt_minutes = None
+    base_mrt = mrt_minutes if (mrt_enabled and mrt_minutes is not None and mrt_minutes > 0) else fl
 
     all_full = all(r.get_student_count() >= capacity for r in sol.routes)
 
@@ -829,23 +1452,29 @@ def _diagnose_unserved(unserved_students, sol, capacity, constraints):
             return "zero_walk_radius_diagnostic_error"
 
     for s in unserved_students:
+        # Reset stale value from any previous attempt before classifying.
+        s.failure_reason = ""
         if all_full:
+            s.failure_reason = "all_routes_at_capacity"
             reasons["all_routes_at_capacity"] = reasons.get("all_routes_at_capacity", 0) + 1
             continue
 
         if enabled:
             dt = getattr(s, "direct_time_to_school", None)
             if dt is not None and _math.isfinite(dt) and dt > 0:
-                cap = max(fl, min(k_mult * dt, dt + ce))
+                cap = max(base_mrt, dt + dmrt_offset)
                 if cap < 20:
+                    s.failure_reason = "ride_time_cap_too_tight"
                     reasons["ride_time_cap_too_tight"] = reasons.get("ride_time_cap_too_tight", 0) + 1
                     continue
 
         if getattr(s, "walk_radius", 0) == 0:
             z_reason = _diagnose_zero_walk_student(s)
+            s.failure_reason = z_reason
             reasons[z_reason] = reasons.get(z_reason, 0) + 1
             continue
 
+        s.failure_reason = "search_budget_exhausted"
         reasons["search_budget_exhausted"] = reasons.get("search_budget_exhausted", 0) + 1
 
     return {k: v for k, v in reasons.items() if v > 0}
@@ -869,6 +1498,14 @@ def _summarise_fleet_search(fleet_log):
         f"Best: k={last['k']} with {last['served']}/{last['served'] + last['unserved']} served, "
         f"{last['unserved']} unserved."
     ]
+
+    rescue = last.get("spare_bus_rescue") or {}
+    if rescue.get("ran"):
+        parts.append(
+            "Spare-bus rescue "
+            f"{('rescued ' + str(rescue.get('rescued_students', 0)) + ' student(s)') if rescue.get('rescued_students', 0) > 0 else 'did not improve service'} "
+            f"(served {rescue.get('served_before', last.get('served'))} -> {rescue.get('served_after', last.get('served'))})."
+        )
     reasons = last.get("rejection_reasons", {})
     if reasons.get("ride_time_cap_too_tight"):
         n = reasons["ride_time_cap_too_tight"]
@@ -932,7 +1569,21 @@ def run_change_location(data, G, input_file_path):
     else:
         target_student.coords = new_coords
         target_student.assignment = change_type
-    precompute_matrix([target_student], routes, G)
+    meta_cfg = data.get("meta", {}) if isinstance(data, dict) else {}
+    matrix_source = _resolve_matrix_source(meta_cfg)
+    precompute_matrix(
+        [target_student],
+        routes,
+        G,
+        matrix_source=matrix_source,
+        road_speeds_override=meta_cfg.get("road_speeds"),
+        cache_context={
+            "seed": data.get("seed", data.get("meta", {}).get("seed")),
+            "student_count": 1,
+            "matrix_source": matrix_source,
+            "road_speeds_signature": _road_speeds_signature(meta_cfg),
+        },
+    )
     if method == '2opt': success, updated_route, message = insert_with_2opt(target_student, routes, G, change_type, daily_budget)
     elif method == 'alns':
         if target_student not in all_students: all_students.append(target_student)
