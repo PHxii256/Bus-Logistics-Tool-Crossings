@@ -2984,6 +2984,11 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                         "stage": stage_name,
                         "physically_mentally_disabled": _is_student_disabled(student),
                         "route_id": route.route_id,
+                        "stop_node_id": stop.node_id,
+                        "stop_latitude": round(float(stop.coords[0]), 7),
+                        "stop_longitude": round(float(stop.coords[1]), 7),
+                        "home_latitude": round(float(student.coords[0]), 7),
+                        "home_longitude": round(float(student.coords[1]), 7),
                         "pickup_order": pickup_order,
                         "ride_time_min": round(ride_time, 2) if ride_time is not None else None,
                         "ride_distance_km": ride_distance_km,
@@ -3019,11 +3024,21 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
         for route in sol.routes:
             if route.get_student_count() == 0:
                 continue
+            route_capacity_total = int(getattr(route.bus, "capacity", 0) or 0)
+            route_capacity_used = int(route.get_student_count())
+            route_capacity_remaining = max(0, route_capacity_total - route_capacity_used)
+            pickup_stops_count = sum(1 for stop in route.stops if stop.stop_type != "school")
             routes_list.append({
                 "route_id": route.route_id,
+                "bus_id": getattr(route.bus, "bus_id", None),
                 "students_count": route.get_student_count(),
+                "pickup_stops_count": pickup_stops_count,
                 "total_time_min": round(route.total_time, 2),
                 "total_distance_km": round(route.total_distance, 2),
+                "capacity_total": route_capacity_total,
+                "capacity_used": route_capacity_used,
+                "capacity_remaining": route_capacity_remaining,
+                "occupancy_pct": round((route_capacity_used / route_capacity_total) * 100.0, 1) if route_capacity_total > 0 else 0.0,
             })
 
         # Build unserved student diagnostics (stable schema even when reasons are missing)
@@ -3045,6 +3060,11 @@ def _build_metrics(meta, stage_walk, all_stats, crossings_dict,
                 "stage": stage_name,
                 "physically_mentally_disabled": _is_student_disabled(student),
                 "route_id": None,
+                "stop_node_id": None,
+                "stop_latitude": None,
+                "stop_longitude": None,
+                "home_latitude": round(float(student.coords[0]), 7),
+                "home_longitude": round(float(student.coords[1]), 7),
                 "pickup_order": None,
                 "ride_time_min": None,
                 "ride_distance_km": None,

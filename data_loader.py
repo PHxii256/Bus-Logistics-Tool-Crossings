@@ -332,6 +332,7 @@ def serialize_routes(routes, buses, school_coords, unserved_students=None, graph
             continue
 
         route_bus_id = bus_to_id.get(id(route.bus), "UNKNOWN")
+        route_capacity_total = int(getattr(route.bus, 'capacity', 0) or 0)
 
         path_data = []
         for stop in route.stops:
@@ -360,8 +361,15 @@ def serialize_routes(routes, buses, school_coords, unserved_students=None, graph
                 "latitude": stop.coords[0],
                 "longitude": stop.coords[1],
                 "type": stop.stop_type,
+                "students_count": len(students_data),
                 "students": students_data
             })
+
+        route_students_count = int(route.get_student_count())
+        pickup_stops_count = sum(1 for s in route.stops if s.stop_type != 'school')
+        capacity_used = route_students_count
+        capacity_remaining = max(0, route_capacity_total - capacity_used)
+        occupancy_pct = round((capacity_used / route_capacity_total) * 100.0, 1) if route_capacity_total > 0 else 0.0
         
         output["routes"].append({
             "id": route.route_id,
@@ -377,6 +385,12 @@ def serialize_routes(routes, buses, school_coords, unserved_students=None, graph
             "total_distance_km": round(route.total_distance, 2),
             "total_time_minutes": round(route.total_time, 2),
             "detour_time_used_today": round(route.detour_time_used, 2),
+            "students_count": route_students_count,
+            "pickup_stops_count": pickup_stops_count,
+            "capacity_total": route_capacity_total,
+            "capacity_used": capacity_used,
+            "capacity_remaining": capacity_remaining,
+            "occupancy_pct": occupancy_pct,
             "path": path_data
         })
     

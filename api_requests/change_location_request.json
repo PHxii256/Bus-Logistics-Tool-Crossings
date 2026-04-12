@@ -1,0 +1,10 @@
+{
+  "student_id": "S1",
+  "route_id": "R1",
+  "new_location": {
+    "latitude": 29.9615107,
+    "longitude": 31.2762834
+  },
+  "max_detour_minutes": 5,
+  "change_type": "temporary"
+}

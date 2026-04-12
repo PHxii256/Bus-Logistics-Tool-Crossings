@@ -33,12 +33,19 @@
       "total_distance_km": 16.12,
       "total_time_minutes": 74.45,
       "detour_time_used_today": 0.0,
+      "students_count": 6,
+      "pickup_stops_count": 6,
+      "capacity_total": 20,
+      "capacity_used": 6,
+      "capacity_remaining": 14,
+      "occupancy_pct": 30.0,
       "path": [
         {
           "node_id": 2208869932,
           "latitude": 29.9644413,
           "longitude": 31.270124,
           "type": "school",
+          "students_count": 0,
           "students": []
         },
         {
@@ -46,6 +53,7 @@
           "latitude": 29.960181,
           "longitude": 31.269975,
           "type": "pickup",
+          "students_count": 1,
           "students": [
             {
               "id": "S6",
