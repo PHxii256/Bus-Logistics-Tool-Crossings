@@ -141,12 +141,14 @@ Optional for experiment outputs:
 
 ```powershell
 & "c:/Users/phx25/Desktop/Grad Project/Bus-Logistics-Tool-Crossings/.venv/Scripts/python.exe" process_change_location_request.py --base-routes <path-to-base_routes.json> --request api_requests/change_location_request.json --response api_requests/response.json --updated-route-html api_requests/updated_route.html
+
+python process_change_location_request.py --base-routes experiments/experiment4_crossings/46ce89b8_mrt_1_0413-1440/base_routes.json --request api_requests/change_location_request.json --response api_requests/response.json --updated-route-html api_requests/updated_route.html
 ```
 
 ### 3) Inject star pin into comparison map
 
 ```powershell
-& "c:/Users/phx25/Desktop/Grad Project/Bus-Logistics-Tool-Crossings/.venv/Scripts/python.exe" inject_star_pin_into_comparison_map.py --comparison-map-html <path-to-comparison_map.html> --latitude 29.9615107 --longitude 31.2762834 --output api_requests/map_insertion_attempt.html
+& "c:/Users/phx25/Desktop/Grad Project/Bus-Logistics-Tool-Crossings/.venv/Scripts/python.exe" inject_star_pin_into_comparison_map.py --comparison-map-html experiments/experiment4_crossings/46ce89b8_mrt_1_0413-1440/comparison_map.html --latitude 29.9615107 --longitude 31.2762834 --output api_requests/map_insertion_attempt.html
 ```
 
 ---

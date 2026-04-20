@@ -1,6 +1,7 @@
 import argparse
 import copy
 import json
+import os
 from collections import defaultdict
 from datetime import datetime
 
@@ -27,6 +28,84 @@ def _safe_int(value, default=0):
         return int(value)
     except (TypeError, ValueError):
         return int(default)
+
+
+def _is_valid_coord(lat, lon):
+    return lat is not None and lon is not None
+
+
+def _school_from_payload(payload):
+    if not isinstance(payload, dict):
+        return None
+    s = payload.get("school") or {}
+    lat = s.get("latitude")
+    lon = s.get("longitude")
+    if _is_valid_coord(lat, lon):
+        return {
+            "name": s.get("name", "School"),
+            "latitude": lat,
+            "longitude": lon,
+        }
+
+    cfg = payload.get("config") or {}
+    s2 = cfg.get("school") or {}
+    lat2 = s2.get("latitude")
+    lon2 = s2.get("longitude")
+    if _is_valid_coord(lat2, lon2):
+        return {
+            "name": s2.get("name", "School"),
+            "latitude": lat2,
+            "longitude": lon2,
+        }
+    return None
+
+
+def _resolve_school(input_payload, input_path):
+    direct = _school_from_payload(input_payload)
+    if direct is not None:
+        return direct
+
+    candidates = []
+    in_abs = os.path.abspath(input_path)
+    in_dir = os.path.dirname(in_abs)
+    candidates.append(os.path.join(in_dir, "snapshot_input.json"))
+    candidates.append(os.path.join(in_dir, "input.json"))
+
+    for c in candidates:
+        if not os.path.exists(c):
+            continue
+        try:
+            payload = _load_json(c)
+        except Exception:
+            continue
+        s = _school_from_payload(payload)
+        if s is not None:
+            return s
+
+    return {
+        "name": "School",
+        "latitude": None,
+        "longitude": None,
+    }
+
+
+def _ensure_terminal_school_stop(route, school):
+    if not _is_valid_coord(school.get("latitude"), school.get("longitude")):
+        return
+    path = route.get("path", [])
+    if not isinstance(path, list) or len(path) == 0:
+        return
+    if str(path[-1].get("type", "pickup")).lower() == "school":
+        return
+    path.append({
+        "sequence": len(path),
+        "node_id": "school_end",
+        "latitude": school.get("latitude"),
+        "longitude": school.get("longitude"),
+        "type": "school",
+        "students_count": 0,
+        "students": [],
+    })
 
 
 def _build_buses_lookup(buses):
@@ -105,6 +184,7 @@ def _normalize_unified_route(route, bus_lookup):
 def _extract_from_unified(data, input_path):
     buses = data.get("buses", [])
     bus_lookup = _build_buses_lookup(buses)
+    school = _resolve_school(data, input_path)
 
     routes_out = []
     students_index_entries = []
@@ -112,6 +192,7 @@ def _extract_from_unified(data, input_path):
         if "path" not in route:
             continue
         normalized, entries = _normalize_unified_route(route, bus_lookup)
+        _ensure_terminal_school_stop(normalized, school)
         routes_out.append(normalized)
         students_index_entries.extend(entries)
 
@@ -136,7 +217,7 @@ def _extract_from_unified(data, input_path):
             "source_file": input_path,
             "source_type": "unified_routes_output",
         },
-        "school": copy.deepcopy(data.get("school", {})),
+        "school": school,
         "buses": copy.deepcopy(buses),
         "routes": routes_out,
         "students_index": students_index,
@@ -165,12 +246,7 @@ def _extract_from_experiment(data, input_path, mode_name):
     buses_count = _safe_int((data.get("config", {}).get("buses_count")), 0)
     buses_capacity = _safe_int((data.get("config", {}).get("buses_capacity")), 0)
 
-    school_cfg = (data.get("config", {}).get("school") or {})
-    school = {
-        "name": school_cfg.get("name", "School"),
-        "latitude": school_cfg.get("latitude"),
-        "longitude": school_cfg.get("longitude"),
-    }
+    school = _resolve_school(data, input_path)
 
     buses = []
     if buses_count > 0:
@@ -201,17 +277,6 @@ def _extract_from_experiment(data, input_path, mode_name):
 
         path = []
         seq = 0
-        if school.get("latitude") is not None and school.get("longitude") is not None:
-            path.append({
-                "sequence": seq,
-                "node_id": "school_start",
-                "latitude": school.get("latitude"),
-                "longitude": school.get("longitude"),
-                "type": "school",
-                "students_count": 0,
-                "students": [],
-            })
-            seq += 1
 
         pickup_orders = sorted(k for k in grouped_by_order.keys() if isinstance(k, int))
         for pickup_order in pickup_orders:
@@ -255,7 +320,7 @@ def _extract_from_experiment(data, input_path, mode_name):
             })
             seq += 1
 
-        if school.get("latitude") is not None and school.get("longitude") is not None:
+        if _is_valid_coord(school.get("latitude"), school.get("longitude")):
             path.append({
                 "sequence": seq,
                 "node_id": "school_end",

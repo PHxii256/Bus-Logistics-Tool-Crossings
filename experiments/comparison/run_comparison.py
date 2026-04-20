@@ -2213,9 +2213,7 @@ def _build_custom_layer_control_js(
 
     unserved_rows = ""
     for fg_u, label in [
-        (fg_unserved_a, 'Strictly Constrained – Unserved'),
         (fg_unserved_b, 'Weakly Constrained – Unserved'),
-        (fg_unserved_c, 'Door-to-Door – Unserved'),
     ]:
         if fg_u is not None:
             vu = fg_u.get_name()
@@ -2226,9 +2224,7 @@ def _build_custom_layer_control_js(
 
     candidate_rows = ""
     for fg_c2, label in [
-        (fg_cands_a, 'Strictly Constrained – Candidate Stops'),
         (fg_cands_b, 'Weakly Constrained – Candidate Stops'),
-        (fg_cands_c, 'Door-to-Door – Candidate Stops'),
     ]:
         if fg_c2 is not None:
             vca = fg_c2.get_name()
@@ -2239,9 +2235,7 @@ def _build_custom_layer_control_js(
 
     usage_rows = ""
     for fg_u, label in [
-        (fg_usage_a, 'Strictly Constrained – Crossing Usage'),
         (fg_usage_b, 'Weakly Constrained – Crossing Usage'),
-        (fg_usage_c, 'Door-to-Door – Crossing Usage'),
     ]:
         if fg_u is not None:
             vu = fg_u.get_name()
@@ -2295,15 +2289,9 @@ def _build_custom_layer_control_js(
                     span.textContent = label;
                     lbl.appendChild(span);
                 }}
-                row('Strictly Constrained (Safe Walking)',
-                    [{va_r}, {va_w}], map.hasLayer({va_r}));
                 row('Weakly Constrained (Any Walking)',
                     [{vb_r}, {vb_w}], map.hasLayer({vb_r}));
-                row('Direct (No Walking)',
-                    [{vc_r}, {vc_w}], map.hasLayer({vc_r}));
                 sep();
-                row('Dangerous Roads (unsafe to cross)',
-                    [{v_danger}], map.hasLayer({v_danger}));
                 row('Unclassified Roads (no student placement)',
                     [{v_unclass}], map.hasLayer({v_unclass}));
                 row('{syn_label}',
@@ -2324,7 +2312,8 @@ def _build_custom_layer_control_js(
 
 def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
                       solutions_dict=None, G=None, constraints=None,
-                      meta=None):
+                      meta=None, visible_modes=("A", "B", "C"),
+                      include_dangerous_roads=True):
     now    = datetime.datetime.now()
     hour12 = now.hour % 12 or 12
     ampm   = "am" if now.hour < 12 else "pm"
@@ -2357,9 +2346,10 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
         except (TypeError, ValueError):
             mrt_json_line = f'\"mrt\": {str(mrt_raw)}'
 
+    mode_keys = tuple(visible_modes) if visible_modes else ("A", "B", "C")
     blocks = ""
     _build_stats_html._mode_tables = ""   # accumulator for side-by-side mode tables
-    for mk in ("A", "B", "C"):
+    for mk in mode_keys:
         mc = _ROUTE_COLORS[mk][0]
 
         # Mode was skipped — show a dimmed placeholder
@@ -2474,7 +2464,7 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
     mode_tables_html = getattr(_build_stats_html, '_mode_tables', "")
     _build_stats_html._mode_tables = ""   # reset for next call
 
-    # Three mode mini-tables placed side-by-side; single horizontal scrollbar at bottom
+        # Mode mini-tables placed side-by-side; single horizontal scrollbar at bottom
     route_table = f"""
       <div style="margin-top:6px; padding-top:6px; border-top:1px solid #ddd;">
         <div style="font-size:11px; font-weight:bold; color:#444; margin-bottom:3px;">Per-Route Details</div>
@@ -2482,6 +2472,11 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
           {mode_tables_html}
         </div>
       </div>"""
+
+        title_prefix = "Three-Mode" if len(mode_keys) == 3 else "Routing"
+        dangerous_legend_line = ""
+        if include_dangerous_roads:
+                dangerous_legend_line = "<span style=\"color:#e74c3c;\">&#x2015;&#x2015;</span> Dangerous roads &nbsp;&nbsp;"
 
     return f"""
     <div style="position:fixed; bottom:15px; right:15px; width:430px;
@@ -2491,7 +2486,7 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
                 font-family:Arial,sans-serif; box-shadow:2px 2px 8px rgba(0,0,0,.25);">
             <div style="font-weight:bold; font-size:13px; margin-bottom:10px;
                   padding-bottom:6px; border-bottom:2px solid #ccc;">
-        Three-Mode Routing Comparison{mrt_status_text}
+                {title_prefix} Comparison{mrt_status_text}
                 <div style="font-weight:normal; font-size:11px; color:#666; margin-top:2px;">
                     {mrt_json_line}
                 </div>
@@ -2500,8 +2495,7 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
       {route_table}
       <div style="font-size:10px; color:#888; margin-top:6px;">
         Toggle layers via top-right control.<br>
-        <span style="color:#e74c3c;">&#x2015;&#x2015;</span> Dangerous roads
-        &nbsp;&nbsp;
+                {dangerous_legend_line}
         <span style="color:#7f8c8d;">&#x2508;&#x2508;</span> Unclassified roads<br>
         Generated: {ts}
       </div>
@@ -3940,14 +3934,10 @@ def run(input_path=None, output_path=None, iterations=None):
             icon=folium.Icon(color="darkgreen", icon="graduation-cap", prefix='fa'),
         ).add_to(m)
 
-        # Dangerous roads layer
-        fg_danger = FeatureGroup(name="Dangerous Roads (unsafe to cross)", show=True)
-        danger_segs = _extract_segments(G_con, center[0], center[1], "dangerous")
-        for seg in danger_segs:
-            folium.PolyLine(seg, color="#e74c3c", weight=3, opacity=0.45,
-                            dash_array="6,4").add_to(fg_danger)
-        fg_danger.add_to(m)
-        print(f"  Dangerous-road segments: {len(danger_segs)}")
+        # Dangerous roads are intentionally hidden in operational comparison maps.
+        fg_danger = FeatureGroup(name="Dangerous Roads (unsafe to cross)", show=False)
+        danger_segs = []
+        print("  Dangerous-road segments: hidden (disabled)")
 
         # Unclassified roads layer
         fg_unclass = FeatureGroup(name="Unclassified Roads (no student placement)", show=False)
@@ -4061,9 +4051,7 @@ def run(input_path=None, output_path=None, iterations=None):
         fgs_unserved = {}  # mk -> fg_unserved
 
         solutions = [
-            ("A", sol_a, school_a),
             ("B", sol_b, school_b),
-            ("C", sol_c, school_c),
         ]
 
         for mk, sol, school_node_for_mode in solutions:
@@ -4085,9 +4073,7 @@ def run(input_path=None, output_path=None, iterations=None):
 
         # Candidate stop inspector layers (one per mode, hidden by default)
         cand_data = {mk: cd for mk, cd in {
-            "A": (sol_a, cands_a,  cand_dist_a, G_con) if sol_a else None,
-            "B": (sol_b, cands_b,  cand_dist_b, G_unc) if sol_b else None,
-            "C": (sol_c, cands_c,  cand_dist_c, G_unc) if sol_c else None,
+            "B": (sol_b, cands_b, cand_dist_b, G_unc) if sol_b else None,
         }.items() if cd is not None}
         fgs_cands = {}
         for mk, (sol, cds, cdst, G_mk) in cand_data.items():
@@ -4095,7 +4081,7 @@ def run(input_path=None, output_path=None, iterations=None):
 
         _syn_markers = _eng.get_synthetic_crossings()
         _show_only_used_syn = bool(synth_cfg.get("show_only_used", True))
-        _used_syn_edges = _collect_used_synthetic_edge_keys([sol_a, sol_b, sol_c], G_unc) if _show_only_used_syn else set()
+        _used_syn_edges = _collect_used_synthetic_edge_keys([sol_b], G_unc) if _show_only_used_syn else set()
         fg_syn = _add_synthetic_crossing_markers(
             m,
             _syn_markers,
@@ -4118,7 +4104,7 @@ def run(input_path=None, output_path=None, iterations=None):
             G_walk = _eng._WALK_GRAPH or _eng._get_walk_graph(G_unc)
             fgs_crossing_usage = _add_crossing_usage_layers(
                 m,
-                {"A": sol_a, "B": sol_b, "C": sol_c},
+                {"B": sol_b},
                 G_walk,
                 G_unc
             )
@@ -4168,12 +4154,25 @@ def run(input_path=None, output_path=None, iterations=None):
         )
         m.get_root().script.add_child(folium.Element(ctrl_js))
 
+        visible_modes = ("B",)
+        map_stats = {k: v for k, v in all_stats.items() if k in visible_modes}
+        map_crossings = {k: used_crossings_count.get(k, 0) for k in visible_modes}
+        map_occupancies = {k: occupancies_dict.get(k, []) for k in visible_modes}
+        map_solutions = {"B": sol_b}
+
         m.get_root().html.add_child(folium.Element(
-            _build_stats_html(all_stats, used_crossings_count, occupancies_dict,
-                              solutions_dict={"A": sol_a, "B": sol_b, "C": sol_c},
-                              G=G_unc,
-                              constraints=meta.get("constraints", {}),
-                              meta=meta)))
+            _build_stats_html(
+                map_stats,
+                map_crossings,
+                map_occupancies,
+                solutions_dict=map_solutions,
+                G=G_unc,
+                constraints=meta.get("constraints", {}),
+                meta=meta,
+                visible_modes=visible_modes,
+                include_dangerous_roads=False,
+            )
+        ))
 
         m.save(output)
         fsize_kb = os.path.getsize(output) / 1024

@@ -2,9 +2,13 @@ import argparse
 import copy
 import json
 import math
+import os
 import time
+import urllib.parse
+import urllib.request
 
 import folium
+from folium import plugins
 
 
 def _load_json(path):
@@ -22,6 +26,10 @@ def _safe_float(value, default=0.0):
         return float(value)
     except (TypeError, ValueError):
         return float(default)
+
+
+def _is_valid_coord(lat, lon):
+    return lat is not None and lon is not None
 
 
 def _haversine_km(lat1, lon1, lat2, lon2):
@@ -44,6 +52,63 @@ def _route_polyline(path):
             continue
         coords.append((float(lat), float(lon)))
     return coords
+
+
+def _route_polyline_on_roads(path, osrm_base_url="http://localhost:5000"):
+    """Build a road-following polyline by querying OSRM route geometry per segment."""
+    stops = _route_polyline(path)
+    if len(stops) < 2:
+        return stops
+
+    merged = []
+    for i in range(len(stops) - 1):
+        a_lat, a_lon = stops[i]
+        b_lat, b_lon = stops[i + 1]
+        segment = _osrm_segment_geometry(a_lat, a_lon, b_lat, b_lon, osrm_base_url=osrm_base_url)
+        if not segment:
+            segment = [(a_lat, a_lon), (b_lat, b_lon)]
+
+        if not merged:
+            merged.extend(segment)
+        else:
+            merged.extend(segment[1:])
+
+    return merged
+
+
+def _osrm_segment_geometry(lat1, lon1, lat2, lon2, osrm_base_url="http://localhost:5000"):
+    """Return (lat, lon) geometry for one road segment from OSRM, or None on failure."""
+    coords = f"{float(lon1)},{float(lat1)};{float(lon2)},{float(lat2)}"
+    base = str(osrm_base_url).rstrip("/")
+    path = f"/route/v1/driving/{coords}"
+    query = urllib.parse.urlencode({
+        "overview": "full",
+        "geometries": "geojson",
+        "steps": "false",
+    })
+    url = f"{base}{path}?{query}"
+
+    try:
+        with urllib.request.urlopen(url, timeout=5) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        return None
+
+    if payload.get("code") != "Ok":
+        return None
+
+    routes = payload.get("routes") or []
+    if not routes:
+        return None
+
+    geom = (routes[0].get("geometry") or {}).get("coordinates") or []
+    if len(geom) < 2:
+        return None
+
+    out = []
+    for lon, lat in geom:
+        out.append((float(lat), float(lon)))
+    return out
 
 
 def _estimate_path_distance_km(path):
@@ -88,6 +153,114 @@ def _route_student_count(route):
     for stop in route.get("path", []):
         total += len(stop.get("students", []))
     return total
+
+
+def _school_from_payload(payload):
+    if not isinstance(payload, dict):
+        return None
+
+    s = payload.get("school") or {}
+    lat = s.get("latitude")
+    lon = s.get("longitude")
+    if _is_valid_coord(lat, lon):
+        return {
+            "name": s.get("name", "School"),
+            "latitude": lat,
+            "longitude": lon,
+        }
+
+    cfg = payload.get("config") or {}
+    s2 = cfg.get("school") or {}
+    lat2 = s2.get("latitude")
+    lon2 = s2.get("longitude")
+    if _is_valid_coord(lat2, lon2):
+        return {
+            "name": s2.get("name", "School"),
+            "latitude": lat2,
+            "longitude": lon2,
+        }
+    return None
+
+
+def _resolve_school_from_base(base_payload, base_routes_path):
+    direct = _school_from_payload(base_payload)
+    if direct is not None:
+        return direct
+
+    candidates = []
+    base_abs = os.path.abspath(base_routes_path)
+    base_dir = os.path.dirname(base_abs)
+
+    meta = base_payload.get("meta") or {}
+    source_file = meta.get("source_file")
+    source_abs = None
+    if source_file:
+        source_abs = source_file if os.path.isabs(source_file) else os.path.abspath(os.path.join(base_dir, source_file))
+        source_dir = os.path.dirname(source_abs)
+        candidates.append(os.path.join(source_dir, "snapshot_input.json"))
+        candidates.append(os.path.join(source_dir, "input.json"))
+        candidates.append(source_abs)
+
+    candidates.append(os.path.join(base_dir, "snapshot_input.json"))
+    candidates.append(os.path.join(base_dir, "input.json"))
+
+    for c in candidates:
+        if not c or not os.path.exists(c):
+            continue
+        try:
+            payload = _load_json(c)
+        except Exception:
+            continue
+        s = _school_from_payload(payload)
+        if s is not None:
+            return s
+
+    return {
+        "name": "School",
+        "latitude": None,
+        "longitude": None,
+    }
+
+
+def _ensure_school_bookends(route, school):
+    if not _is_valid_coord(school.get("latitude"), school.get("longitude")):
+        return
+
+    path = route.get("path", [])
+    if not isinstance(path, list) or len(path) == 0:
+        return
+
+    if str(path[0].get("type", "pickup")).lower() != "school":
+        path.insert(0, {
+            "sequence": 0,
+            "node_id": "school_start",
+            "latitude": school.get("latitude"),
+            "longitude": school.get("longitude"),
+            "type": "school",
+            "students_count": 0,
+            "students": [],
+        })
+    else:
+        path[0]["node_id"] = path[0].get("node_id") or "school_start"
+        path[0]["latitude"] = school.get("latitude")
+        path[0]["longitude"] = school.get("longitude")
+        path[0]["type"] = "school"
+
+    if str(path[-1].get("type", "pickup")).lower() != "school":
+        path.append({
+            "sequence": len(path),
+            "node_id": "school_end",
+            "latitude": school.get("latitude"),
+            "longitude": school.get("longitude"),
+            "type": "school",
+            "students_count": 0,
+            "students": [],
+        })
+    else:
+        path[-1]["node_id"] = path[-1].get("node_id") or "school_end"
+        path[-1]["latitude"] = school.get("latitude")
+        path[-1]["longitude"] = school.get("longitude")
+        path[-1]["type"] = "school"
 
 
 def _recompute_route_stats(route):
@@ -199,22 +372,54 @@ def _build_response_failure(student_id, reason, runtime_s, routes_considered, po
     }
 
 
-def _generate_updated_route_html(output_html, old_route, new_route, school, new_lat, new_lon):
+def _generate_updated_route_html(output_html, old_route, new_route, school, new_lat, new_lon, student_id=None):
     center = [new_lat, new_lon]
     if school.get("latitude") is not None and school.get("longitude") is not None:
         center = [school.get("latitude"), school.get("longitude")]
 
     m = folium.Map(location=center, zoom_start=14, tiles="OpenStreetMap")
 
-    old_coords = _route_polyline(old_route.get("path", []))
-    new_coords = _route_polyline(new_route.get("path", []))
+    old_route_display = copy.deepcopy(old_route)
+    new_route_display = copy.deepcopy(new_route)
+    _ensure_school_bookends(old_route_display, school)
+    _ensure_school_bookends(new_route_display, school)
+    _recompute_route_stats(old_route_display)
+    _recompute_route_stats(new_route_display)
+
+    old_route_id = str(old_route_display.get("route_id") or "N/A")
+    new_route_id = str(new_route_display.get("route_id") or "N/A")
+    student_label = str(student_id) if student_id is not None else "Unknown"
+
+    old_coords = _route_polyline_on_roads(old_route_display.get("path", []))
+    new_coords = _route_polyline_on_roads(new_route_display.get("path", []))
 
     if old_coords:
-        folium.PolyLine(old_coords, color="#6c757d", weight=4, opacity=0.85, dash_array="8,6", tooltip="Original route").add_to(m)
+        folium.PolyLine(
+            old_coords,
+            color="#6c757d",
+            weight=4,
+            opacity=0.8,
+            dash_array="8,6",
+            tooltip=f"Original route {old_route_id} (school to school)",
+        ).add_to(m)
     if new_coords:
-        folium.PolyLine(new_coords, color="#0d6efd", weight=5, opacity=0.9, tooltip="Updated route").add_to(m)
+        updated = folium.PolyLine(
+            new_coords,
+            color="#2E7D32",
+            weight=5,
+            opacity=0.9,
+            tooltip=f"Updated route {new_route_id} (school to school)",
+        )
+        updated.add_to(m)
+        plugins.PolyLineTextPath(
+            updated,
+            "          \u27A4          ",
+            repeat=True,
+            offset=6,
+            attributes={"fill": "#2E7D32", "font-weight": "bold", "font-size": "24"},
+        ).add_to(m)
 
-    for stop in old_route.get("path", []):
+    for stop in old_route_display.get("path", []):
         lat = stop.get("latitude")
         lon = stop.get("longitude")
         if lat is None or lon is None:
@@ -231,7 +436,7 @@ def _generate_updated_route_html(output_html, old_route, new_route, school, new_
             tooltip="Original stop",
         ).add_to(m)
 
-    for stop in new_route.get("path", []):
+    for stop in new_route_display.get("path", []):
         lat = stop.get("latitude")
         lon = stop.get("longitude")
         if lat is None or lon is None:
@@ -241,9 +446,9 @@ def _generate_updated_route_html(output_html, old_route, new_route, school, new_
         folium.CircleMarker(
             location=(lat, lon),
             radius=5,
-            color="#0d6efd",
+            color="#2E7D32",
             fill=True,
-            fill_color="#0d6efd",
+            fill_color="#2E7D32",
             fill_opacity=0.8,
             tooltip="Updated stop",
         ).add_to(m)
@@ -258,9 +463,30 @@ def _generate_updated_route_html(output_html, old_route, new_route, school, new_
     folium.Marker(
         location=(new_lat, new_lon),
         icon=folium.Icon(color="orange", icon="star", prefix="fa"),
-        tooltip="Inserted changed location",
-        popup="Inserted changed location",
+        tooltip=f"Changed student location ({student_label}) on route {new_route_id}",
+        popup=(
+            f"<b>Student location change</b><br>"
+            f"Student: {student_label}<br>"
+            f"Route used: {new_route_id}<br>"
+            f"Lat: {float(new_lat):.7f}<br>"
+            f"Lon: {float(new_lon):.7f}"
+        ),
     ).add_to(m)
+
+    route_info_html = (
+        "<div style='position: fixed; top: 10px; left: 50px; z-index: 9999; "
+        "background: white; border: 1px solid #d1d5db; border-radius: 6px; "
+        "padding: 6px 10px; font: 12px/1.3 Arial, sans-serif; "
+        "box-shadow: 0 1px 4px rgba(0,0,0,.25);'>"
+        f"<b>Student:</b> {student_label}<br>"
+        f"<b>Route used:</b> {new_route_id}<br>"
+        "<b>Path:</b> School → Stops → School"
+        "</div>"
+    )
+    m.get_root().html.add_child(folium.Element(route_info_html))
+
+    if new_coords:
+        m.fit_bounds(new_coords)
 
     m.save(output_html)
 
@@ -279,7 +505,11 @@ def process_request(base_routes_path, request_path, response_path, updated_route
     change_type = request_payload.get("change_type", "temporary")
 
     routes = copy.deepcopy(base.get("routes", []))
-    school = copy.deepcopy(base.get("school", {}))
+    school = _resolve_school_from_base(base, base_routes_path)
+
+    for route in routes:
+        _ensure_school_bookends(route, school)
+        _recompute_route_stats(route)
 
     if not student_id:
         response = _build_response_failure(None, "Missing student_id in request", time.time() - t0, 0, 0)
@@ -380,6 +610,7 @@ def process_request(base_routes_path, request_path, response_path, updated_route
         school=school,
         new_lat=new_lat,
         new_lon=new_lon,
+        student_id=student_id,
     )
 
     return response
