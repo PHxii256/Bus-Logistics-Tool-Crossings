@@ -1,0 +1,22 @@
+{
+  "school": {
+    "name": "Victory College School",
+    "latitude": 29.964406,
+    "longitude": 31.270319
+  },
+  "buses": {
+    "count": 9,
+    "capacity": 28
+  },
+  "constraints": {
+    "floor_minutes": 60.0,
+    "acceptable_offset_minutes": 30.0,
+    "daily_detour_budget_minutes": 10.0
+  },
+  "stage_walk_limits": {
+    "KG": 0,
+    "ELEMENTARY": 0,
+    "MIDDLE": 250,
+    "HIGH": 500
+  }
+}

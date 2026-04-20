@@ -15,7 +15,7 @@ The new flow is:
 
 The behavior is insertion-only:
 
-- No other students are moved between routes.
+- No other students are moved between routes, all students in a route must not change.
 - Routes with no remaining capacity are skipped.
 - If `route_id` is provided in request, it is treated as a soft hint (tried first, then fallback to others).
 
@@ -166,7 +166,6 @@ Example (`api_requests/change_location_request.json`):
     "longitude": 31.2762834
   },
   "max_detour_minutes": 5,
-  "change_type": "temporary"
 }
 ```
 

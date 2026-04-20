@@ -1,0 +1,95 @@
+{
+  "_description": "Full students routing payload accepted by api_new change-location flow.",
+  "school": {
+    "name": "Victory College School",
+    "latitude": 29.964406,
+    "longitude": 31.270319
+  },
+  "buses": [
+    {
+      "id": "BUS_1",
+      "capacity": 28
+    }
+  ],
+  "routes": [
+    {
+      "route_id": "R1",
+      "bus_id": "BUS_1",
+      "total_distance_km": 16.12,
+      "total_time_minutes": 74.45,
+      "detour_time_used_today": 0.0,
+      "pickup_stops_count": 2,
+      "students_count": 2,
+      "capacity_total": 28,
+      "capacity_used": 2,
+      "capacity_remaining": 26,
+      "occupancy_pct": 7.1,
+      "path": [
+        {
+          "sequence": 0,
+          "node_id": "school_start",
+          "latitude": 29.964406,
+          "longitude": 31.270319,
+          "type": "school",
+          "students_count": 0,
+          "students": []
+        },
+        {
+          "sequence": 1,
+          "node_id": "pickup_1",
+          "latitude": 29.960181,
+          "longitude": 31.269975,
+          "type": "pickup",
+          "students_count": 1,
+          "students": [
+            {
+              "id": "S6",
+              "home_latitude": 29.960161,
+              "home_longitude": 31.26982,
+              "school_stage": "ELEMENTARY",
+              "assignment": "permanent",
+              "valid_from": null,
+              "valid_until": null,
+              "walk_distance": 15.2,
+              "stop_latitude": 29.960181,
+              "stop_longitude": 31.269975,
+              "stop_node_id": "pickup_1"
+            }
+          ]
+        },
+        {
+          "sequence": 2,
+          "node_id": "pickup_2",
+          "latitude": 29.9611,
+          "longitude": 31.2742,
+          "type": "pickup",
+          "students_count": 1,
+          "students": [
+            {
+              "id": "S37",
+              "home_latitude": 29.9610,
+              "home_longitude": 31.2740,
+              "school_stage": "HIGH",
+              "assignment": "permanent",
+              "valid_from": null,
+              "valid_until": null,
+              "walk_distance": 23.0,
+              "stop_latitude": 29.9611,
+              "stop_longitude": 31.2742,
+              "stop_node_id": "pickup_2"
+            }
+          ]
+        },
+        {
+          "sequence": 3,
+          "node_id": "school_end",
+          "latitude": 29.964406,
+          "longitude": 31.270319,
+          "type": "school",
+          "students_count": 0,
+          "students": []
+        }
+      ]
+    }
+  ]
+}

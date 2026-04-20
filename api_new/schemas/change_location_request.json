@@ -1,0 +1,11 @@
+{
+  "_description": "API request contract for changing a single student's pickup location.",
+  "student_id": "S037",
+  "route_id": "R1",
+  "new_location": {
+    "latitude": 29.9615107,
+    "longitude": 31.2762834
+  },
+  "max_detour_minutes": 5,
+  "change_type": "temporary"
+}

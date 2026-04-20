@@ -1,0 +1,416 @@
+{
+  "success": true,
+  "student_id": "S1",
+  "requested_route_id": "R1",
+  "assigned_route_id": "R1",
+  "detour_minutes_added": 0.9479,
+  "updated_route": {
+    "route_id": "R1",
+    "bus_id": "BUS_1",
+    "total_distance_km": 16.6612,
+    "total_time_minutes": 74.7779,
+    "detour_time_used_today": 3.9079,
+    "pickup_stops_count": 7,
+    "students_count": 6,
+    "capacity_total": 20,
+    "capacity_used": 6,
+    "capacity_remaining": 14,
+    "occupancy_pct": 30.0,
+    "path": [
+      {
+        "sequence": 0,
+        "node_id": 2208869932,
+        "latitude": 29.964406,
+        "longitude": 31.270319,
+        "type": "school",
+        "students_count": 0,
+        "students": []
+      },
+      {
+        "sequence": 1,
+        "node_id": 8244426647,
+        "latitude": 29.9601385,
+        "longitude": 31.2703967,
+        "type": "pickup",
+        "students_count": 1,
+        "students": [
+          {
+            "id": "S6",
+            "home_latitude": 29.960161,
+            "home_longitude": 31.26982,
+            "school_stage": "ELEMENTARY",
+            "assignment": "permanent",
+            "valid_from": null,
+            "valid_until": null,
+            "walk_distance": 55.6,
+            "stop_latitude": 29.9601385,
+            "stop_longitude": 31.2703967,
+            "stop_node_id": 8244426647
+          }
+        ]
+      },
+      {
+        "sequence": 2,
+        "node_id": 6586433895,
+        "latitude": 29.9550875,
+        "longitude": 31.274714,
+        "type": "pickup",
+        "students_count": 1,
+        "students": [
+          {
+            "id": "S4",
+            "home_latitude": 29.955,
+            "home_longitude": 31.275,
+            "school_stage": "ELEMENTARY",
+            "assignment": "permanent",
+            "valid_from": null,
+            "valid_until": null,
+            "walk_distance": 29.2,
+            "stop_latitude": 29.9550875,
+            "stop_longitude": 31.274714,
+            "stop_node_id": 6586433895
+          }
+        ]
+      },
+      {
+        "sequence": 3,
+        "node_id": 6585990899,
+        "latitude": 29.9586291,
+        "longitude": 31.2775708,
+        "type": "pickup",
+        "students_count": 0,
+        "students": []
+      },
+      {
+        "sequence": 4,
+        "node_id": "changed_S1",
+        "latitude": 29.9615107,
+        "longitude": 31.2762834,
+        "type": "pickup",
+        "students_count": 1,
+        "students": [
+          {
+            "id": "S1",
+            "home_latitude": 29.9615107,
+            "home_longitude": 31.2762834,
+            "school_stage": "ELEMENTARY",
+            "assignment": "temporary",
+            "valid_from": "2026-02-13",
+            "valid_until": "2026-02-13",
+            "walk_distance": 0.0,
+            "stop_latitude": 29.9615107,
+            "stop_longitude": 31.2762834,
+            "stop_node_id": "changed_S1"
+          }
+        ]
+      },
+      {
+        "sequence": 5,
+        "node_id": 315990370,
+        "latitude": 29.9705213,
+        "longitude": 31.2894522,
+        "type": "pickup",
+        "students_count": 1,
+        "students": [
+          {
+            "id": "S2",
+            "home_latitude": 29.97,
+            "home_longitude": 31.29,
+            "school_stage": "MIDDLE",
+            "assignment": "permanent",
+            "valid_from": null,
+            "valid_until": null,
+            "walk_distance": 78.4,
+            "stop_latitude": 29.9705213,
+            "stop_longitude": 31.2894522,
+            "stop_node_id": 315990370
+          }
+        ]
+      },
+      {
+        "sequence": 6,
+        "node_id": 9657861136,
+        "latitude": 29.9643587,
+        "longitude": 31.2832899,
+        "type": "pickup",
+        "students_count": 1,
+        "students": [
+          {
+            "id": "S5",
+            "home_latitude": 29.965,
+            "home_longitude": 31.285,
+            "school_stage": "MIDDLE",
+            "assignment": "permanent",
+            "valid_from": null,
+            "valid_until": null,
+            "walk_distance": 179.5,
+            "stop_latitude": 29.9643587,
+            "stop_longitude": 31.2832899,
+            "stop_node_id": 9657861136
+          }
+        ]
+      },
+      {
+        "sequence": 7,
+        "node_id": 6304086264,
+        "latitude": 29.9799007,
+        "longitude": 31.2704775,
+        "type": "pickup",
+        "students_count": 1,
+        "students": [
+          {
+            "id": "S3",
+            "home_latitude": 29.98,
+            "home_longitude": 31.27,
+            "school_stage": "HIGH",
+            "assignment": "permanent",
+            "valid_from": null,
+            "valid_until": null,
+            "walk_distance": 47.3,
+            "stop_latitude": 29.9799007,
+            "stop_longitude": 31.2704775,
+            "stop_node_id": 6304086264
+          }
+        ]
+      },
+      {
+        "sequence": 8,
+        "node_id": 2208869932,
+        "latitude": 29.964406,
+        "longitude": 31.270319,
+        "type": "school",
+        "students_count": 0,
+        "students": []
+      }
+    ]
+  },
+  "updated_routes": [
+    {
+      "route_id": "R1",
+      "bus_id": "BUS_1",
+      "total_distance_km": 16.6612,
+      "total_time_minutes": 74.7779,
+      "detour_time_used_today": 3.9079,
+      "pickup_stops_count": 7,
+      "students_count": 6,
+      "capacity_total": 20,
+      "capacity_used": 6,
+      "capacity_remaining": 14,
+      "occupancy_pct": 30.0,
+      "path": [
+        {
+          "sequence": 0,
+          "node_id": 2208869932,
+          "latitude": 29.964406,
+          "longitude": 31.270319,
+          "type": "school",
+          "students_count": 0,
+          "students": []
+        },
+        {
+          "sequence": 1,
+          "node_id": 8244426647,
+          "latitude": 29.9601385,
+          "longitude": 31.2703967,
+          "type": "pickup",
+          "students_count": 1,
+          "students": [
+            {
+              "id": "S6",
+              "home_latitude": 29.960161,
+              "home_longitude": 31.26982,
+              "school_stage": "ELEMENTARY",
+              "assignment": "permanent",
+              "valid_from": null,
+              "valid_until": null,
+              "walk_distance": 55.6,
+              "stop_latitude": 29.9601385,
+              "stop_longitude": 31.2703967,
+              "stop_node_id": 8244426647
+            }
+          ]
+        },
+        {
+          "sequence": 2,
+          "node_id": 6586433895,
+          "latitude": 29.9550875,
+          "longitude": 31.274714,
+          "type": "pickup",
+          "students_count": 1,
+          "students": [
+            {
+              "id": "S4",
+              "home_latitude": 29.955,
+              "home_longitude": 31.275,
+              "school_stage": "ELEMENTARY",
+              "assignment": "permanent",
+              "valid_from": null,
+              "valid_until": null,
+              "walk_distance": 29.2,
+              "stop_latitude": 29.9550875,
+              "stop_longitude": 31.274714,
+              "stop_node_id": 6586433895
+            }
+          ]
+        },
+        {
+          "sequence": 3,
+          "node_id": 6585990899,
+          "latitude": 29.9586291,
+          "longitude": 31.2775708,
+          "type": "pickup",
+          "students_count": 0,
+          "students": []
+        },
+        {
+          "sequence": 4,
+          "node_id": "changed_S1",
+          "latitude": 29.9615107,
+          "longitude": 31.2762834,
+          "type": "pickup",
+          "students_count": 1,
+          "students": [
+            {
+              "id": "S1",
+              "home_latitude": 29.9615107,
+              "home_longitude": 31.2762834,
+              "school_stage": "ELEMENTARY",
+              "assignment": "temporary",
+              "valid_from": "2026-02-13",
+              "valid_until": "2026-02-13",
+              "walk_distance": 0.0,
+              "stop_latitude": 29.9615107,
+              "stop_longitude": 31.2762834,
+              "stop_node_id": "changed_S1"
+            }
+          ]
+        },
+        {
+          "sequence": 5,
+          "node_id": 315990370,
+          "latitude": 29.9705213,
+          "longitude": 31.2894522,
+          "type": "pickup",
+          "students_count": 1,
+          "students": [
+            {
+              "id": "S2",
+              "home_latitude": 29.97,
+              "home_longitude": 31.29,
+              "school_stage": "MIDDLE",
+              "assignment": "permanent",
+              "valid_from": null,
+              "valid_until": null,
+              "walk_distance": 78.4,
+              "stop_latitude": 29.9705213,
+              "stop_longitude": 31.2894522,
+              "stop_node_id": 315990370
+            }
+          ]
+        },
+        {
+          "sequence": 6,
+          "node_id": 9657861136,
+          "latitude": 29.9643587,
+          "longitude": 31.2832899,
+          "type": "pickup",
+          "students_count": 1,
+          "students": [
+            {
+              "id": "S5",
+              "home_latitude": 29.965,
+              "home_longitude": 31.285,
+              "school_stage": "MIDDLE",
+              "assignment": "permanent",
+              "valid_from": null,
+              "valid_until": null,
+              "walk_distance": 179.5,
+              "stop_latitude": 29.9643587,
+              "stop_longitude": 31.2832899,
+              "stop_node_id": 9657861136
+            }
+          ]
+        },
+        {
+          "sequence": 7,
+          "node_id": 6304086264,
+          "latitude": 29.9799007,
+          "longitude": 31.2704775,
+          "type": "pickup",
+          "students_count": 1,
+          "students": [
+            {
+              "id": "S3",
+              "home_latitude": 29.98,
+              "home_longitude": 31.27,
+              "school_stage": "HIGH",
+              "assignment": "permanent",
+              "valid_from": null,
+              "valid_until": null,
+              "walk_distance": 47.3,
+              "stop_latitude": 29.9799007,
+              "stop_longitude": 31.2704775,
+              "stop_node_id": 6304086264
+            }
+          ]
+        },
+        {
+          "sequence": 8,
+          "node_id": 2208869932,
+          "latitude": 29.964406,
+          "longitude": 31.270319,
+          "type": "school",
+          "students_count": 0,
+          "students": []
+        }
+      ]
+    },
+    {
+      "route_id": "R2",
+      "bus_id": "BUS_2",
+      "total_distance_km": 0.0,
+      "total_time_minutes": 0.0,
+      "detour_time_used_today": 0.0,
+      "pickup_stops_count": 0,
+      "students_count": 0,
+      "capacity_total": 90,
+      "capacity_used": 0,
+      "capacity_remaining": 90,
+      "occupancy_pct": 0.0,
+      "path": [
+        {
+          "sequence": 0,
+          "node_id": 2208869932,
+          "latitude": 29.964406,
+          "longitude": 31.270319,
+          "type": "school",
+          "students_count": 0,
+          "students": []
+        },
+        {
+          "sequence": 1,
+          "node_id": 2208869932,
+          "latitude": 29.964406,
+          "longitude": 31.270319,
+          "type": "school",
+          "students_count": 0,
+          "students": []
+        }
+      ]
+    }
+  ],
+  "debug_stats": {
+    "runtime_seconds": 0.362,
+    "routes_considered": 2,
+    "candidate_positions_checked": 8,
+    "before_map_mode": "comparison_map_with_star",
+    "invariant": {
+      "ok": true,
+      "before_total_students": 6,
+      "after_total_students": 6,
+      "checked_non_requesting_students": 5
+    }
+  },
+  "before_map": "C:\\Users\\phx25\\Desktop\\Grad Project\\Bus-Logistics-Tool-Crossings\\api_new\\outputs\\map_before.html",
+  "after_map": "C:\\Users\\phx25\\Desktop\\Grad Project\\Bus-Logistics-Tool-Crossings\\api_new\\outputs\\map_after.html"
+}
