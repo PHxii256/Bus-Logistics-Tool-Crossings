@@ -63,6 +63,18 @@ def _get_mrt_status(input_path: str) -> str:
     return "mrt" if enabled else "dmrt"
 
 
+def _write_no_sidepanels_html(source_html: str, target_html: str):
+    """Create a no-sidepanels copy of a generated comparison map HTML."""
+    from strip_comparison_side_panels import strip_side_panels
+
+    with open(source_html, encoding="utf-8") as f:
+        raw_html = f.read()
+    cleaned_html, stats = strip_side_panels(raw_html)
+    with open(target_html, "w", encoding="utf-8") as f:
+        f.write(cleaned_html)
+    return stats
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Experiment 4 – Crossings",
@@ -96,6 +108,7 @@ def main():
 
     dest_input = os.path.join(run_dir, "snapshot_input.json")
     output_path = os.path.join(run_dir, "comparison_map.html")
+    output_no_sidepanels_path = os.path.join(run_dir, "comparison_map_no_sidepanels.html")
     log_path = os.path.join(run_dir, "terminal_log.txt")
 
     if os.path.abspath(input_path) != os.path.abspath(dest_input):
@@ -133,6 +146,20 @@ def main():
             input_path=dest_input,
             output_path=output_path,
         )
+
+        if os.path.isfile(output_path):
+            try:
+                panel_stats = _write_no_sidepanels_html(output_path, output_no_sidepanels_path)
+                print(f"  Output map (no side panels): {output_no_sidepanels_path}")
+                print(
+                    "  Panels removed: "
+                    f"bottom_right={panel_stats.get('bottom_right_panel_removed', 0)}, "
+                    f"toggles={panel_stats.get('toggle_blocks_removed', 0)}"
+                )
+            except Exception as exc:
+                print(f"[WARN] Could not generate no-sidepanels HTML: {exc}")
+        else:
+            print(f"[WARN] comparison_map.html was not found at: {output_path}")
     finally:
         # Restore original stdout/stderr
         sys.stdout = original_stdout

@@ -24,7 +24,7 @@
   },
 
   "buses": {
-    "count": 9,
+    "count": 15,
     "capacity": 28
   },
 
@@ -50,7 +50,7 @@
     "ceiling_minutes": 60,
     "daily_detour_budget_minutes": 10,
     "bidirectional_check": false,
-    "mrt_enabled": true,
+    "mrt_enabled": false,
     "mrt": 60,
     "acceptable_offset_minutes": 30
   },
