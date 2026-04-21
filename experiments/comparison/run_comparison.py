@@ -992,16 +992,15 @@ def _extract_walk_segments(G_walk, center_lat, center_lon, radius_km=4.0, safe_o
 # MAP BUILDING  (with PolyLineTextPath arrows, like visualization.py)
 # ────────────────────────────────────────────────────────────────────
 _ROUTE_COLORS = {
-    # High-contrast route palettes for white map backgrounds (intentionally no orange/red).
-    "A": ["#1F77B4", "#2CA02C", "#9467BD", "#17BECF", "#8C564B", "#393B79", "#637939", "#1B4965", "#0E7490", "#7F7F7F"],
-    "B": ["#2CA02C", "#9467BD", "#17BECF", "#1F77B4", "#8C564B", "#393B79", "#637939", "#1B4965", "#0E7490", "#7F7F7F"],
-    "C": ["#9467BD", "#17BECF", "#1F77B4", "#2CA02C", "#8C564B", "#393B79", "#637939", "#1B4965", "#0E7490", "#7F7F7F"],
+    "A": ["#2196F3", "#1565C0", "#0D47A1", "#82B1FF"],
+    "B": ["#4CAF50", "#2E7D32", "#1B5E20", "#A5D6A7"],
+    "C": ["#FF9800", "#E65100", "#BF360C", "#FFCC80"],
 }
 # Matching folium-valid named colors for Icon markers (same order as _ROUTE_COLORS)
 _ICON_COLORS = {
-    "A": ["blue", "green", "purple", "cadetblue", "darkpurple", "darkblue", "darkgreen", "gray", "black", "lightblue"],
-    "B": ["green", "purple", "cadetblue", "blue", "darkpurple", "darkblue", "darkgreen", "gray", "black", "lightblue"],
-    "C": ["purple", "cadetblue", "blue", "green", "darkpurple", "darkblue", "darkgreen", "gray", "black", "lightblue"],
+    "A": ["blue",   "darkblue",  "darkblue",  "lightblue"],
+    "B": ["green",  "darkgreen", "darkgreen", "lightgreen"],
+    "C": ["orange", "red",       "darkred",   "beige"],
 }
 _MODE_NAMES = {
     "A": "Strictly Constrained (Safe Walking)",
@@ -2465,7 +2464,7 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
     mode_tables_html = getattr(_build_stats_html, '_mode_tables', "")
     _build_stats_html._mode_tables = ""   # reset for next call
 
-    # Mode mini-tables placed side-by-side; single horizontal scrollbar at bottom
+        # Mode mini-tables placed side-by-side; single horizontal scrollbar at bottom
     route_table = f"""
       <div style="margin-top:6px; padding-top:6px; border-top:1px solid #ddd;">
         <div style="font-size:11px; font-weight:bold; color:#444; margin-bottom:3px;">Per-Route Details</div>

@@ -84,6 +84,8 @@ def main():
 
     if students_override_path.exists():
         students_data = normalize_students_data_payload(load_json(students_override_path))
+        # Keep persisted payload canonical (routes -> stops -> students), even for override files.
+        write_json(students_override_path, students_data)
     else:
         run_inputs = resolve_inputs_from_run(run_dir, mode_name=RUN_MODE_FOR_EXTRACTION)
         students_data = run_inputs["students_data"]

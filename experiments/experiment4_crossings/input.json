@@ -6,7 +6,7 @@
     "longitude": 31.270319
   },
 
-  "n_students": 200,
+  "n_students": 400,
   "seed": 67,
   "stage_distribution": {
     "KG": 0.25,

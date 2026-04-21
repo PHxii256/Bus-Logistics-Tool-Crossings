@@ -363,10 +363,9 @@ def _extract_dangerous_roads(G_constrained, center_lat=None, center_lon=None, ra
 # ============================================================================
 
 _ROUTE_COLORS = {
-    # High-contrast route palettes for white map backgrounds (intentionally no orange/red).
-    "A": ["#1F77B4", "#2CA02C", "#9467BD", "#17BECF", "#8C564B", "#393B79", "#637939", "#1B4965", "#0E7490", "#7F7F7F"],
-    "B": ["#2CA02C", "#9467BD", "#17BECF", "#1F77B4", "#8C564B", "#393B79", "#637939", "#1B4965", "#0E7490", "#7F7F7F"],
-    "C": ["#9467BD", "#17BECF", "#1F77B4", "#2CA02C", "#8C564B", "#393B79", "#637939", "#1B4965", "#0E7490", "#7F7F7F"],
+    "A": ["#2196F3", "#1565C0", "#0D47A1", "#82B1FF"],    # blues
+    "B": ["#4CAF50", "#2E7D32", "#1B5E20", "#A5D6A7"],    # greens
+    "C": ["#FF9800", "#E65100", "#BF360C", "#FFCC80"],     # oranges
 }
 
 _MODE_NAMES = {

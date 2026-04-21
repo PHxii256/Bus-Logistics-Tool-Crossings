@@ -102,19 +102,23 @@ def _ensure_school_bookends(route, school):
         stop["students_count"] = len(stop.get("students", []))
 
 
-def _normalize_student(student, stop):
+def _normalize_student(student, stop, route_id=None, pickup_order=None):
     normalized = {
         "id": student.get("id"),
         "home_latitude": student.get("home_latitude"),
         "home_longitude": student.get("home_longitude"),
         "school_stage": student.get("school_stage") or student.get("stage"),
+        "physically_mentally_disabled": student.get("physically_mentally_disabled", False),
         "assignment": student.get("assignment", "permanent"),
         "valid_from": student.get("valid_from"),
         "valid_until": student.get("valid_until"),
-        "walk_distance": student.get("walk_distance"),
+        "walk_distance": student.get("walk_distance", student.get("walk_distance_m")),
         "stop_latitude": stop.get("latitude"),
         "stop_longitude": stop.get("longitude"),
         "stop_node_id": stop.get("node_id"),
+        "route_id": route_id if route_id is not None else student.get("route_id"),
+        "pickup_order": pickup_order if pickup_order is not None else student.get("pickup_order"),
+        "rejection_reason": student.get("rejection_reason"),
     }
     return normalized
 
@@ -129,9 +133,15 @@ def _normalize_route(route, school, bus_lookup):
     pickup_stops_count = 0
     for idx, stop in enumerate(path_in):
         stop_type = stop.get("type", "pickup")
+        current_pickup_order = idx if str(stop_type).lower() != "school" else None
         students = []
         for student in stop.get("students", []):
-            student_out = _normalize_student(student, stop)
+            student_out = _normalize_student(
+                student,
+                stop,
+                route_id=str(route_id),
+                pickup_order=current_pickup_order,
+            )
             students.append(student_out)
         students_count += len(students)
         if str(stop_type).lower() != "school":
@@ -206,7 +216,7 @@ def _extract_students_data_from_experiment(output_payload, snapshot_payload, mod
     has_coords = any(
         student.get("stop_latitude") is not None and student.get("stop_longitude") is not None for student in students_raw
     )
-    if not has_coords:
+    if students_raw and not has_coords:
         raise ValueError(
             "output.json for this run does not include stop coordinates per student. "
             "Provide api_new/inputs/students_data.json override or use a run with detailed stop coordinates."
@@ -234,12 +244,18 @@ def _extract_students_data_from_experiment(output_payload, snapshot_payload, mod
         students_by_route[str(route_id)].append(student)
 
     routes = []
-    for route_id, students in students_by_route.items():
+    for route in routes_raw:
+        route_id = route.get("route_id", route.get("id"))
+        if route_id is None:
+            continue
+        route_id = str(route_id)
+        students = students_by_route.get(route_id, [])
+
         stops_map = defaultdict(list)
         for student in students:
             order = _safe_int(student.get("pickup_order", 10**6), 10**6)
-            stop_lat = student.get("stop_latitude")
-            stop_lon = student.get("stop_longitude")
+            stop_lat = student.get("stop_latitude", student.get("home_latitude"))
+            stop_lon = student.get("stop_longitude", student.get("home_longitude"))
             stop_node = student.get("stop_node_id", f"{route_id}_stop_{order}")
             key = (order, stop_node, stop_lat, stop_lon)
             normalized_student = {
@@ -247,6 +263,7 @@ def _extract_students_data_from_experiment(output_payload, snapshot_payload, mod
                 "home_latitude": student.get("home_latitude"),
                 "home_longitude": student.get("home_longitude"),
                 "school_stage": student.get("school_stage", student.get("stage")),
+                "physically_mentally_disabled": student.get("physically_mentally_disabled", False),
                 "assignment": student.get("assignment", "permanent"),
                 "valid_from": student.get("valid_from"),
                 "valid_until": student.get("valid_until"),
@@ -254,6 +271,9 @@ def _extract_students_data_from_experiment(output_payload, snapshot_payload, mod
                 "stop_latitude": stop_lat,
                 "stop_longitude": stop_lon,
                 "stop_node_id": stop_node,
+                "route_id": route_id,
+                "pickup_order": order if order != 10**6 else None,
+                "rejection_reason": student.get("rejection_reason"),
             }
             stops_map[key].append(normalized_student)
 
@@ -294,11 +314,14 @@ def _extract_students_data_from_experiment(output_payload, snapshot_payload, mod
             }
         )
 
-        stats = route_stats.get(str(route_id), {})
+        stats = route_stats.get(route_id, {})
         students_count = sum(len(stop["students"]) for stop in path if stop["type"] != "school")
-        capacity_total = buses_capacity
+        capacity_total = _safe_int(stats.get("capacity_total", buses_capacity), buses_capacity)
+        capacity_used = _safe_int(stats.get("capacity_used", students_count), students_count)
+        if capacity_used < students_count:
+            capacity_used = students_count
         route_out = {
-            "route_id": str(route_id),
+            "route_id": route_id,
             "bus_id": stats.get("bus_id"),
             "total_distance_km": _safe_float(stats.get("total_distance_km", 0.0), 0.0),
             "total_time_minutes": _safe_float(stats.get("total_time_min", stats.get("total_time_minutes", 0.0)), 0.0),
@@ -306,9 +329,9 @@ def _extract_students_data_from_experiment(output_payload, snapshot_payload, mod
             "pickup_stops_count": len(path) - 2,
             "students_count": students_count,
             "capacity_total": capacity_total,
-            "capacity_used": students_count,
-            "capacity_remaining": max(0, capacity_total - students_count),
-            "occupancy_pct": round((students_count / capacity_total) * 100.0, 1) if capacity_total > 0 else 0.0,
+            "capacity_used": capacity_used,
+            "capacity_remaining": max(0, capacity_total - capacity_used),
+            "occupancy_pct": round((capacity_used / capacity_total) * 100.0, 1) if capacity_total > 0 else 0.0,
             "path": path,
         }
         routes.append(route_out)
