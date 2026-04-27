@@ -7,6 +7,8 @@ if str(REPO_ROOT) not in sys.path:
 
 from api_new.scripts.change_location_pipeline import process_change_location
 from api_new.scripts.data_extractors import (
+    build_operational_students_data,
+    build_school_students_from_routes_payload,
     build_school_config,
     load_json,
     normalize_students_data_payload,
@@ -74,8 +76,9 @@ def main():
 
     snapshot_payload = load_json(run_dir / "snapshot_input.json")
     school_config = build_school_config(snapshot_payload)
-    comparison_map_candidate = run_dir / "comparison_map.html"
-    comparison_map_source = str(comparison_map_candidate) if comparison_map_candidate.exists() else None
+    run_inputs = resolve_inputs_from_run(run_dir, mode_name=RUN_MODE_FOR_EXTRACTION)
+    routes_students_data = run_inputs["students_data"]
+    comparison_map_source = run_inputs.get("comparison_map_html")
 
     if school_override_path.exists():
         school_config = load_json(school_override_path)
@@ -83,15 +86,13 @@ def main():
         write_json(school_override_path, school_config)
 
     if students_override_path.exists():
-        students_data = normalize_students_data_payload(load_json(students_override_path))
-        # Keep persisted payload canonical (routes -> stops -> students), even for override files.
-        write_json(students_override_path, students_data)
+        school_students_data = normalize_students_data_payload(load_json(students_override_path))
+        write_json(students_override_path, school_students_data)
     else:
-        run_inputs = resolve_inputs_from_run(run_dir, mode_name=RUN_MODE_FOR_EXTRACTION)
-        students_data = run_inputs["students_data"]
-        if run_inputs.get("comparison_map_html"):
-            comparison_map_source = run_inputs["comparison_map_html"]
-        write_json(students_override_path, students_data)
+        school_students_data = build_school_students_from_routes_payload(routes_students_data)
+        write_json(students_override_path, school_students_data)
+
+    students_data = build_operational_students_data(school_students_data, routes_students_data)
 
     change_location_request = load_json(request_path)
 

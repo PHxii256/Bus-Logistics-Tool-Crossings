@@ -30,6 +30,22 @@ def _safe_int(value, default=0):
         return int(default)
 
 
+def _safe_bool(value, default=False):
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return bool(default)
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered in {"true", "1", "yes", "y"}:
+            return True
+        if lowered in {"false", "0", "no", "n"}:
+            return False
+    return bool(default)
+
+
 def _get_school(payload):
     school = payload.get("school") or {}
     if school.get("latitude") is not None and school.get("longitude") is not None:
@@ -204,6 +220,117 @@ def _normalize_routes_payload(payload):
         "buses": buses,
         "routes": routes_out,
     }
+
+
+def _normalize_school_students_payload(payload):
+    school = _get_school(payload)
+    students_in = payload.get("students")
+    if not isinstance(students_in, list):
+        raise ValueError("students_data must contain a students list.")
+    if not students_in:
+        raise ValueError("students_data.students cannot be empty.")
+
+    students_out = []
+    seen_ids = set()
+    for idx, student in enumerate(students_in):
+        if not isinstance(student, dict):
+            raise ValueError(f"students_data.students[{idx}] must be an object.")
+
+        student_id = student.get("id")
+        if student_id in (None, ""):
+            raise ValueError(f"students_data.students[{idx}] missing required field: id")
+        student_id = str(student_id)
+        if student_id in seen_ids:
+            raise ValueError(f"Duplicate student id in students_data: {student_id}")
+        seen_ids.add(student_id)
+
+        home_latitude = student.get("home_latitude")
+        home_longitude = student.get("home_longitude")
+        if home_latitude is None or home_longitude is None:
+            raise ValueError(f"students_data.students[{idx}] missing home coordinates.")
+        try:
+            home_latitude = float(home_latitude)
+            home_longitude = float(home_longitude)
+        except (TypeError, ValueError):
+            raise ValueError(f"students_data.students[{idx}] has invalid home coordinates.")
+
+        school_stage = student.get("school_stage") or student.get("stage")
+        if school_stage in (None, ""):
+            raise ValueError(f"students_data.students[{idx}] missing required field: school_stage")
+
+        students_out.append(
+            {
+                "id": student_id,
+                "home_latitude": home_latitude,
+                "home_longitude": home_longitude,
+                "school_stage": str(school_stage),
+                "physically_mentally_disabled": _safe_bool(student.get("physically_mentally_disabled"), False),
+            }
+        )
+
+    return {
+        "meta": {
+            "kind": "students_data_school_input",
+            "version": 1,
+            "generated_at": datetime.now().isoformat(timespec="seconds"),
+            "source_type": "school_students_payload",
+        },
+        "school": school,
+        "students": students_out,
+    }
+
+
+def build_school_students_from_routes_payload(routes_payload):
+    normalized_routes = _normalize_routes_payload(routes_payload)
+    students_by_id = {}
+    for route in normalized_routes.get("routes", []):
+        for stop in route.get("path", []):
+            for student in stop.get("students", []):
+                student_id = student.get("id")
+                if student_id in (None, ""):
+                    continue
+                student_id = str(student_id)
+                if student_id in students_by_id:
+                    continue
+                students_by_id[student_id] = {
+                    "id": student_id,
+                    "home_latitude": student.get("home_latitude"),
+                    "home_longitude": student.get("home_longitude"),
+                    "school_stage": student.get("school_stage") or student.get("stage"),
+                    "physically_mentally_disabled": _safe_bool(student.get("physically_mentally_disabled"), False),
+                }
+
+    school_students_payload = {
+        "school": normalized_routes.get("school") or {},
+        "students": [students_by_id[sid] for sid in sorted(students_by_id.keys())],
+    }
+    return _normalize_school_students_payload(school_students_payload)
+
+
+def build_operational_students_data(school_students_payload, routes_payload):
+    normalized_school_students = _normalize_school_students_payload(school_students_payload)
+    operational = _normalize_routes_payload(routes_payload)
+    student_profile_by_id = {str(student["id"]): student for student in normalized_school_students.get("students", [])}
+
+    for route in operational.get("routes", []):
+        for stop in route.get("path", []):
+            for student in stop.get("students", []):
+                student_id = str(student.get("id")) if student.get("id") is not None else None
+                if student_id and student_id in student_profile_by_id:
+                    profile = student_profile_by_id[student_id]
+                    student["home_latitude"] = profile["home_latitude"]
+                    student["home_longitude"] = profile["home_longitude"]
+                    student["school_stage"] = profile["school_stage"]
+                    student["physically_mentally_disabled"] = profile["physically_mentally_disabled"]
+                else:
+                    student["physically_mentally_disabled"] = _safe_bool(
+                        student.get("physically_mentally_disabled"),
+                        False,
+                    )
+
+    operational["meta"] = operational.get("meta") or {}
+    operational["meta"]["source_type"] = "routes_payload+school_students"
+    return operational
 
 
 def _extract_students_data_from_experiment(output_payload, snapshot_payload, mode_name):
@@ -387,15 +514,7 @@ def validate_school_config(school_config):
 
 
 def validate_students_data(students_data):
-    if "routes" not in students_data or not isinstance(students_data["routes"], list):
-        raise ValueError("students_data must contain routes list.")
-    if not students_data["routes"]:
-        raise ValueError("students_data.routes cannot be empty.")
-    for route in students_data["routes"]:
-        if "route_id" not in route:
-            raise ValueError("Each route in students_data must contain route_id.")
-        if "path" not in route or not isinstance(route["path"], list):
-            raise ValueError(f"Route {route.get('route_id')} missing path list.")
+    _normalize_school_students_payload(students_data)
 
 
 def resolve_inputs_from_run(run_dir, mode_name="weakly_constrained"):
@@ -434,5 +553,5 @@ def resolve_inputs_from_run(run_dir, mode_name="weakly_constrained"):
 
 
 def normalize_students_data_payload(payload):
-    return _normalize_routes_payload(payload)
+    return _normalize_school_students_payload(payload)
 
