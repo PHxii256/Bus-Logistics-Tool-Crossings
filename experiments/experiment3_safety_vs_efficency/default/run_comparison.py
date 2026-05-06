@@ -21,6 +21,7 @@ Usage (from the repo root):
 """
 
 import os, sys, json, time, copy, math, argparse
+from typing import Any, cast
 
 # ── path fix: ensure repo root is on sys.path ──
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -292,16 +293,29 @@ def _extract_segments(G_con, center_lat, center_lon, kind="dangerous"):
 # ────────────────────────────────────────────────────────────────────
 # MAP BUILDING  (with PolyLineTextPath arrows, like visualization.py)
 # ────────────────────────────────────────────────────────────────────
-_ROUTE_COLORS = {
+_MODE_COLORS = {
     "A": ["#2196F3", "#1565C0", "#0D47A1", "#82B1FF"],
     "B": ["#4CAF50", "#2E7D32", "#1B5E20", "#A5D6A7"],
-    "C": ["#FF9800", "#E65100", "#BF360C", "#FFCC80"],
+    "C": ["#F4A261", "#2E86AB", "#6C5B7B", "#E377C2"],
 }
+_ROUTE_PALETTE = [
+    "#1f77b4", "#2ca02c", "#17becf", "#9467bd", "#1b9e77",
+    "#4e79a7", "#59a14f", "#76b7b2", "#af7aa1", "#8da0cb",
+    "#66c2a5", "#a6cee3", "#8c6bb1", "#5ab4ac", "#3b4994",
+]
 _MODE_NAMES = {
     "A": "Constrained (Safe Walking)",
     "B": "Unconstrained (Any Walking)",
     "C": "Door-to-Door (No Walking)",
 }
+
+
+def _route_color_for(route_id, route_index):
+    digits = "".join(ch for ch in str(route_id) if ch.isdigit())
+    if digits:
+        route_number = max(1, int(digits))
+        return _ROUTE_PALETTE[(route_number - 1) % len(_ROUTE_PALETTE)]
+    return _ROUTE_PALETTE[route_index % len(_ROUTE_PALETTE)]
 
 import networkx as nx
 from detour_engine import (
@@ -409,12 +423,11 @@ def _add_route_layer(m, G, sol, mode_key, G_con):
     show = mode_key in ("A", "B")   # show constrained + unconstrained by default
     fg_routes = FeatureGroup(name=f"{_MODE_NAMES[mode_key]} – Routes",        show=show)
     fg_walks  = FeatureGroup(name=f"{_MODE_NAMES[mode_key]} – Walking Paths", show=show)
-    colors = _ROUTE_COLORS[mode_key]
     active  = [r for r in sol.routes if r.get_student_count() > 0]
     occupancies = []
 
     for ri, route in enumerate(active):
-        c = colors[ri % len(colors)]
+        c = _route_color_for(route.route_id, ri)
 
         # ── Bus route polyline with arrow-heads ──
         if len(route.stops) > 1:
@@ -467,7 +480,7 @@ def _add_route_layer(m, G, sol, mode_key, G_con):
                 walk_m = walk_distance_on_roads(G, s_node, stop.node_id)
                 folium.CircleMarker(
                     location=student.coords, radius=4,
-                    color=c, fill=True, fillColor="white", fillOpacity=0.9, weight=2,
+                    color=c, fill=True, fillColor=c, fillOpacity=0.9, weight=2,
                     tooltip=f"{student.id} ({student.school_stage.name}) — walk {walk_m:.0f} m",
                 ).add_to(fg_walks)
 
@@ -506,7 +519,7 @@ def _build_stats_html(all_stats, crossings_dict, occupancies_dict):
         occ = occupancies_dict.get(mk, [])
         avg_occ = (sum(occ) / len(occ)) if occ else 0
         cx_color = "#c0392b" if cx > 0 else "#27ae60"
-        mc = _ROUTE_COLORS[mk][0]
+        mc = _MODE_COLORS[mk][0]
         blocks += f"""
         <div style="margin-bottom:8px; padding-bottom:8px;
                     border-bottom:1px solid #e0e0e0;">
@@ -677,14 +690,8 @@ def main():
         icon=folium.Icon(color="darkgreen", icon="graduation-cap", prefix="fa"),
     ).add_to(m)
 
-    # Dangerous roads layer
-    fg_danger = FeatureGroup(name="\u26A0 Dangerous Roads (unsafe to cross)", show=True)
-    danger_segs = _extract_segments(G_con, center[0], center[1], "dangerous")
-    for seg in danger_segs:
-        folium.PolyLine(seg, color="#e74c3c", weight=3, opacity=0.45,
-                        dash_array="6,4").add_to(fg_danger)
-    fg_danger.add_to(m)
-    print(f"  Dangerous-road segments: {len(danger_segs)}")
+    # Dangerous roads are intentionally hidden in comparison maps.
+    print("  Dangerous-road segments: hidden (disabled)")
 
     # Unclassified roads layer
     fg_unclass = FeatureGroup(name="Unclassified Roads (no student placement)", show=False)
@@ -716,7 +723,7 @@ def main():
 
     _add_crossing_markers(m, crossings_dict)
     folium.LayerControl(collapsed=False).add_to(m)
-    m.get_root().html.add_child(folium.Element(
+    cast(Any, m.get_root()).html.add_child(folium.Element(
         _build_stats_html(all_stats, crossings_dict, occupancies_dict)))
 
     m.save(output)

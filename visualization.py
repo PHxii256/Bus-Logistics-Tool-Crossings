@@ -40,6 +40,31 @@ def get_address_from_coords(lat, lon):
         return "Address lookup error"
 
 
+def _route_icon_class(route_color):
+    safe = str(route_color or "").lstrip("#").lower()
+    return f"route-{safe}" if safe else "blue"
+
+
+def _ensure_route_icon_css(m, route_color):
+    if m is None or not route_color:
+        return
+    used = getattr(m, "_route_icon_colors", None)
+    if used is None:
+        used = set()
+        m._route_icon_colors = used
+    if route_color in used:
+        return
+    class_name = _route_icon_class(route_color)
+    css = (
+        "<style>"
+        f".awesome-marker-icon-{class_name} "
+        f"{{ background-color: {route_color}; border-color: {route_color}; }}"
+        "</style>"
+    )
+    m.get_root().header.add_child(folium.Element(css))
+    used.add(route_color)
+
+
 def _compute_pm_ride_time(route, stop, G):
     """Afternoon (school→home) ride time for a student at `stop`.
 
@@ -226,7 +251,11 @@ def create_route_map(G, routes, students_to_routes=None, all_students=None, scho
     )
     
     # Color palette for routes
-    route_colors = ['blue', 'red', 'green', 'purple', 'orange', 'darkblue', 'darkred', 'darkgreen']
+    route_colors = [
+        '#1f77b4', '#2ca02c', '#17becf', '#9467bd', '#1b9e77',
+        '#4e79a7', '#59a14f', '#76b7b2', '#af7aa1', '#8da0cb',
+        '#66c2a5', '#a6cee3', '#8c6bb1', '#5ab4ac', '#3b4994',
+    ]
     
     # Add school location if provided
     if school_coords:
@@ -478,12 +507,14 @@ def create_route_map(G, routes, students_to_routes=None, all_students=None, scho
                 if walk_dist_m > 20:  # 20m tolerance for snapping to nearest road
                     walk_warning_html = f'<br><b style="color:red;">House far from stop ({walk_dist_m:.0f}m)</b>'
 
-            # Temporary students get a distinct red/orange marker so they stand out
+            # Keep the home icon, but match the route color exactly.
             is_temporary = getattr(student_obj, 'assignment', 'permanent') == 'temporary'
+            _ensure_route_icon_css(m, route_color)
             home_icon = folium.Icon(
-                color='orange' if is_temporary else 'blue',
+                color=_route_icon_class(route_color),
                 icon='home',
-                prefix='fa'
+                prefix='fa',
+                icon_color='white'
             )
             assignment_label = (
                 f'<br><b style="color:darkorange;">Temporary: {student_obj.valid_from} → {student_obj.valid_until}</b>'
@@ -655,10 +686,10 @@ def create_route_map(G, routes, students_to_routes=None, all_students=None, scho
             <span style="color: darkgreen; font-weight: bold;">●</span> School Location (Start/End)
         </p>
         <p style="margin: 5px 0;">
-            <span style="color: blue;">●</span> Student Home (permanent)
+            <span style="color: #444;">●</span> Student Home (route-colored)
         </p>
         <p style="margin: 5px 0;">
-            <span style="color: orange;">●</span> Student Home (temporary change)
+            <span style="color: #444;">●</span> Temporary status shown in popup
         </p>
         <p style="margin: 5px 0;">
             <span style="color: black;">●</span> Unassigned Student (Failed)

@@ -1,5 +1,7 @@
 import sys
 from pathlib import Path
+import glob
+import json
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
@@ -24,7 +26,44 @@ from api_new.scripts.data_extractors import (
 # -------------------------
 # Inputs / constants
 # -------------------------
-RUN_FOLDER_REL_PATH = "experiments/experiment4_crossings/200_students/42/3ff9ad02_dmrt_1_0408-2240"
+
+def _discover_latest_run_folder(experiments_dir_rel_path="experiments/experiment4_crossings"):
+    """
+    Auto-discover the latest experiment run folder by:
+    1. Globbing all run folders (matching pattern with timestamps)
+    2. Sorting by timestamp from snapshot_input.json or folder modification time
+    3. Returns the latest run folder path (relative to REPO_ROOT)
+    
+    Falls back to hardcoded default if no runs found.
+    """
+    repo_root = REPO_ROOT
+    experiments_dir = repo_root / experiments_dir_rel_path
+    
+    if not experiments_dir.exists():
+        print(f"Warning: experiments directory not found at {experiments_dir}")
+        return None
+    
+    # Find all run folders (pattern: folder with snapshot_input.json)
+    run_folders = []
+    for run_dir in experiments_dir.iterdir():
+        if run_dir.is_dir() and (run_dir / "snapshot_input.json").exists():
+            run_folders.append(run_dir)
+    
+    if not run_folders:
+        print(f"Warning: no run folders found in {experiments_dir}")
+        return None
+    
+    # Sort by modification time (latest first)
+    latest_run = max(run_folders, key=lambda d: d.stat().st_mtime)
+    rel_path = latest_run.relative_to(repo_root)
+    
+    print(f"Auto-discovered latest run: {rel_path}")
+    return str(rel_path)
+
+
+# Default run folder (will be overridden by auto-discovery if runs exist)
+RUN_FOLDER_REL_PATH_DEFAULT = "experiments/experiment4_crossings/627daf88_dmrt_1_0505-2126"
+RUN_FOLDER_REL_PATH = _discover_latest_run_folder() or RUN_FOLDER_REL_PATH_DEFAULT
 RUN_MODE_FOR_EXTRACTION = "weakly_constrained"
 
 # Optional override files. If present, these override run-derived defaults.
@@ -97,12 +136,13 @@ def main():
     change_location_request = load_json(request_path)
 
     validate_school_config(school_config)
-    validate_students_data(students_data)
+    validate_students_data(school_students_data)
     _validate_change_location_request(change_location_request)
 
     response = process_change_location(
         school_config=school_config,
         students_data=students_data,
+        school_students_data=school_students_data,
         change_location_request=change_location_request,
         before_map_path=str(output_before_map_path),
         after_map_path=str(output_after_map_path),
@@ -110,13 +150,13 @@ def main():
     )
 
     write_json(output_response_path, response)
-    print(f"success={response.get('success')}")
-    print(f"response={output_response_path}")
-    print(f"before_map={output_before_map_path}")
+    print(f"success= {response.get('success')}")
+    print(f"response= {output_response_path}")
+    print(f"before_map= {output_before_map_path}")
     if response.get("success"):
-        print(f"after_map={output_after_map_path}")
+        print(f"after_map= {output_after_map_path}")
     else:
-        print(f"failure_reason={response.get('reason')}")
+        print(f"failure_reason= {response.get('reason')}")
 
 
 if __name__ == "__main__":

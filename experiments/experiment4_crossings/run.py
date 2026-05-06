@@ -145,6 +145,8 @@ def main():
         _run_comparison(
             input_path=dest_input,
             output_path=output_path,
+            run_modes=("B",),
+            visible_modes=("B",),
         )
 
         if os.path.isfile(output_path):

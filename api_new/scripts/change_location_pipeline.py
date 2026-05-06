@@ -1,8 +1,11 @@
 import copy
 import math
 import time
+import sys
+from pathlib import Path
 
 from api_new.scripts.map_tools import generate_before_map, generate_updated_route_map
+from api_new.scripts.route_reoptimizer import reoptimize_route, _load_or_create_graph
 
 
 def _safe_float(value, default=0.0):
@@ -142,6 +145,16 @@ def _find_and_remove_student(routes, student_id):
     return None, None
 
 
+def _find_student_profile(school_students_data, student_id):
+    candidates = school_students_data
+    if isinstance(candidates, dict):
+        candidates = candidates.get("students") or []
+    for student in candidates or []:
+        if str(student.get("id")) == str(student_id):
+            return copy.deepcopy(student)
+    return None
+
+
 def _ordered_candidate_routes(routes, preferred_route_id):
     route_map = {str(route.get("route_id")): route for route in routes}
     ordered_ids = []
@@ -259,6 +272,7 @@ def process_change_location(
     *,
     school_config,
     students_data,
+    school_students_data=None,
     change_location_request,
     before_map_path,
     after_map_path,
@@ -307,7 +321,9 @@ def process_change_location(
             break
 
     old_route, student_record = _find_and_remove_student(routes, student_id)
-    if old_route is None or student_record is None:
+    if student_record is None:
+        student_record = _find_student_profile(school_students_data, student_id)
+    if student_record is None:
         return _build_failure(student_id, "Student was not found in students_data", time.time() - start_time, 0, 0)
 
     routes_considered = 0
@@ -381,6 +397,69 @@ def process_change_location(
     if old_route_snapshot is not None and str(selected_route_before.get("route_id")) == str(old_route_snapshot.get("route_id")):
         route_for_map_before = old_route_snapshot
 
+    # Attempt full ALNS re-optimization with proper graph loading
+    optimized_path_coords = None
+    try:
+        print("[Pipeline] Attempting ALNS re-optimization...")
+        
+        # DEBUG: Log what students are in the route before optimization
+        route_students_debug = []
+        for stop in selected_route.get("path", []):
+            if stop.get("type", "pickup").lower() != "school":
+                for s in stop.get("students", []):
+                    route_students_debug.append((s.get("id"), s.get("home_latitude"), s.get("home_longitude")))
+        print(f"[Pipeline] selected_route R{selected_route.get('route_id')} has {len(route_students_debug)} students before re-opt")
+        s093_before = [s for s in route_students_debug if s[0] == 'S093']
+        if s093_before:
+            print(f"[Pipeline]   S093: {s093_before[0]}")
+        
+        # Compute bounding box from route stops
+        all_lats = [school.get("latitude")]
+        all_lons = [school.get("longitude")]
+        for stop in selected_route.get("path", []):
+            if stop.get("latitude") is not None and stop.get("longitude") is not None:
+                all_lats.append(float(stop["latitude"]))
+                all_lons.append(float(stop["longitude"]))
+        
+        if len(all_lats) < 2:
+            raise ValueError("Not enough coordinates to compute bounding box")
+        
+        bbox = [min(all_lats), min(all_lons), max(all_lats), max(all_lons)]
+        print(f"[Pipeline] Route bbox: {bbox}")
+        
+        # Load road network
+        graph = _load_or_create_graph(bbox)
+        
+        # Run ALNS re-optimizer
+        print("[Pipeline] Calling reoptimize_route...")
+        result = reoptimize_route(selected_route, school, graph, iterations=100, time_budget_seconds=60)
+        print(f"[Pipeline] reoptimize_route returned: {type(result)}")
+        
+        # Trace optimized waypoints through OSRM to get road geometry
+        from api_new.scripts.map_tools import _osrm_segment_geometry
+        optimized_waypoints = result.get("optimized_path", [])
+        print(f"[Pipeline] Got {len(optimized_waypoints)} optimized waypoints")
+        
+        if len(optimized_waypoints) >= 2:
+            merged_coords = []
+            for idx in range(len(optimized_waypoints) - 1):
+                a_lat, a_lon = optimized_waypoints[idx]
+                b_lat, b_lon = optimized_waypoints[idx + 1]
+                segment = _osrm_segment_geometry(a_lat, a_lon, b_lat, b_lon)
+                if not segment:
+                    segment = [(a_lat, a_lon), (b_lat, b_lon)]
+                if not merged_coords:
+                    merged_coords.extend(segment)
+                else:
+                    merged_coords.extend(segment[1:])
+            optimized_path_coords = merged_coords
+            print(f"[Pipeline] ALNS re-optimization succeeded: {len(optimized_waypoints)} waypoints → {len(optimized_path_coords)} road coords")
+    except Exception as e:
+        import traceback
+        print(f"[Pipeline] ALNS re-optimization failed: {e}")
+        print(traceback.format_exc())
+        optimized_path_coords = None
+
     generate_updated_route_map(
         output_html=after_map_path,
         old_route=route_for_map_before,
@@ -389,7 +468,8 @@ def process_change_location(
         new_lat=new_lat,
         new_lon=new_lon,
         student_id=student_id,
-        use_osrm=False,
+        use_osrm=True,
+        optimized_path_coords=optimized_path_coords,
     )
 
     response = {

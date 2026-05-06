@@ -991,22 +991,41 @@ def _extract_walk_segments(G_walk, center_lat, center_lon, radius_km=4.0, safe_o
 # ────────────────────────────────────────────────────────────────────
 # MAP BUILDING  (with PolyLineTextPath arrows, like visualization.py)
 # ────────────────────────────────────────────────────────────────────
-_ROUTE_COLORS = {
+_MODE_COLORS = {
     "A": ["#2196F3", "#1565C0", "#0D47A1", "#82B1FF"],
     "B": ["#4CAF50", "#2E7D32", "#1B5E20", "#A5D6A7"],
-    "C": ["#FF9800", "#E65100", "#BF360C", "#FFCC80"],
+    "C": ["#F4A261", "#2E86AB", "#6C5B7B", "#E377C2"],
 }
-# Matching folium-valid named colors for Icon markers (same order as _ROUTE_COLORS)
-_ICON_COLORS = {
-    "A": ["blue",   "darkblue",  "darkblue",  "lightblue"],
-    "B": ["green",  "darkgreen", "darkgreen", "lightgreen"],
-    "C": ["orange", "red",       "darkred",   "beige"],
-}
+_ROUTE_PALETTE = [
+    "#00008B", "#006400", "#800080", "#5F9EA0", "#301934",
+    "#000000", "#0000FF", "#008000", "#A52A2A", "#808080",
+]
+_ROUTE_ICON_COLORS = [
+    "darkblue", "darkgreen", "purple", "cadetblue", "darkpurple",
+    "black", "blue", "green", "brown", "gray",
+]
 _MODE_NAMES = {
     "A": "Strictly Constrained (Safe Walking)",
     "B": "Weakly Constrained (Any Walking)",
     "C": "Door-to-Door (No Walking)",
 }
+
+
+def _route_color_for(route_id, route_index):
+    digits = "".join(ch for ch in str(route_id) if ch.isdigit())
+    if digits:
+        route_number = max(1, int(digits))
+        return _ROUTE_PALETTE[(route_number - 1) % len(_ROUTE_PALETTE)]
+    return _ROUTE_PALETTE[route_index % len(_ROUTE_PALETTE)]
+
+
+def _route_icon_color_for(route_id, route_index):
+    digits = "".join(ch for ch in str(route_id) if ch.isdigit())
+    if digits:
+        route_number = max(1, int(digits))
+        return _ROUTE_ICON_COLORS[(route_number - 1) % len(_ROUTE_ICON_COLORS)]
+    return _ROUTE_ICON_COLORS[route_index % len(_ROUTE_ICON_COLORS)]
+
 
 import networkx as nx
 from detour_engine import (
@@ -1279,7 +1298,7 @@ def _dir_cap_html(label, ride, direct, cap, k):
 
 
 def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
-    """Add route + walk FeatureGroups for one mode.  Returns (fg_routes, fg_walks, occupancies)."""
+    """Add one FeatureGroup per route and return route toggle metadata plus occupancies."""
     con = constraints or {}
     ride_k       = float(con.get("ride_time_multiplier", 2.5))
     floor_min    = float(con.get("floor_minutes",        45))
@@ -1292,17 +1311,14 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
         mrt_minutes = None
     caps_enabled = bool(con.get("enabled",              True))
 
-    show = mode_key in ("A", "B")   # show constrained + unconstrained by default
-    fg_routes = FeatureGroup(name=f"{_MODE_NAMES[mode_key]} – Routes",        show=show)
-    fg_walks  = FeatureGroup(name=f"{_MODE_NAMES[mode_key]} – Walking Paths", show=show)
-    colors      = _ROUTE_COLORS[mode_key]
-    icon_colors = _ICON_COLORS[mode_key]
     active  = [r for r in sol.routes if r.get_student_count() > 0]
+    route_rows = []
     occupancies = []
 
     for ri, route in enumerate(active):
-        c  = colors[ri % len(colors)]
-        ic = icon_colors[ri % len(icon_colors)]
+        c  = _route_color_for(route.route_id, ri)
+        ic = _route_icon_color_for(route.route_id, ri)
+        fg_route = FeatureGroup(name=f"{_MODE_NAMES[mode_key]} – Route {route.route_id}", show=True)
 
         # ── Bus route polyline with arrow-heads ──
         if len(route.stops) > 1:
@@ -1318,13 +1334,13 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
                           f"{route.total_time:.0f} min, "
                           f"{route.total_distance:.1f} km)",
                 )
-                pl.add_to(fg_routes)
+                pl.add_to(fg_route)
 
                 # Directional arrows (same technique as visualization.py)
                 plugins.PolyLineTextPath(
                     pl, _ARROW_TEXT, repeat=True, offset=6,
                     attributes={"fill": c, "font-weight": "bold", "font-size": "24"},
-                ).add_to(fg_routes)
+                ).add_to(fg_route)
 
         # ── Stop markers ──
         student_count = 0
@@ -1346,7 +1362,7 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
                     max_width=260,
                 ),
                 tooltip=f"{mode_key}-{route.route_id} Stop {si} ({n_stu} students)",
-            ).add_to(fg_routes)
+            ).add_to(fg_route)
 
             # ── Walk paths + student home markers ──
             for student in stop.students:
@@ -1360,7 +1376,7 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
                     folium.PolyLine(
                         wcoords, color=c, weight=2, opacity=0.6, dash_array="6,4",
                         tooltip=f"{student.id} walk: {walk_dist:.0f} m",
-                    ).add_to(fg_walks)
+                    ).add_to(fg_route)
 
                 walk_m = walk_distance_on_roads(G, s_node, stop.node_id)
                 if walk_m is None or not math.isfinite(walk_m) or walk_m < 0:
@@ -1474,18 +1490,29 @@ def _add_route_layer(m, G, sol, mode_key, G_con, constraints=None):
                     f'</div></div>'
                 )
 
+                home_icon = folium.Icon(
+                    color=ic,
+                    icon='home',
+                    prefix='fa',
+                    icon_color='white'
+                )
                 folium.Marker(
                     location=student.coords,
                     tooltip=f"{student.id} ({stage_name}) — AM {ride_time_am:.0f} min, walk {walk_m:.0f}m",
                     popup=folium.Popup(popup_html, max_width=300),
-                    icon=folium.Icon(color=ic, icon='home', prefix='fa'),
-                ).add_to(fg_walks)
+                    icon=home_icon,
+                ).add_to(fg_route)
 
         occupancies.append(student_count)
+        fg_route.add_to(m)
+        route_rows.append({
+            "label": f"{route.route_id} ({route.get_student_count()} students)",
+            "layers": [fg_route],
+            "color": c,
+            "checked": True,
+        })
 
-    fg_routes.add_to(m)
-    fg_walks.add_to(m)
-    return fg_routes, fg_walks, occupancies
+    return route_rows, occupancies
 
 
 def _count_satisfied_per_route(sol, G, constraints):
@@ -1737,7 +1764,7 @@ def _add_candidate_layer(m, G, mode_key, sol, cand_cache, cand_dist):
             )
 
             # Colour coding: chosen=bright mode colour, 2pts=dark, 1pt=mid, 0pt=light grey
-            mode_c = _ROUTE_COLORS[mode_key][0]
+            mode_c = _MODE_COLORS[mode_key][0]
             if is_chosen:
                 fill_c = mode_c
                 r = 5
@@ -2088,7 +2115,7 @@ def _add_crossing_usage_layers(m, solutions_dict, G_walk, G_drive):
     )
 
     fgs_usage = {}
-    mode_colors = {"A": "#1f77b4", "B": "#ff7f0e", "C": "#2ca02c"}  # Blue, Orange, Green
+    mode_colors = {"A": "#1f77b4", "B": "#4CAF50", "C": "#2ca02c"}  # Blue, Green, Green
 
     for mode_key, solution in solutions_dict.items():
         if solution is None:
@@ -2168,7 +2195,7 @@ def _add_crossing_usage_layers(m, solutions_dict, G_walk, G_drive):
 
 def _build_custom_layer_control_js(
     map_var, fg_danger, fg_unclass, fg_syn_cross,
-    fgs_a, fgs_b, fgs_c,
+    route_rows,
     fg_injected=None,
     syn_label=None,
     injected_label=None,
@@ -2183,9 +2210,6 @@ def _build_custom_layer_control_js(
     Uses Folium's .get_name() to get each feature-group's actual JS variable
     name, so the control works on every freshly generated map.
     """
-    va_r, va_w = fgs_a[0].get_name(), fgs_a[1].get_name()
-    vb_r, vb_w = fgs_b[0].get_name(), fgs_b[1].get_name()
-    vc_r, vc_w = fgs_c[0].get_name(), fgs_c[1].get_name()
     v_danger  = fg_danger.get_name()
     v_unclass = fg_unclass.get_name()
     v_syn = fg_syn_cross.get_name()
@@ -2210,6 +2234,21 @@ def _build_custom_layer_control_js(
                 row('{injected_label}',
                     [{vi}],
                     map.hasLayer({vi}));"""
+
+    route_rows_js = ""
+    for route_row in route_rows or []:
+        route_layers = route_row.get("layers", [])
+        if not route_layers:
+            continue
+        layer_names = ", ".join(layer.get_name() for layer in route_layers)
+        label = route_row.get("label", "Route")
+        color = route_row.get("color", "#1f77b4")
+        checked = "true" if route_row.get("checked", True) else "false"
+        route_rows_js += f"""
+                routeRow('{label}',
+                    [{layer_names}],
+                    {checked},
+                    '{color}');"""
 
     unserved_rows = ""
     for fg_u, label in [
@@ -2289,8 +2328,36 @@ def _build_custom_layer_control_js(
                     span.textContent = label;
                     lbl.appendChild(span);
                 }}
-                row('Weakly Constrained (Any Walking)',
-                    [{vb_r}, {vb_w}], map.hasLayer({vb_r}));
+                function routeRow(label, layers, on, color) {{
+                    var lbl = L.DomUtil.create('label', '', c);
+                    lbl.style.cssText =
+                        'display:flex;align-items:center;gap:7px;' +
+                        'margin:5px 0;cursor:pointer;';
+                    var cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.checked = on;
+                    cb.style.cssText =
+                        'width:14px;height:14px;cursor:pointer;flex-shrink:0;';
+                    cb.addEventListener('change', function() {{
+                        layers.forEach(function(fg) {{
+                            cb.checked ? map.addLayer(fg) : map.removeLayer(fg);
+                        }});
+                    }});
+                    lbl.appendChild(cb);
+                    var swatch = document.createElement('span');
+                    swatch.style.cssText =
+                        'display:inline-block;width:10px;height:10px;border-radius:50%;' +
+                        'border:1px solid rgba(0,0,0,.25);flex-shrink:0;background:' + color + ';';
+                    lbl.appendChild(swatch);
+                    var span = document.createElement('span');
+                    span.textContent = label;
+                    lbl.appendChild(span);
+                }}
+                var routeHdr = L.DomUtil.create('div', '', c);
+                routeHdr.textContent = 'Routes';
+                routeHdr.style.cssText =
+                    'font-weight:bold;font-size:12px;margin:2px 0 4px;color:#555;';
+                {route_rows_js}
                 sep();
                 row('Unclassified Roads (no student placement)',
                     [{v_unclass}], map.hasLayer({v_unclass}));
@@ -2350,7 +2417,7 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
     blocks = ""
     _build_stats_html._mode_tables = ""   # accumulator for side-by-side mode tables
     for mk in mode_keys:
-        mc = _ROUTE_COLORS[mk][0]
+        mc = _MODE_COLORS[mk][0]
 
         # Mode was skipped — show a dimmed placeholder
         if mk not in all_stats or all_stats[mk] is None:
@@ -2367,7 +2434,7 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
         cx  = int(crossings_count_dict.get(mk, 0))
         occ = occupancies_dict.get(mk, [])
         cx_color = "#c0392b" if cx > 0 else "#27ae60"
-        mc = _ROUTE_COLORS[mk][0]
+        mc = _MODE_COLORS[mk][0]
 
         # Avg occupancy as % of bus capacity
         sol = (solutions_dict or {}).get(mk)
@@ -2476,7 +2543,7 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
     title_prefix = "Three-Mode" if len(mode_keys) == 3 else "Routing"
     dangerous_legend_line = ""
     if include_dangerous_roads:
-        dangerous_legend_line = "<span style=\"color:#e74c3c;\">&#x2015;&#x2015;</span> Dangerous roads &nbsp;&nbsp;"
+        dangerous_legend_line = "<span style=\"color:#2E86AB;\">&#x2015;&#x2015;</span> Dangerous roads &nbsp;&nbsp;"
 
     return f"""
     <div style="position:fixed; bottom:15px; right:15px; width:430px;
@@ -3335,7 +3402,7 @@ def _sanitise_floats(obj):
 # ────────────────────────────────────────────────────────────────────
 # PUBLIC API  (callable from thin launchers)
 # ────────────────────────────────────────────────────────────────────
-def run(input_path=None, output_path=None, iterations=None):
+def run(input_path=None, output_path=None, iterations=None, run_modes=None, visible_modes=None):
     """Run the three-mode comparison and save the map.
 
     Parameters
@@ -3368,8 +3435,14 @@ def run(input_path=None, output_path=None, iterations=None):
     run_mode_a = bool(_dbg.get("run_mode_a", True))
     run_mode_b = bool(_dbg.get("run_mode_b", True))
     run_mode_c = bool(_dbg.get("run_mode_c", True))
+    if run_modes is not None:
+        run_set = {str(m).upper() for m in run_modes}
+        run_mode_a = "A" in run_set
+        run_mode_b = "B" in run_set
+        run_mode_c = "C" in run_set
     run_build_map = bool(_dbg.get("run_build_map", True))
     _active_modes = [m for m, en in [("A", run_mode_a), ("B", run_mode_b), ("C", run_mode_c)] if en]
+    visible_mode_keys = tuple(visible_modes) if visible_modes else tuple(_active_modes)
 
     # Resolve where to write the map
     if output_path:
@@ -4047,8 +4120,8 @@ def run(input_path=None, output_path=None, iterations=None):
         _eng._path_cache.clear()
         # NOTE: Keep _MATRIX_CACHE intact! Metrics calculation (line 3126) needs it.
 
-        fgs = {}          # mk -> (fg_routes, fg_walks)
         fgs_unserved = {}  # mk -> fg_unserved
+        route_rows = []
 
         solutions = [
             ("B", sol_b, school_b),
@@ -4058,9 +4131,9 @@ def run(input_path=None, output_path=None, iterations=None):
             if sol is None:
                 continue
             print(f"  Drawing Mode {mk} …")
-            fg_r, fg_w, _ = _add_route_layer(m, G_unc, sol, mk, G_con,
+            mk_route_rows, _ = _add_route_layer(m, G_unc, sol, mk, G_con,
                                 constraints=meta.get("constraints"))
-            fgs[mk] = (fg_r, fg_w)
+            route_rows.extend(mk_route_rows)
             mode_unserved_records = (all_stats.get(mk) or {}).get("unserved_students")
             fgs_unserved[mk] = _add_unserved_layer(
                 m,
@@ -4123,20 +4196,11 @@ def run(input_path=None, output_path=None, iterations=None):
             print(f"    Eligible students checked: {crossing_stats.get('allowed_students_checked', 0)}")
             print(f"    Eligible students exploring crossings: {crossing_stats.get('allowed_students_explored_crossing', 0)}")
 
-        # Fill in empty FeatureGroups for any skipped modes so the layer control doesn't crash
-        for _mk in ("A", "B", "C"):
-            if _mk not in fgs:
-                _emp_routes = FeatureGroup(name=f"Mode {_mk} Routes (skipped)", show=False)
-                _emp_walks = FeatureGroup(name=f"Mode {_mk} Walks (skipped)", show=False)
-                _emp_routes.add_to(m)  # CRITICAL: Add to map so JavaScript can reference it
-                _emp_walks.add_to(m)   # CRITICAL: Add to map so JavaScript can reference it
-                fgs[_mk] = (_emp_routes, _emp_walks)
-
-        # Custom grouped layer control (title + 3 mode checkboxes, no radio buttons)
+        # Custom grouped layer control (route checkboxes + utility overlays)
         map_var = f"map_{m._id}"
         ctrl_js = _build_custom_layer_control_js(
             map_var, fg_danger, fg_unclass, fg_syn,
-            fgs["A"], fgs["B"], fgs["C"],
+            route_rows,
             fg_injected=fg_injected,
             syn_label=_syn_label,
             injected_label=_injected_label,
@@ -4154,11 +4218,10 @@ def run(input_path=None, output_path=None, iterations=None):
         )
         m.get_root().script.add_child(folium.Element(ctrl_js))
 
-        visible_modes = ("B",)
-        map_stats = {k: v for k, v in all_stats.items() if k in visible_modes}
-        map_crossings = {k: used_crossings_count.get(k, 0) for k in visible_modes}
-        map_occupancies = {k: occupancies_dict.get(k, []) for k in visible_modes}
-        map_solutions = {"B": sol_b}
+        map_stats = {k: v for k, v in all_stats.items() if k in visible_mode_keys}
+        map_crossings = {k: used_crossings_count.get(k, 0) for k in visible_mode_keys}
+        map_occupancies = {k: occupancies_dict.get(k, []) for k in visible_mode_keys}
+        map_solutions = {k: v for k, v in {"A": sol_a, "B": sol_b, "C": sol_c}.items() if k in visible_mode_keys}
 
         m.get_root().html.add_child(folium.Element(
             _build_stats_html(
@@ -4169,7 +4232,7 @@ def run(input_path=None, output_path=None, iterations=None):
                 G=G_unc,
                 constraints=meta.get("constraints", {}),
                 meta=meta,
-                visible_modes=visible_modes,
+                visible_modes=visible_mode_keys,
                 include_dangerous_roads=False,
             )
         ))

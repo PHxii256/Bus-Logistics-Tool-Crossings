@@ -9,6 +9,31 @@ import folium
 from folium import plugins
 
 
+def _route_icon_class(route_color):
+    safe = str(route_color or "").lstrip("#").lower()
+    return f"route-{safe}" if safe else "blue"
+
+
+def _ensure_route_icon_css(map_obj, route_color):
+    if map_obj is None or not route_color:
+        return
+    used = getattr(map_obj, "_route_icon_colors", None)
+    if used is None:
+        used = set()
+        map_obj._route_icon_colors = used
+    if route_color in used:
+        return
+    class_name = _route_icon_class(route_color)
+    css = (
+        "<style>"
+        f".awesome-marker-icon-{class_name} "
+        f"{{ background-color: {route_color}; border-color: {route_color}; }}"
+        "</style>"
+    )
+    map_obj.get_root().header.add_child(folium.Element(css))
+    used.add(route_color)
+
+
 def inject_star_pin(input_html_path, output_html_path, latitude, longitude):
     input_abs = os.path.abspath(input_html_path)
     output_abs = os.path.abspath(output_html_path)
@@ -82,6 +107,43 @@ def _route_polyline(path):
     return coords
 
 
+def _route_waypoints(path, use_student_homes=False):
+    coords = []
+    for stop in path:
+        if str(stop.get("type", "pickup")).lower() == "school":
+            lat = stop.get("latitude")
+            lon = stop.get("longitude")
+            if lat is None or lon is None:
+                continue
+            point = (float(lat), float(lon))
+            if not coords or coords[-1] != point:
+                coords.append(point)
+            continue
+
+        if use_student_homes:
+            for student in stop.get("students", []):
+                lat = student.get("home_latitude")
+                lon = student.get("home_longitude")
+                if lat is None or lon is None:
+                    lat = stop.get("latitude")
+                    lon = stop.get("longitude")
+                if lat is None or lon is None:
+                    continue
+                point = (float(lat), float(lon))
+                if not coords or coords[-1] != point:
+                    coords.append(point)
+            continue
+
+        lat = stop.get("latitude")
+        lon = stop.get("longitude")
+        if lat is None or lon is None:
+            continue
+        point = (float(lat), float(lon))
+        if not coords or coords[-1] != point:
+            coords.append(point)
+    return coords
+
+
 def _osrm_segment_geometry(lat1, lon1, lat2, lon2, osrm_base_url="http://localhost:5000"):
     coords = f"{float(lon1)},{float(lat1)};{float(lon2)},{float(lat2)}"
     base = str(osrm_base_url).rstrip("/")
@@ -113,8 +175,8 @@ def _osrm_segment_geometry(lat1, lon1, lat2, lon2, osrm_base_url="http://localho
     return [(float(lat), float(lon)) for lon, lat in geom]
 
 
-def _route_polyline_on_roads(path, use_osrm=False, osrm_base_url="http://localhost:5000"):
-    stops = _route_polyline(path)
+def _route_polyline_on_roads(path, use_osrm=False, osrm_base_url="http://localhost:5000", use_student_homes=False):
+    stops = _route_waypoints(path, use_student_homes=use_student_homes)
     if len(stops) < 2:
         return stops
     if not use_osrm:
@@ -144,6 +206,66 @@ def _draw_school_marker(map_obj, school):
         icon=folium.Icon(color="green", icon="graduation-cap", prefix="fa"),
         tooltip="School",
     ).add_to(map_obj)
+
+
+def _draw_student_home_markers(map_obj, route, route_label, route_color="#1D4ED8"):
+    seen = set()
+    _ensure_route_icon_css(map_obj, route_color)
+    home_icon = folium.Icon(
+        color=_route_icon_class(route_color),
+        icon="home",
+        prefix="fa",
+        icon_color="white",
+    )
+    route_students = route.get("students") or []
+    if route_students:
+        for student in route_students:
+            student_id = str(student.get("id") or "Unknown")
+            home_lat = student.get("home_latitude")
+            home_lon = student.get("home_longitude")
+            if home_lat is None or home_lon is None:
+                continue
+            home_key = (student_id, float(home_lat), float(home_lon))
+            if home_key in seen:
+                continue
+            seen.add(home_key)
+            folium.Marker(
+                location=(float(home_lat), float(home_lon)),
+                icon=home_icon,
+                tooltip=f"Home of {student_id}",
+                popup=(
+                    f"<b>Student home</b><br>"
+                    f"Student: {student_id}<br>"
+                    f"Route: {route_label}<br>"
+                    f"Home: {float(home_lat):.6f}, {float(home_lon):.6f}"
+                ),
+            ).add_to(map_obj)
+        return
+
+    for stop in route.get("path", []):
+        if str(stop.get("type", "pickup")).lower() == "school":
+            continue
+        for student in stop.get("students", []):
+            student_id = str(student.get("id") or "Unknown")
+            home_lat = student.get("home_latitude")
+            home_lon = student.get("home_longitude")
+            if home_lat is None or home_lon is None:
+                continue
+            home_key = (student_id, float(home_lat), float(home_lon))
+            if home_key in seen:
+                continue
+            seen.add(home_key)
+            folium.Marker(
+                location=(float(home_lat), float(home_lon)),
+                icon=home_icon,
+                tooltip=f"Home of {student_id}",
+                popup=(
+                    f"<b>Student home</b><br>"
+                    f"Student: {student_id}<br>"
+                    f"Route: {route_label}<br>"
+                    f"Home: {float(home_lat):.6f}, {float(home_lon):.6f}"
+                ),
+            ).add_to(map_obj)
 
 
 def build_before_map_from_routes(output_html, routes, school, new_lat, new_lon, student_id):
@@ -225,6 +347,7 @@ def generate_updated_route_map(
     new_lon,
     student_id=None,
     use_osrm=False,
+    optimized_path_coords=None,
 ):
     center = [float(new_lat), float(new_lon)]
     if school.get("latitude") is not None and school.get("longitude") is not None:
@@ -238,8 +361,24 @@ def generate_updated_route_map(
     new_route_id = str(new_route_display.get("route_id") or "N/A")
     student_label = str(student_id) if student_id is not None else "Unknown"
 
-    old_coords = _route_polyline_on_roads(old_route_display.get("path", []), use_osrm=use_osrm)
-    new_coords = _route_polyline_on_roads(new_route_display.get("path", []), use_osrm=use_osrm)
+    old_coords = _route_polyline_on_roads(
+        old_route_display.get("path", []),
+        use_osrm=use_osrm,
+        use_student_homes=True,
+    )
+    
+    # Use optimized path if provided, otherwise compute from new route
+    if optimized_path_coords:
+        new_coords = optimized_path_coords
+        geometry_source = "ALNS-optimized + OSRM road geometry"
+    else:
+        new_coords = _route_polyline_on_roads(
+            new_route_display.get("path", []),
+            use_osrm=use_osrm,
+            use_student_homes=True,
+        )
+        route_stop_count = len(_route_waypoints(new_route_display.get("path", []), use_student_homes=True))
+        geometry_source = "OSRM road geometry" if use_osrm and len(new_coords) > route_stop_count else "home-sequence fallback"
 
     if old_coords:
         folium.PolyLine(
@@ -267,6 +406,19 @@ def generate_updated_route_map(
             offset=6,
             attributes={"fill": "#2E7D32", "font-weight": "bold", "font-size": "18"},
         ).add_to(map_obj)
+
+    route_info_html = (
+        "<div style='position: fixed; top: 10px; left: 50px; z-index: 9999; "
+        "background: white; border: 1px solid #d1d5db; border-radius: 6px; "
+        "padding: 6px 10px; font: 12px/1.3 Arial, sans-serif; "
+        "box-shadow: 0 1px 4px rgba(0,0,0,.25);'>"
+        f"<b>Student:</b> {student_label}<br>"
+        f"<b>Route used:</b> {new_route_id}<br>"
+        f"<b>Route geometry:</b> {geometry_source}<br>"
+        "<b>Path:</b> School → Homes → School"
+        "</div>"
+    )
+    map_obj.get_root().html.add_child(folium.Element(route_info_html))
 
     for stop in old_route_display.get("path", []):
         if str(stop.get("type", "pickup")).lower() == "school":
@@ -301,6 +453,13 @@ def generate_updated_route_map(
             fill_opacity=0.8,
             tooltip="Updated stop",
         ).add_to(map_obj)
+
+    _draw_student_home_markers(
+        map_obj,
+        new_route_display,
+        new_route_id,
+        route_color="#2E7D32",
+    )
 
     _draw_school_marker(map_obj, school)
 
