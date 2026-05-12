@@ -2211,29 +2211,17 @@ def _build_custom_layer_control_js(
     name, so the control works on every freshly generated map.
     """
     v_danger  = fg_danger.get_name()
-    v_unclass = fg_unclass.get_name()
-    v_syn = fg_syn_cross.get_name()
     
     # Bbox and walk graph variables
     bbox_row = ""
     if fg_bbox is not None:
         v_bbox = fg_bbox.get_name()
-        bbox_row = f"\n                row('Bounding Box (Intended + Actual)', [{v_bbox}], map.hasLayer({v_bbox}));"
-    walk_row = ""
-    if fg_walk is not None:
-        v_walk = fg_walk.get_name()
-        walk_row = f"\n                row('Walk Graph Network', [{v_walk}], map.hasLayer({v_walk}));"
+        bbox_row = f"\n                row('Bounding Box', [{v_bbox}], map.hasLayer({v_bbox}));"
     
     syn_label = syn_label or "Synthetic Crossings"
     injected_label = injected_label or "Injected Crossings"
 
     injected_row = ""
-    if fg_injected is not None:
-        vi = fg_injected.get_name()
-        injected_row = f"""
-                row('{injected_label}',
-                    [{vi}],
-                    map.hasLayer({vi}));"""
 
     route_rows_js = ""
     for route_row in route_rows or []:
@@ -2252,7 +2240,7 @@ def _build_custom_layer_control_js(
 
     unserved_rows = ""
     for fg_u, label in [
-        (fg_unserved_b, 'Weakly Constrained – Unserved'),
+        (fg_unserved_b, 'Unserved'),
     ]:
         if fg_u is not None:
             vu = fg_u.get_name()
@@ -2263,7 +2251,7 @@ def _build_custom_layer_control_js(
 
     candidate_rows = ""
     for fg_c2, label in [
-        (fg_cands_b, 'Weakly Constrained – Candidate Stops'),
+        (fg_cands_b, 'Candidate Stops'),
     ]:
         if fg_c2 is not None:
             vca = fg_c2.get_name()
@@ -2274,7 +2262,7 @@ def _build_custom_layer_control_js(
 
     usage_rows = ""
     for fg_u, label in [
-        (fg_usage_b, 'Weakly Constrained – Crossing Usage'),
+        (fg_usage_b, 'Crossing Usage'),
     ]:
         if fg_u is not None:
             vu = fg_u.get_name()
@@ -2359,10 +2347,7 @@ def _build_custom_layer_control_js(
                     'font-weight:bold;font-size:12px;margin:2px 0 4px;color:#555;';
                 {route_rows_js}
                 sep();
-                row('Unclassified Roads (no student placement)',
-                    [{v_unclass}], map.hasLayer({v_unclass}));
-                row('{syn_label}',
-                    [{v_syn}], map.hasLayer({v_syn}));{bbox_row}{walk_row}{injected_row}{usage_rows}{unserved_rows}
+                {bbox_row}{usage_rows}{unserved_rows}
                 sep();
                 var hdr2 = L.DomUtil.create('div', '', c);
                 hdr2.textContent = 'Candidate Stop Inspector';
@@ -2456,36 +2441,29 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
         elif buses_count is not None:
             fleet_cell = f"{buses_count}"
 
-        blocks += f"""
-        <div style="margin-bottom:8px; padding-bottom:8px;
-                    border-bottom:1px solid #e0e0e0;">
-          <div style="font-weight:bold; color:{mc}; margin-bottom:3px;">
-            {mk}: {_MODE_NAMES[mk]}
-          </div>
-          <table style="width:100%; border-collapse:collapse;
-                        font-size:11px; text-align:center;">
-            <tr style="color:#555;">
-              <td style="text-align:left; padding:1px 4px;">Routes</td>
-              <td style="text-align:left; padding:1px 4px;">Fleet</td>
-              <td style="text-align:left; padding:1px 4px;">Total Time</td>
-              <td style="text-align:left; padding:1px 4px;">Distance</td>
-              <td style="text-align:left; padding:1px 4px;">Avg Occ.</td>
-              <td style="text-align:left; padding:1px 4px;">Served</td>
-              <td style="text-align:left; padding:1px 4px;">Satisfied</td>
-              <td style="text-align:left; padding:1px 4px;">Crossings</td>
-            </tr>
-            <tr style="font-weight:bold;">
-              <td style="padding:1px 4px;">{s['routes']}</td>
-              <td style="padding:1px 4px;">{fleet_cell}</td>
-                            <td style="padding:1px 4px;">{s['total_time']:.0f} min</td>
-              <td style="padding:1px 4px;">{s['total_dist']:.1f} km</td>
-              <td style="padding:1px 4px;">{avg_occ_str}</td>
-              <td style="padding:1px 4px;">{s['served']}/{s['total']}</td>
-              <td style="padding:1px 4px;">{s.get('satisfied', '—')}/{s['served']}</td>
-              <td style="padding:1px 4px; color:{cx_color};">{cx}</td>
-            </tr>
-          </table>
-        </div>"""
+                blocks += f"""
+                <div style="margin-bottom:8px; padding-bottom:8px;
+                                        border-bottom:1px solid #e0e0e0;">
+                    <table style="width:100%; border-collapse:collapse;
+                                                font-size:11px; text-align:center;">
+                        <tr style="color:#555;">
+                            <td style="text-align:left; padding:1px 4px;">Routes</td>
+                            <td style="text-align:left; padding:1px 4px;">Fleet</td>
+                            <td style="text-align:left; padding:1px 4px;">Total Time</td>
+                            <td style="text-align:left; padding:1px 4px;">Distance</td>
+                            <td style="text-align:left; padding:1px 4px;">Occupancy</td>
+                            <td style="text-align:left; padding:1px 4px;">Served</td>
+                        </tr>
+                        <tr style="font-weight:bold;">
+                            <td style="padding:1px 4px;">{s['routes']}</td>
+                            <td style="padding:1px 4px;">{fleet_cell}</td>
+                                                        <td style="padding:1px 4px;">{s['total_time']:.0f} min</td>
+                            <td style="padding:1px 4px;">{s['total_dist']:.1f} km</td>
+                            <td style="padding:1px 4px;">{avg_occ_str}</td>
+                            <td style="padding:1px 4px;">{s['served']}/{s['total']}</td>
+                        </tr>
+                    </table>
+                </div>"""
 
         # Per-mode mini-table for the side-by-side horizontal layout
         th = "padding:1px 4px; text-align:right; border-bottom:1px solid #ccc; white-space:nowrap;"
@@ -2509,12 +2487,12 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
         mode_tables_html = getattr(_build_stats_html, '_mode_tables', "")
         mode_tables_html += f"""
           <table style="border-collapse:collapse; font-size:10px; white-space:nowrap;
-                        margin-right:10px; vertical-align:top; display:inline-table;">
+                        margin-right:0; vertical-align:top; display:table; width:100%; table-layout:fixed;">
             <thead>
-              <tr style="background:#f5f5f5; color:{mc};">
-                <th colspan="5" style="padding:1px 4px; text-align:left;
-                    border-bottom:1px solid #ccc; font-size:10px;">{mk}</th>
-              </tr>
+                            <tr style="background:#f5f5f5; color:{mc};">
+                                <th colspan="5" style="padding:1px 4px; text-align:left;
+                                        border-bottom:1px solid #ccc; font-size:10px;">Routes</th>
+                            </tr>
               <tr style="background:#f5f5f5; color:#555;">
                 <th style="{th_l}">Route</th>
                 <th style="{th}">Dist (km)</th>
@@ -2532,15 +2510,15 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
     _build_stats_html._mode_tables = ""   # reset for next call
 
         # Mode mini-tables placed side-by-side; single horizontal scrollbar at bottom
-    route_table = f"""
-      <div style="margin-top:6px; padding-top:6px; border-top:1px solid #ddd;">
+        route_table = f"""
+            <div style="margin-top:6px; padding-top:0;">
         <div style="font-size:11px; font-weight:bold; color:#444; margin-bottom:3px;">Per-Route Details</div>
         <div style="overflow-x:auto; white-space:nowrap;">
           {mode_tables_html}
         </div>
       </div>"""
 
-    title_prefix = "Three-Mode" if len(mode_keys) == 3 else "Routing"
+    title_prefix = "Routing Sunmmary"
     dangerous_legend_line = ""
     if include_dangerous_roads:
         dangerous_legend_line = "<span style=\"color:#2E86AB;\">&#x2015;&#x2015;</span> Dangerous roads &nbsp;&nbsp;"
@@ -2551,19 +2529,15 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
                 background:white; border:2px solid #555; z-index:9999;
                 padding:12px 14px; border-radius:6px; font-size:12px;
                 font-family:Arial,sans-serif; box-shadow:2px 2px 8px rgba(0,0,0,.25);">
-            <div style="font-weight:bold; font-size:13px; margin-bottom:10px;
-                  padding-bottom:6px; border-bottom:2px solid #ccc;">
-                {title_prefix} Comparison{mrt_status_text}
-                <div style="font-weight:normal; font-size:11px; color:#666; margin-top:2px;">
-                    {mrt_json_line}
-                </div>
+                        <div style="font-weight:bold; font-size:13px; margin-bottom:10px;
+                                    padding-bottom:6px; border-bottom:2px solid #ccc;">
+                                {title_prefix} (DMRT)
       </div>
       {blocks}
       {route_table}
       <div style="font-size:10px; color:#888; margin-top:6px;">
         Toggle layers via top-right control.<br>
                 {dangerous_legend_line}
-        <span style="color:#7f8c8d;">&#x2508;&#x2508;</span> Unclassified roads<br>
         Generated: {ts}
       </div>
     </div>

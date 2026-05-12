@@ -61,104 +61,36 @@
                 padding:12px 14px; border-radius:6px; font-size:12px;
                 font-family:Arial,sans-serif; box-shadow:2px 2px 8px rgba(0,0,0,.25);">
             <div style="font-weight:bold; font-size:13px; margin-bottom:10px;
-                  padding-bottom:6px; border-bottom:2px solid #ccc;">
-        Three-Mode Routing Comparison
-      </div>
+                                    padding-bottom:6px; border-bottom:2px solid #ccc;">
+                Routing Sunmmary (DMRT)
+            </div>
       
-        <div style="margin-bottom:8px; padding-bottom:8px;
-                    border-bottom:1px solid #e0e0e0;">
-          <div style="font-weight:bold; color:#2196F3; margin-bottom:3px;">
-            A: Strictly Constrained (Safe Walking)
-          </div>
-          <table style="width:100%; border-collapse:collapse;
-                        font-size:11px; text-align:center;">
-            <tr style="color:#555;">
-              <td style="text-align:left; padding:1px 4px;">Routes</td>
-              <td style="text-align:left; padding:1px 4px;">Fleet</td>
-              <td style="text-align:left; padding:1px 4px;">Total Time</td>
-              <td style="text-align:left; padding:1px 4px;">Distance</td>
-              <td style="text-align:left; padding:1px 4px;">Avg Occ.</td>
-              <td style="text-align:left; padding:1px 4px;">Served</td>
-              <td style="text-align:left; padding:1px 4px;">Satisfied</td>
-              <td style="text-align:left; padding:1px 4px;">Crossings</td>
-            </tr>
-            <tr style="font-weight:bold;">
-              <td style="padding:1px 4px;">4</td>
-              <td style="padding:1px 4px;">4/4</td>
-                            <td style="padding:1px 4px;">166 min</td>
-              <td style="padding:1px 4px;">76.5 km</td>
-              <td style="padding:1px 4px;">64%</td>
-              <td style="padding:1px 4px;">56/60</td>
-              <td style="padding:1px 4px;">56/56</td>
-              <td style="padding:1px 4px; color:#27ae60;">0</td>
-            </tr>
-          </table>
-        </div>
-        <div style="margin-bottom:8px; padding-bottom:8px;
-                    border-bottom:1px solid #e0e0e0;">
-          <div style="font-weight:bold; color:#4CAF50; margin-bottom:3px;">
-            B: Weakly Constrained (Any Walking)
-          </div>
-          <table style="width:100%; border-collapse:collapse;
-                        font-size:11px; text-align:center;">
-            <tr style="color:#555;">
-              <td style="text-align:left; padding:1px 4px;">Routes</td>
-              <td style="text-align:left; padding:1px 4px;">Fleet</td>
-              <td style="text-align:left; padding:1px 4px;">Total Time</td>
-              <td style="text-align:left; padding:1px 4px;">Distance</td>
-              <td style="text-align:left; padding:1px 4px;">Avg Occ.</td>
-              <td style="text-align:left; padding:1px 4px;">Served</td>
-              <td style="text-align:left; padding:1px 4px;">Satisfied</td>
-              <td style="text-align:left; padding:1px 4px;">Crossings</td>
-            </tr>
-            <tr style="font-weight:bold;">
-              <td style="padding:1px 4px;">4</td>
-              <td style="padding:1px 4px;">4/4</td>
-                            <td style="padding:1px 4px;">156 min</td>
-              <td style="padding:1px 4px;">71.2 km</td>
-              <td style="padding:1px 4px;">68%</td>
-              <td style="padding:1px 4px;">60/60</td>
-              <td style="padding:1px 4px;">60/60</td>
-              <td style="padding:1px 4px; color:#c0392b;">1</td>
-            </tr>
-          </table>
-        </div>
-        <div style="margin-bottom:8px; padding-bottom:8px;
-                    border-bottom:1px solid #e0e0e0;">
-          <div style="font-weight:bold; color:#FF9800; margin-bottom:3px;">
-            C: Door-to-Door (No Walking)
-          </div>
-          <table style="width:100%; border-collapse:collapse;
-                        font-size:11px; text-align:center;">
-            <tr style="color:#555;">
-              <td style="text-align:left; padding:1px 4px;">Routes</td>
-              <td style="text-align:left; padding:1px 4px;">Fleet</td>
-              <td style="text-align:left; padding:1px 4px;">Total Time</td>
-              <td style="text-align:left; padding:1px 4px;">Distance</td>
-              <td style="text-align:left; padding:1px 4px;">Avg Occ.</td>
-              <td style="text-align:left; padding:1px 4px;">Served</td>
-              <td style="text-align:left; padding:1px 4px;">Satisfied</td>
-              <td style="text-align:left; padding:1px 4px;">Crossings</td>
-            </tr>
-            <tr style="font-weight:bold;">
-              <td style="padding:1px 4px;">4</td>
-              <td style="padding:1px 4px;">4/4</td>
-                            <td style="padding:1px 4px;">185 min</td>
-              <td style="padding:1px 4px;">85.0 km</td>
-              <td style="padding:1px 4px;">66%</td>
-              <td style="padding:1px 4px;">58/60</td>
-              <td style="padding:1px 4px;">58/58</td>
-              <td style="padding:1px 4px; color:#27ae60;">0</td>
-            </tr>
-          </table>
-        </div>
+                <table style="width:100%; border-collapse:collapse;
+                                                font-size:11px; text-align:center; margin-bottom:8px;">
+                        <tr style="color:#555;">
+                            <td style="text-align:left; padding:1px 4px;">Routes</td>
+                            <td style="text-align:left; padding:1px 4px;">Fleet</td>
+                            <td style="text-align:left; padding:1px 4px;">Total Time</td>
+                            <td style="text-align:left; padding:1px 4px;">Distance</td>
+                            <td style="text-align:left; padding:1px 4px;">Occupancy</td>
+                            <td style="text-align:left; padding:1px 4px;">Served</td>
+                        </tr>
+                        <tr style="font-weight:bold;">
+                            <td style="padding:1px 4px;">4</td>
+                            <td style="padding:1px 4px;">4/4</td>
+                                                        <td style="padding:1px 4px;">156 min</td>
+                            <td style="padding:1px 4px;">71.2 km</td>
+                            <td style="padding:1px 4px;">68%</td>
+                            <td style="padding:1px 4px;">60/60</td>
+                        </tr>
+                    </table>
       
       <div style="margin-top:6px; padding-top:6px; border-top:1px solid #ddd;">
         <div style="font-size:11px; font-weight:bold; color:#444; margin-bottom:3px;">Per-Route Details</div>
         <div style="overflow-x:auto; white-space:nowrap;">
           
           <table style="border-collapse:collapse; font-size:10px; white-space:nowrap;
-                        margin-right:10px; vertical-align:top; display:inline-table;">
+                        margin-right:0; vertical-align:top; display:block; width:100%;">
             <thead>
               <tr style="background:#f5f5f5; color:#2196F3;">
                 <th colspan="5" style="padding:1px 4px; text-align:left;
@@ -168,7 +100,7 @@
                 <th style="padding:1px 4px; text-align:left; border-bottom:1px solid #ccc; white-space:nowrap;">Route</th>
                 <th style="padding:1px 4px; text-align:right; border-bottom:1px solid #ccc; white-space:nowrap;">Dist (km)</th>
                 <th style="padding:1px 4px; text-align:right; border-bottom:1px solid #ccc; white-space:nowrap;">Time (m)</th>
-                <th style="padding:1px 4px; text-align:right; border-bottom:1px solid #ccc; white-space:nowrap;">Occ</th>
+                <th style="padding:1px 4px; text-align:right; border-bottom:1px solid #ccc; white-space:nowrap;">Occupancy</th>
                 <th style="padding:1px 4px; text-align:right; border-bottom:1px solid #ccc; white-space:nowrap;">Sat</th>
               </tr>
             </thead>
@@ -204,7 +136,7 @@
             </tbody>
           </table>
           <table style="border-collapse:collapse; font-size:10px; white-space:nowrap;
-                        margin-right:10px; vertical-align:top; display:inline-table;">
+                        margin-right:0; vertical-align:top; display:block; width:100%;">
             <thead>
               <tr style="background:#f5f5f5; color:#4CAF50;">
                 <th colspan="5" style="padding:1px 4px; text-align:left;
@@ -214,7 +146,7 @@
                 <th style="padding:1px 4px; text-align:left; border-bottom:1px solid #ccc; white-space:nowrap;">Route</th>
                 <th style="padding:1px 4px; text-align:right; border-bottom:1px solid #ccc; white-space:nowrap;">Dist (km)</th>
                 <th style="padding:1px 4px; text-align:right; border-bottom:1px solid #ccc; white-space:nowrap;">Time (m)</th>
-                <th style="padding:1px 4px; text-align:right; border-bottom:1px solid #ccc; white-space:nowrap;">Occ</th>
+                <th style="padding:1px 4px; text-align:right; border-bottom:1px solid #ccc; white-space:nowrap;">Occupancy</th>
                 <th style="padding:1px 4px; text-align:right; border-bottom:1px solid #ccc; white-space:nowrap;">Sat</th>
               </tr>
             </thead>
@@ -250,7 +182,7 @@
             </tbody>
           </table>
           <table style="border-collapse:collapse; font-size:10px; white-space:nowrap;
-                        margin-right:10px; vertical-align:top; display:inline-table;">
+                        margin-right:0; vertical-align:top; display:block; width:100%;">
             <thead>
               <tr style="background:#f5f5f5; color:#FF9800;">
                 <th colspan="5" style="padding:1px 4px; text-align:left;
@@ -260,7 +192,7 @@
                 <th style="padding:1px 4px; text-align:left; border-bottom:1px solid #ccc; white-space:nowrap;">Route</th>
                 <th style="padding:1px 4px; text-align:right; border-bottom:1px solid #ccc; white-space:nowrap;">Dist (km)</th>
                 <th style="padding:1px 4px; text-align:right; border-bottom:1px solid #ccc; white-space:nowrap;">Time (m)</th>
-                <th style="padding:1px 4px; text-align:right; border-bottom:1px solid #ccc; white-space:nowrap;">Occ</th>
+                <th style="padding:1px 4px; text-align:right; border-bottom:1px solid #ccc; white-space:nowrap;">Occupancy</th>
                 <th style="padding:1px 4px; text-align:right; border-bottom:1px solid #ccc; white-space:nowrap;">Sat</th>
               </tr>
             </thead>
@@ -368,8 +300,7 @@
                     [feature_group_8f8372f5efb2d2f4c5eb50909f4ee654], map.hasLayer(feature_group_8f8372f5efb2d2f4c5eb50909f4ee654));
                 row('Unclassified Roads (no student placement)',
                     [feature_group_decb45fdcedeecbd5a810f0c07836730], map.hasLayer(feature_group_decb45fdcedeecbd5a810f0c07836730));
-                row('Synthetic Crossings (152)',
-                    [feature_group_79da5e82294620d5c033a908a03a28f1], map.hasLayer(feature_group_79da5e82294620d5c033a908a03a28f1));
+                
                 row('Weakly Constrained – Crossing Usage',
                     [feature_group_14d83722fcb8979471f7c28de6cf0fef],
                     map.hasLayer(feature_group_14d83722fcb8979471f7c28de6cf0fef));

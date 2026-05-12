@@ -8177,7 +8177,7 @@
     }
   ],
   "debug_stats": {
-    "runtime_seconds": 7.1286,
+    "runtime_seconds": 65.7585,
     "routes_considered": 15,
     "candidate_positions_checked": 272,
     "before_map_mode": "comparison_map_with_star",

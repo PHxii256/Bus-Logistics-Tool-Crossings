@@ -7,7 +7,6 @@ import numpy as np
 
 
 # ── helpers ────────────────────────────────────────────────────────────────────
-
 def _collect_values(obj, key):
     values = []
     if isinstance(obj, dict):
@@ -243,3 +242,4 @@ if __name__ == "__main__":
         print(f"  Rejected - Mean: {np.mean(obs_rejected):.1f} min, Median: {np.median(obs_rejected):.1f} min, Std: {np.std(obs_rejected):.1f} min")
     else:
         plot_distribution(out_pdf, out_png)
+        

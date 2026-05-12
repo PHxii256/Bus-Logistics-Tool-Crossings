@@ -208,11 +208,11 @@ def _draw_school_marker(map_obj, school):
     ).add_to(map_obj)
 
 
-def _draw_student_home_markers(map_obj, route, route_label, route_color="#1D4ED8"):
+def _draw_student_home_markers(map_obj, route, route_label, route_color="#1D4ED8", home_color="orange"):
     seen = set()
     _ensure_route_icon_css(map_obj, route_color)
     home_icon = folium.Icon(
-        color=_route_icon_class(route_color),
+        color=home_color,
         icon="home",
         prefix="fa",
         icon_color="white",
@@ -338,6 +338,51 @@ def generate_before_map(output_html, comparison_map_html, routes, school, new_la
     return "generated_routes_before_map"
 
 
+def _draw_walking_paths(map_obj, route, osrm_base_url="http://localhost:5000"):
+    """Draw walking paths (home → stop) as green dotted lines for all students in the route."""
+    seen_paths = set()
+    
+    for stop in route.get("path", []):
+        if str(stop.get("type", "pickup")).lower() == "school":
+            continue
+        
+        stop_lat = float(stop.get("latitude", 0))
+        stop_lon = float(stop.get("longitude", 0))
+        
+        for student in stop.get("students", []):
+            home_lat = student.get("home_latitude")
+            home_lon = student.get("home_longitude")
+            student_id = str(student.get("id", "unknown"))
+            
+            if home_lat is None or home_lon is None:
+                continue
+            
+            home_lat = float(home_lat)
+            home_lon = float(home_lon)
+            
+            # Avoid drawing duplicate paths
+            path_key = (round(home_lat, 6), round(home_lon, 6), round(stop_lat, 6), round(stop_lon, 6))
+            if path_key in seen_paths:
+                continue
+            seen_paths.add(path_key)
+            
+            # Get walking path from home to stop via OSRM
+            walk_coords = _osrm_segment_geometry(home_lat, home_lon, stop_lat, stop_lon, osrm_base_url=osrm_base_url)
+            if not walk_coords:
+                # Fallback: straight line if OSRM fails
+                walk_coords = [(home_lat, home_lon), (stop_lat, stop_lon)]
+            
+            # Draw green dotted walking line
+            folium.PolyLine(
+                walk_coords,
+                color="#22C55E",
+                weight=2,
+                opacity=0.6,
+                dash_array="5,5",
+                tooltip=f"Walking path: {student_id} to stop",
+            ).add_to(map_obj)
+
+
 def generate_updated_route_map(
     output_html,
     old_route,
@@ -380,7 +425,8 @@ def generate_updated_route_map(
         route_stop_count = len(_route_waypoints(new_route_display.get("path", []), use_student_homes=True))
         geometry_source = "OSRM road geometry" if use_osrm and len(new_coords) > route_stop_count else "home-sequence fallback"
 
-    if old_coords:
+    # Only draw the previous (dashed) route when we don't have an optimized OSRM-traced geometry
+    if old_coords and not optimized_path_coords:
         folium.PolyLine(
             old_coords,
             color="#6C757D",
@@ -475,6 +521,9 @@ def generate_updated_route_map(
             f"Lon: {float(new_lon):.7f}"
         ),
     ).add_to(map_obj)
+
+    # Draw walking paths from homes to stops (green dotted lines)
+    _draw_walking_paths(map_obj, new_route_display)
 
     if new_coords:
         map_obj.fit_bounds(new_coords)

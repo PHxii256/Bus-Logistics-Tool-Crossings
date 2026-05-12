@@ -2,7 +2,7 @@
   "meta": {
     "kind": "students_data_school_input",
     "version": 1,
-    "generated_at": "2026-05-06T16:45:31",
+    "generated_at": "2026-05-08T21:15:46",
     "source_type": "school_students_payload"
   },
   "school": {
@@ -11,6 +11,13 @@
     "longitude": 31.270319
   },
   "students": [
+    {
+      "id": "S001",
+      "home_latitude": 30.100695,
+      "home_longitude": 31.288640,
+      "school_stage": "ELEMENTARY",
+      "physically_mentally_disabled": false
+    },
     {
       "id": "S065",
       "home_latitude": 30.0504369,
@@ -1857,13 +1864,6 @@
       "home_latitude": 29.9705851,
       "home_longitude": 31.3135542,
       "school_stage": "MIDDLE",
-      "physically_mentally_disabled": false
-    },
-    {
-      "id": "S001",
-      "home_latitude": 29.9615107,
-      "home_longitude": 31.2762834,
-      "school_stage": "ELEMENTARY",
       "physically_mentally_disabled": false
     }
   ]

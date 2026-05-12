@@ -27,6 +27,7 @@ from data_loader import (
     load_json, load_mode1_input, load_mode2_input,
     serialize_routes, print_input_summary
 )
+from api_new.scripts.generate_route_response import generate_route_response
 import detour_engine as _det_eng
 import alns_engine as _alns
 from detour_engine import (
@@ -915,6 +916,7 @@ def run_generate_routes(data, G, input_file_path):
         "objective": round(best_sol.calculate_objective(), 2)
     }
     with open('output_data.json', 'w') as f: json.dump(output, f, indent=2)
+    generate_route_response('output_data.json', 'api_new/outputs/route_response.json')
     _te = _t.time() - _run_start
     report = {
         "mode": "generate_routes", "input_file": input_file_path,
@@ -1605,6 +1607,8 @@ def run_change_location(data, G, input_file_path):
     output = serialize_routes(routes, buses, school_coords, unserved, G)
     if not success: output = {"status": "failed", "student_id": student_id, "reason": message}
     with open('output_data.json', 'w') as f: json.dump(output, f, indent=2)
+    if success:
+        generate_route_response('output_data.json', 'api_new/outputs/route_response.json')
     report = {"mode": "change_location", "status": output.get('status', 'success'), "students_total": len(all_students)}
     save_run(data, output, report, map_files={'route_map_old.html': 'route_map_old.html', 'route_map_new.html': 'route_map_new.html'})
     return output
