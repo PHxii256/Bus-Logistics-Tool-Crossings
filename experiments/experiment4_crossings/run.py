@@ -86,6 +86,12 @@ def main():
         default=os.path.join(_DIR, "input.json"),
         help="Path to an input.json config file.",
     )
+    parser.add_argument(
+        "-S", "--students",
+        action="store_true",
+        dest="students_override",
+        help="Use api_new/inputs/students_data.json instead of synthetic annulus",
+    )
     args = parser.parse_args()
 
     input_path = os.path.abspath(args.input)
@@ -147,6 +153,7 @@ def main():
             output_path=output_path,
             run_modes=("B",),
             visible_modes=("B",),
+            use_students_override=args.students_override,
         )
 
         if os.path.isfile(output_path):

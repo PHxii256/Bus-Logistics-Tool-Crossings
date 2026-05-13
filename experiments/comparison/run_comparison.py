@@ -42,6 +42,8 @@ from run_algorithm import (
     DEFAULT_STAGE_WALK_LIMITS, _DEFAULT_BBOX,
 )
 from data_loader   import load_mode1_input
+from api_new.scripts.generate_route_response import generate_route_response
+from api_new.scripts.data_extractors import normalize_students_data_payload
 from solution_state import ServiceSolution
 from detour_engine  import (
     calculate_route_path_and_stats,
@@ -524,6 +526,76 @@ def _generate_dataset(meta):
         constraints=meta.get("constraints") or {},
         iterations=meta.get("algorithm", {}).get("iterations", 30),
     )
+
+
+def _stage_distribution_from_students(students):
+    total = len(students)
+    dist = {"KG": 0, "ELEMENTARY": 0, "MIDDLE": 0, "HIGH": 0}
+    for student in students:
+        stage = str(student.get("school_stage") or "ELEMENTARY").upper()
+        if stage not in dist:
+            dist[stage] = 0
+        dist[stage] += 1
+    if total > 0:
+        for k in dist:
+            dist[k] = round(dist[k] / total, 4)
+    return dist
+
+
+def _build_dataset_from_students(meta, students_payload):
+    normalized = normalize_students_data_payload(students_payload)
+    school = normalized.get("school") or meta.get("school") or {}
+    students_out = []
+    for student in normalized.get("students", []):
+        students_out.append(
+            {
+                "id": student.get("id"),
+                "latitude": student.get("home_latitude"),
+                "longitude": student.get("home_longitude"),
+                "age": student.get("age"),
+                "school_stage": student.get("school_stage"),
+                "physically_mentally_disabled": student.get("physically_mentally_disabled", False),
+                "fee": student.get("fee", 100.0),
+            }
+        )
+
+    total = len(students_out)
+    disabled_count = sum(1 for s in students_out if s.get("physically_mentally_disabled"))
+    disabled_pct = (disabled_count / total * 100.0) if total > 0 else 0.0
+
+    buses_cfg = meta.get("buses", {}) if isinstance(meta, dict) else {}
+    buses_count = buses_cfg.get("count", 4)
+    bus_capacity = buses_cfg.get("capacity", 60)
+    description = f"Students override - {total} students"
+
+    return {
+        "meta": {
+            "mode": "generate_routes",
+            "city": meta.get("city", "Cairo"),
+            "description": description,
+            "disabled_percentage": disabled_pct,
+            "disabled_students": disabled_count,
+            "constraints": meta.get("constraints") or {},
+            "algorithm": {
+                "method": "alns",
+                "iterations": meta.get("algorithm", {}).get("iterations", 30),
+            },
+        },
+        "data": {
+            "school": school,
+            "buses": [
+                {
+                    "id": f"BUS_{i+1}",
+                    "type": "Standard",
+                    "capacity": bus_capacity,
+                    "fixed_cost": 50,
+                    "var_cost_km": 1.0,
+                }
+                for i in range(int(buses_count))
+            ],
+            "students": students_out,
+        },
+    }
 
 
 def _haversine_km(lat1, lon1, lat2, lon2):
@@ -2441,7 +2513,7 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
         elif buses_count is not None:
             fleet_cell = f"{buses_count}"
 
-                blocks += f"""
+        blocks += f"""
                 <div style="margin-bottom:8px; padding-bottom:8px;
                                         border-bottom:1px solid #e0e0e0;">
                     <table style="width:100%; border-collapse:collapse;
@@ -2457,7 +2529,7 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
                         <tr style="font-weight:bold;">
                             <td style="padding:1px 4px;">{s['routes']}</td>
                             <td style="padding:1px 4px;">{fleet_cell}</td>
-                                                        <td style="padding:1px 4px;">{s['total_time']:.0f} min</td>
+                            <td style="padding:1px 4px;">{s['total_time']:.0f} min</td>
                             <td style="padding:1px 4px;">{s['total_dist']:.1f} km</td>
                             <td style="padding:1px 4px;">{avg_occ_str}</td>
                             <td style="padding:1px 4px;">{s['served']}/{s['total']}</td>
@@ -2509,14 +2581,14 @@ def _build_stats_html(all_stats, crossings_count_dict, occupancies_dict,
     mode_tables_html = getattr(_build_stats_html, '_mode_tables', "")
     _build_stats_html._mode_tables = ""   # reset for next call
 
-        # Mode mini-tables placed side-by-side; single horizontal scrollbar at bottom
-        route_table = f"""
-            <div style="margin-top:6px; padding-top:0;">
-        <div style="font-size:11px; font-weight:bold; color:#444; margin-bottom:3px;">Per-Route Details</div>
-        <div style="overflow-x:auto; white-space:nowrap;">
-          {mode_tables_html}
-        </div>
-      </div>"""
+    # Mode mini-tables placed side-by-side; single horizontal scrollbar at bottom
+    route_table = f"""
+                        <div style="margin-top:6px; padding-top:0;">
+                <div style="font-size:11px; font-weight:bold; color:#444; margin-bottom:3px;">Per-Route Details</div>
+                <div style="overflow-x:auto; white-space:nowrap;">
+                    {mode_tables_html}
+                </div>
+            </div>"""
 
     title_prefix = "Routing Sunmmary"
     dangerous_legend_line = ""
@@ -3376,7 +3448,8 @@ def _sanitise_floats(obj):
 # ────────────────────────────────────────────────────────────────────
 # PUBLIC API  (callable from thin launchers)
 # ────────────────────────────────────────────────────────────────────
-def run(input_path=None, output_path=None, iterations=None, run_modes=None, visible_modes=None):
+def run(input_path=None, output_path=None, iterations=None, run_modes=None, visible_modes=None,
+    use_students_override=False):
     """Run the three-mode comparison and save the map.
 
     Parameters
@@ -3397,6 +3470,24 @@ def run(input_path=None, output_path=None, iterations=None, run_modes=None, visi
     # tracemalloc.start()
 
     meta           = _load_meta(input_path)
+    base_data_override = None
+    students_override_path = os.path.join(_ROOT, "api_new", "inputs", "students_data.json")
+    if use_students_override:
+        if not os.path.exists(students_override_path):
+            raise FileNotFoundError(
+                f"Students override file not found: {students_override_path}"
+            )
+        with open(students_override_path, "r", encoding="utf-8") as f:
+            students_payload = json.load(f)
+        base_data_override = _build_dataset_from_students(meta, students_payload)
+        meta["school"] = base_data_override.get("data", {}).get("school") or meta.get("school", {})
+        meta["n_students"] = len(base_data_override.get("data", {}).get("students", []))
+        meta["stage_distribution"] = _stage_distribution_from_students(
+            base_data_override.get("data", {}).get("students", [])
+        )
+        meta["disabled_percentage"] = base_data_override.get("meta", {}).get(
+            "disabled_percentage", meta.get("disabled_percentage", 0.0)
+        )
     iters          = iterations or meta.get("algorithm", {}).get("iterations", 30)
     algo_cfg       = meta.get("algorithm", {})
     iters          = iterations or algo_cfg.get("iterations", 30)
@@ -3467,6 +3558,8 @@ def run(input_path=None, output_path=None, iterations=None, run_modes=None, visi
     print(f"  Walk lim : {stage_walk}")
     print(f"  Iters    : {iters}")
     print(f"  Dwell    : {dwell_time_seconds_per_stop:.0f}s per pickup stop")
+    if use_students_override:
+        print(f"  Students override: {students_override_path}")
     print(f"  BuildMap : {'ON' if run_build_map else 'OFF'}")
     _mode_labels = {"A": "Strictly Constrained", "B": "Weakly Constrained", "C": "Door-to-Door"}
     _skipped = [m for m in ("A", "B", "C") if m not in _active_modes]
@@ -3487,7 +3580,10 @@ def run(input_path=None, output_path=None, iterations=None, run_modes=None, visi
     # ── 1. Generate dataset ──
     print("[1/7] Generating dataset …")
     _t0 = _wtime.time()
-    base_data = _generate_dataset(meta)
+    if base_data_override is not None:
+        base_data = base_data_override
+    else:
+        base_data = _generate_dataset(meta)
     # Preserve graph-related config from input so all stages use the same bbox/cache policy.
     base_data["meta"]["graph"] = copy.deepcopy(meta.get("graph", {}))
     base_data["meta"]["walk_graph"] = copy.deepcopy(meta.get("walk_graph", {}))
@@ -4234,6 +4330,12 @@ def run(input_path=None, output_path=None, iterations=None, run_modes=None, visi
     with open(metrics_path, "w", encoding="utf-8") as f:
         json.dump(_sanitise_floats(metrics), f, indent=2, ensure_ascii=False)
     print(f"  Metrics  : {metrics_path}")
+    try:
+        route_response_path = os.path.join(_ROOT, "api_new", "outputs", "route_response.json")
+        generate_route_response(metrics_path, route_response_path)
+        print(f"  Route response: {route_response_path}")
+    except Exception as e:
+        print(f"  Warning: failed to update route_response.json: {e}")
 
     # Keep a run-local ledger of paper metrics alongside output artifacts.
     try:
@@ -4323,11 +4425,16 @@ def main():
         "--output", default=None,
         help="Output HTML path (default: from meta.json)",
     )
+    parser.add_argument(
+        "-S", "--students", action="store_true", dest="students_override",
+        help="Use api_new/inputs/students_data.json instead of synthetic annulus",
+    )
     args = parser.parse_args()
     run(
         input_path=args.input,
         output_path=args.output,
         iterations=args.iterations,
+        use_students_override=args.students_override,
     )
 
 
