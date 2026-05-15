@@ -1,5 +1,0 @@
-[DEBUG] Building metrics for mode B: sol has 10 routes
-[DEBUG] Calculated ride_time=41.26166666666666 for stop_idx=1, stops_count=5
-[DEBUG] Calculated ride_time=27.778333333333332 for stop_idx=2, stops_count=4
-[DEBUG] Calculated ride_time=12.898333333333333 for stop_idx=3, stops_count=3
-[DEBUG] Calculated ride_time=6.328333333333333 for stop_idx=4, stops_count=2
