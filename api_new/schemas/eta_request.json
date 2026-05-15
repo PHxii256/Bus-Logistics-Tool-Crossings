@@ -1,0 +1,6 @@
+{
+  "_description": "Request body for drive-time ETA between two WGS84 points (lat, lon). Optional congestion_factor scales minutes (>0; default 1).",
+  "from_coord": [29.9615107, 31.2762834],
+  "to_coord": [29.975, 31.295],
+  "congestion_factor": 1
+}
