@@ -1,4 +1,10 @@
 {
+  "meta": {
+    "kind": "students_data_school_input",
+    "version": 1,
+    "generated_at": "2026-05-16T21:39:49",
+    "source_type": "school_students_payload"
+  },
   "school": {
     "name": "Victory College School",
     "latitude": 29.964406,

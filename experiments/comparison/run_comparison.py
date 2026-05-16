@@ -4311,6 +4311,16 @@ def run(input_path=None, output_path=None, iterations=None, run_modes=None, visi
         fsize_kb = os.path.getsize(output) / 1024
         _step_times["build_map_s"] = round(_wtime.time() - _t0, 2)
         print(f"\n  Map saved: {output}  ({fsize_kb:.0f} KB)")
+        # Also publish the latest comparison map to api_new/outputs so the API can reference it
+        try:
+            import shutil
+            api_out_dir = os.path.join(_ROOT, "api_new", "outputs")
+            os.makedirs(api_out_dir, exist_ok=True)
+            dest = os.path.join(api_out_dir, "comparison_map.html")
+            shutil.copy2(output, dest)
+            print(f"  Published latest comparison map to: {dest}")
+        except Exception:
+            print("  Warning: failed to publish comparison map to api_new/outputs")
     else:
         _step_times["build_map_s"] = 0.0
         print("\n[7/7] Map generation skipped (debug.run_build_map=false)")

@@ -130,6 +130,112 @@ def _segment_delta(route, prev_stop, next_stop, new_lat, new_lon):
     return delta_dist, delta_time
 
 
+def _direct_speed_km_per_min(route):
+    route_speed = _route_speed_km_per_min(route)
+    return max(0.5, route_speed) if route_speed > 0 else 0.5
+
+
+def _estimate_direct_time_min(student, school, route):
+    direct = student.get("direct_potential_min")
+    if direct is not None:
+        try:
+            direct_val = float(direct)
+        except (TypeError, ValueError):
+            direct_val = None
+        if direct_val is not None and direct_val > 0:
+            return direct_val
+
+    home_lat = student.get("home_latitude")
+    home_lon = student.get("home_longitude")
+    if home_lat is None or home_lon is None:
+        home_lat = student.get("stop_latitude")
+        home_lon = student.get("stop_longitude")
+    school_lat = school.get("latitude")
+    school_lon = school.get("longitude")
+    if None in (home_lat, home_lon, school_lat, school_lon):
+        return None
+
+    dist_km = _haversine_km(home_lat, home_lon, school_lat, school_lon)
+    speed = _direct_speed_km_per_min(route)
+    if speed <= 0:
+        return None
+    return dist_km / speed
+
+
+def _build_time_to_school(path, route_speed):
+    if not path or route_speed <= 0:
+        return None
+    times = [0.0 for _ in path]
+    accum = 0.0
+    for idx in range(len(path) - 2, -1, -1):
+        a = path[idx]
+        b = path[idx + 1]
+        a_lat, a_lon = a.get("latitude"), a.get("longitude")
+        b_lat, b_lon = b.get("latitude"), b.get("longitude")
+        if None in (a_lat, a_lon, b_lat, b_lon):
+            return None
+        segment_km = _haversine_km(a_lat, a_lon, b_lat, b_lon)
+        accum += segment_km / route_speed
+        times[idx] = accum
+    return times
+
+
+def _check_route_ride_time_caps(route, school, constraints):
+    floor_min = _safe_float((constraints or {}).get("floor_minutes", 0.0), 0.0)
+    offset_min = _safe_float((constraints or {}).get("acceptable_offset_minutes", 0.0), 0.0)
+    route_speed = _route_speed_km_per_min(route)
+    if route_speed <= 0:
+        return {
+            "ok": False,
+            "reason": "invalid_route_speed",
+            "violations": [],
+        }
+
+    path = route.get("path", [])
+    time_to_school = _build_time_to_school(path, route_speed)
+    if time_to_school is None:
+        return {
+            "ok": False,
+            "reason": "missing_route_coordinates",
+            "violations": [],
+        }
+
+    violations = []
+    for stop_idx, stop in enumerate(path):
+        if str(stop.get("type", "pickup")).lower() == "school":
+            continue
+        ride_time = time_to_school[stop_idx]
+        for student in stop.get("students", []):
+            direct_time = _estimate_direct_time_min(student, school, route)
+            if direct_time is None:
+                violations.append(
+                    {
+                        "student_id": student.get("id"),
+                        "ride_time_min": round(ride_time, 2),
+                        "cap_min": None,
+                        "direct_time_min": None,
+                        "reason": "missing_direct_time",
+                    }
+                )
+                continue
+            cap = max(floor_min, direct_time + offset_min)
+            if ride_time > cap:
+                violations.append(
+                    {
+                        "student_id": student.get("id"),
+                        "ride_time_min": round(ride_time, 2),
+                        "cap_min": round(cap, 2),
+                        "direct_time_min": round(direct_time, 2),
+                    }
+                )
+
+    return {
+        "ok": len(violations) == 0,
+        "violations": violations,
+        "route_speed_km_per_min": round(route_speed, 4),
+    }
+
+
 def _find_and_remove_student(routes, student_id):
     for route in routes:
         path = route.get("path", [])
@@ -277,6 +383,7 @@ def process_change_location(
     before_map_path,
     after_map_path,
     comparison_map_source=None,
+    skip_map=False,
 ):
     start_time = time.time()
     request = _extract_request(change_location_request)
@@ -301,15 +408,18 @@ def process_change_location(
         _recompute_route_stats(route)
 
     before_routes_snapshot = copy.deepcopy(routes)
-    before_map_mode = generate_before_map(
-        output_html=before_map_path,
-        comparison_map_html=comparison_map_source,
-        routes=before_routes_snapshot,
-        school=school,
-        new_lat=new_lat,
-        new_lon=new_lon,
-        student_id=student_id,
-    )
+    if not skip_map:
+        before_map_mode = generate_before_map(
+            output_html=before_map_path,
+            comparison_map_html=comparison_map_source,
+            routes=before_routes_snapshot,
+            school=school,
+            new_lat=new_lat,
+            new_lon=new_lon,
+            student_id=student_id,
+        )
+    else:
+        before_map_mode = "skipped"
 
     old_route_snapshot = None
     for route in before_routes_snapshot:
@@ -328,7 +438,7 @@ def process_change_location(
 
     routes_considered = 0
     positions_checked = 0
-    best = None
+    candidates = []
     candidate_routes = _ordered_candidate_routes(routes, preferred_route_id)
     for route in candidate_routes:
         _recompute_route_stats(route)
@@ -347,15 +457,16 @@ def process_change_location(
             positions_checked += 1
             if delta_time > max_detour:
                 continue
-            if best is None or delta_time < best["delta_time"]:
-                best = {
+            candidates.append(
+                {
                     "route_id": route.get("route_id"),
                     "insert_index": insert_index,
                     "delta_time": delta_time,
                     "delta_distance": delta_dist,
                 }
+            )
 
-    if best is None:
+    if not candidates:
         response = _build_failure(
             student_id,
             f"No feasible insertion found under detour limit {max_detour:.2f} minutes",
@@ -367,8 +478,47 @@ def process_change_location(
         response["before_map_mode"] = before_map_mode
         return response
 
-    selected_route = next(route for route in routes if str(route.get("route_id")) == str(best["route_id"]))
-    selected_route_before = copy.deepcopy(selected_route)
+    candidates.sort(key=lambda item: item["delta_time"])
+
+    selected_route = None
+    selected_route_before = None
+    best = None
+    ride_time_check = None
+    constraints = school_config.get("constraints") or {}
+    for candidate in candidates:
+        route = next(r for r in routes if str(r.get("route_id")) == str(candidate["route_id"]))
+        route_before = copy.deepcopy(route)
+        temp_route = copy.deepcopy(route)
+        _insert_candidate_stop(temp_route, candidate["insert_index"], student_record, new_lat, new_lon, change_type)
+        temp_route["total_distance_km"] = round(_safe_float(temp_route.get("total_distance_km"), 0.0) + candidate["delta_distance"], 4)
+        temp_route["total_time_minutes"] = round(_safe_float(temp_route.get("total_time_minutes"), 0.0) + candidate["delta_time"], 4)
+        if str(change_type).lower() == "temporary":
+            temp_route["detour_time_used_today"] = round(
+                _safe_float(temp_route.get("detour_time_used_today", 0.0), 0.0) + max(0.0, candidate["delta_time"]),
+                4,
+            )
+        _recompute_route_stats(temp_route)
+
+        ride_time_check = _check_route_ride_time_caps(temp_route, school, constraints)
+        if ride_time_check.get("ok"):
+            selected_route = route
+            selected_route_before = route_before
+            best = candidate
+            break
+
+    if selected_route is None or best is None:
+        response = _build_failure(
+            student_id,
+            "No insertion satisfied ride-time caps for existing students.",
+            time.time() - start_time,
+            routes_considered,
+            positions_checked,
+            invariant=ride_time_check,
+        )
+        response["before_map"] = before_map_path
+        response["before_map_mode"] = before_map_mode
+        return response
+
     _insert_candidate_stop(selected_route, best["insert_index"], student_record, new_lat, new_lon, change_type)
     selected_route["total_distance_km"] = round(_safe_float(selected_route.get("total_distance_km"), 0.0) + best["delta_distance"], 4)
     selected_route["total_time_minutes"] = round(_safe_float(selected_route.get("total_time_minutes"), 0.0) + best["delta_time"], 4)
@@ -397,80 +547,85 @@ def process_change_location(
     if old_route_snapshot is not None and str(selected_route_before.get("route_id")) == str(old_route_snapshot.get("route_id")):
         route_for_map_before = old_route_snapshot
 
-    # Attempt full ALNS re-optimization with proper graph loading
+    # Attempt full ALNS re-optimization only when map generation is enabled
     optimized_path_coords = None
-    try:
-        print("[Pipeline] Attempting ALNS re-optimization...")
-        
-        # DEBUG: Log what students are in the route before optimization
-        route_students_debug = []
-        for stop in selected_route.get("path", []):
-            if stop.get("type", "pickup").lower() != "school":
-                for s in stop.get("students", []):
-                    route_students_debug.append((s.get("id"), s.get("home_latitude"), s.get("home_longitude")))
-        print(f"[Pipeline] selected_route R{selected_route.get('route_id')} has {len(route_students_debug)} students before re-opt")
-        s093_before = [s for s in route_students_debug if s[0] == 'S093']
-        if s093_before:
-            print(f"[Pipeline]   S093: {s093_before[0]}")
-        
-        # Compute bounding box from route stops
-        all_lats = [school.get("latitude")]
-        all_lons = [school.get("longitude")]
-        for stop in selected_route.get("path", []):
-            if stop.get("latitude") is not None and stop.get("longitude") is not None:
-                all_lats.append(float(stop["latitude"]))
-                all_lons.append(float(stop["longitude"]))
-        
-        if len(all_lats) < 2:
-            raise ValueError("Not enough coordinates to compute bounding box")
-        
-        bbox = [min(all_lats), min(all_lons), max(all_lats), max(all_lons)]
-        print(f"[Pipeline] Route bbox: {bbox}")
-        
-        # Load road network
-        graph = _load_or_create_graph(bbox)
-        
-        # Run ALNS re-optimizer
-        print("[Pipeline] Calling reoptimize_route...")
-        result = reoptimize_route(selected_route, school, graph, iterations=100, time_budget_seconds=60)
-        print(f"[Pipeline] reoptimize_route returned: {type(result)}")
-        
-        # Trace optimized waypoints through OSRM to get road geometry
-        from api_new.scripts.map_tools import _osrm_segment_geometry
-        optimized_waypoints = result.get("optimized_path", [])
-        print(f"[Pipeline] Got {len(optimized_waypoints)} optimized waypoints")
-        
-        if len(optimized_waypoints) >= 2:
-            merged_coords = []
-            for idx in range(len(optimized_waypoints) - 1):
-                a_lat, a_lon = optimized_waypoints[idx]
-                b_lat, b_lon = optimized_waypoints[idx + 1]
-                segment = _osrm_segment_geometry(a_lat, a_lon, b_lat, b_lon)
-                if not segment:
-                    segment = [(a_lat, a_lon), (b_lat, b_lon)]
-                if not merged_coords:
-                    merged_coords.extend(segment)
-                else:
-                    merged_coords.extend(segment[1:])
-            optimized_path_coords = merged_coords
-            print(f"[Pipeline] ALNS re-optimization succeeded: {len(optimized_waypoints)} waypoints → {len(optimized_path_coords)} road coords")
-    except Exception as e:
-        import traceback
-        print(f"[Pipeline] ALNS re-optimization failed: {e}")
-        print(traceback.format_exc())
-        optimized_path_coords = None
+    if not skip_map:
+        try:
+            print("[Pipeline] Attempting ALNS re-optimization...")
 
-    generate_updated_route_map(
-        output_html=after_map_path,
-        old_route=route_for_map_before,
-        new_route=selected_route,
-        school=school,
-        new_lat=new_lat,
-        new_lon=new_lon,
-        student_id=student_id,
-        use_osrm=True,
-        optimized_path_coords=optimized_path_coords,
-    )
+            # DEBUG: Log what students are in the route before optimization
+            route_students_debug = []
+            for stop in selected_route.get("path", []):
+                if stop.get("type", "pickup").lower() != "school":
+                    for s in stop.get("students", []):
+                        route_students_debug.append((s.get("id"), s.get("home_latitude"), s.get("home_longitude")))
+            print(f"[Pipeline] selected_route R{selected_route.get('route_id')} has {len(route_students_debug)} students before re-opt")
+            s093_before = [s for s in route_students_debug if s[0] == "S093"]
+            if s093_before:
+                print(f"[Pipeline]   S093: {s093_before[0]}")
+
+            # Compute bounding box from route stops
+            all_lats = [school.get("latitude")]
+            all_lons = [school.get("longitude")]
+            for stop in selected_route.get("path", []):
+                if stop.get("latitude") is not None and stop.get("longitude") is not None:
+                    all_lats.append(float(stop["latitude"]))
+                    all_lons.append(float(stop["longitude"]))
+
+            if len(all_lats) < 2:
+                raise ValueError("Not enough coordinates to compute bounding box")
+
+            bbox = [min(all_lats), min(all_lons), max(all_lats), max(all_lons)]
+            print(f"[Pipeline] Route bbox: {bbox}")
+
+            # Load road network
+            graph = _load_or_create_graph(bbox)
+
+            # Run ALNS re-optimizer
+            print("[Pipeline] Calling reoptimize_route...")
+            result = reoptimize_route(selected_route, school, graph, iterations=100, time_budget_seconds=60)
+            print(f"[Pipeline] reoptimize_route returned: {type(result)}")
+
+            # Trace optimized waypoints through OSRM to get road geometry
+            from api_new.scripts.map_tools import _osrm_segment_geometry
+            optimized_waypoints = result.get("optimized_path", [])
+            print(f"[Pipeline] Got {len(optimized_waypoints)} optimized waypoints")
+
+            if len(optimized_waypoints) >= 2:
+                merged_coords = []
+                for idx in range(len(optimized_waypoints) - 1):
+                    a_lat, a_lon = optimized_waypoints[idx]
+                    b_lat, b_lon = optimized_waypoints[idx + 1]
+                    segment = _osrm_segment_geometry(a_lat, a_lon, b_lat, b_lon)
+                    if not segment:
+                        segment = [(a_lat, a_lon), (b_lat, b_lon)]
+                    if not merged_coords:
+                        merged_coords.extend(segment)
+                    else:
+                        merged_coords.extend(segment[1:])
+                optimized_path_coords = merged_coords
+                print(f"[Pipeline] ALNS re-optimization succeeded: {len(optimized_waypoints)} waypoints -> {len(optimized_path_coords)} road coords")
+        except Exception as e:
+            import traceback
+            print(f"[Pipeline] ALNS re-optimization failed: {e}")
+            print(traceback.format_exc())
+            optimized_path_coords = None
+
+    if not skip_map:
+        generate_updated_route_map(
+            output_html=after_map_path,
+            old_route=route_for_map_before,
+            new_route=selected_route,
+            school=school,
+            new_lat=new_lat,
+            new_lon=new_lon,
+            student_id=student_id,
+            use_osrm=True,
+            optimized_path_coords=optimized_path_coords,
+        )
+    else:
+        # Skip writing an updated map when requested (fast mode)
+        pass
 
     response = {
         "success": True,
@@ -486,6 +641,7 @@ def process_change_location(
             "candidate_positions_checked": positions_checked,
             "before_map_mode": before_map_mode,
             "invariant": invariant,
+            "ride_time_check": ride_time_check,
         },
         "before_map": before_map_path,
         "after_map": after_map_path,
