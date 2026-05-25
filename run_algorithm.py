@@ -880,6 +880,39 @@ def run_generate_routes(data, G, input_file_path):
     students, buses, routes, school_coords, constraints, algo_config = load_mode1_input(data, G)
     print_input_summary(students, buses, routes, school_coords)
     meta_cfg = data.get("meta", {}) if isinstance(data, dict) else {}
+    memory_cfg = meta_cfg.get("memory", {}) if isinstance(meta_cfg, dict) else {}
+    _det_eng.set_memory_policy(memory_cfg)
+
+    max_cands = algo_config.get("max_candidates_per_student", 15)
+    try:
+        max_cands = int(max_cands)
+    except Exception:
+        max_cands = 15
+
+    if isinstance(memory_cfg, dict):
+        override_cands = memory_cfg.get("max_candidates_per_student")
+        if override_cands is not None:
+            try:
+                max_cands = min(max_cands, int(override_cands))
+            except Exception:
+                pass
+
+        max_matrix_nodes = memory_cfg.get("max_matrix_nodes")
+        if max_matrix_nodes is not None:
+            try:
+                max_matrix_nodes = int(max_matrix_nodes)
+            except Exception:
+                max_matrix_nodes = None
+        if max_matrix_nodes:
+            base_nodes = (len(students) * 2) + (len(routes) * 2)
+            remaining = max_matrix_nodes - base_nodes
+            dynamic_cap = 1 if remaining <= 0 else max(1, remaining // max(1, len(students)))
+            if dynamic_cap < max_cands:
+                print(
+                    f"[Memory] Reducing max_candidates_per_student from {max_cands} to {dynamic_cap} "
+                    f"to stay under max_matrix_nodes={max_matrix_nodes}"
+                )
+                max_cands = dynamic_cap
     matrix_source = _resolve_matrix_source(meta_cfg)
     precompute_matrix(
         students,
@@ -887,6 +920,7 @@ def run_generate_routes(data, G, input_file_path):
         G,
         matrix_source=matrix_source,
         road_speeds_override=meta_cfg.get("road_speeds"),
+        max_candidates=max_cands,
         cache_context={
             "seed": data.get("seed", data.get("meta", {}).get("seed")),
             "student_count": len(students),
@@ -896,7 +930,11 @@ def run_generate_routes(data, G, input_file_path):
     )
     print(f"\nRUNNING ALNS OPTIMIZATION ({algo_config.get('iterations', 60)} iters)")
     initial_sol = ServiceSolution(students, routes, G)
-    optimizer = ALNSEngine(initial_sol, iterations=algo_config.get('iterations', 60))
+    optimizer = ALNSEngine(
+        initial_sol,
+        iterations=algo_config.get('iterations', 60),
+        max_candidates_per_student=max_cands,
+    )
     _alns_start = _t.time()
     best_sol = optimizer.run()
     _alns_elapsed = _t.time() - _alns_start
@@ -994,7 +1032,40 @@ def run_algorithm(data: dict, G, iterations: int = None,
         min_budget_for_floor = float(min_iterations_floor) * floor_sec_per_iter
         budget = max(float(budget), min_budget_for_floor)
 
+    meta_cfg = data.get("meta", {}) if isinstance(data, dict) else {}
+    memory_cfg = meta_cfg.get("memory", {}) if isinstance(meta_cfg, dict) else {}
+    _det_eng.set_memory_policy(memory_cfg)
+
     max_cands = algo_cfg.get("max_candidates_per_student", 15)
+    try:
+        max_cands = int(max_cands)
+    except Exception:
+        max_cands = 15
+
+    if isinstance(memory_cfg, dict):
+        override_cands = memory_cfg.get("max_candidates_per_student")
+        if override_cands is not None:
+            try:
+                max_cands = min(max_cands, int(override_cands))
+            except Exception:
+                pass
+
+        max_matrix_nodes = memory_cfg.get("max_matrix_nodes")
+        if max_matrix_nodes is not None:
+            try:
+                max_matrix_nodes = int(max_matrix_nodes)
+            except Exception:
+                max_matrix_nodes = None
+        if max_matrix_nodes:
+            base_nodes = (n_students_local * 2) + (len(routes) * 2)
+            remaining = max_matrix_nodes - base_nodes
+            dynamic_cap = 1 if remaining <= 0 else max(1, remaining // max(1, n_students_local))
+            if dynamic_cap < max_cands:
+                print(
+                    f"[Memory] Reducing max_candidates_per_student from {max_cands} to {dynamic_cap} "
+                    f"to stay under max_matrix_nodes={max_matrix_nodes}"
+                )
+                max_cands = dynamic_cap
     early_stop_patience = algo_cfg.get("early_stop_patience", None)
     min_improvement = algo_cfg.get("early_stop_min_improvement", 1e-6)
     freeze_temp_threshold = algo_cfg.get("early_stop_freeze_temp", 0.05)
@@ -1006,7 +1077,6 @@ def run_algorithm(data: dict, G, iterations: int = None,
     destroy_fraction_max = algo_cfg.get("destroy_fraction_max", None)
     repair_max_unassigned_per_call = algo_cfg.get("repair_max_unassigned_per_call", None)
     regret_scan_limit = algo_cfg.get("regret_scan_limit", None)
-    meta_cfg = data.get("meta", {}) if isinstance(data, dict) else {}
     matrix_source = _resolve_matrix_source(meta_cfg)
     cache_context = {
         "seed": data.get("seed", data.get("meta", {}).get("seed")),

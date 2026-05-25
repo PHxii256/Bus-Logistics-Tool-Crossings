@@ -6,7 +6,7 @@
     "longitude": 31.270319
   },
 
-  "n_students": 400,
+  "n_students": 1000,
   "seed": 67,
   "stage_distribution": {
     "KG": 0.25,
@@ -24,7 +24,7 @@
   },
 
   "buses": {
-    "count": 15,
+    "count": 37,
     "capacity": 28
   },
 
@@ -106,6 +106,15 @@
   },
 
   "distance_matrix_source": "osrm_scaled",
+
+  "memory": {
+    "max_matrix_nodes": 5500,
+    "matrix_store_lengths": false,
+    "safe_nodes_cache_mode": "truncated",
+    "walk_dist_cache_max_entries": 200000,
+    "path_cache_max_entries": 120000,
+    "osrm_table_max_sources": 200
+  },
 
   "algorithm": {
     "iterations": 5000,

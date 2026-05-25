@@ -3596,6 +3596,8 @@ def run(input_path=None, output_path=None, iterations=None, run_modes=None, visi
     # Preserve full algorithm config from input meta (early-stop, time budget, etc.).
     base_data["meta"]["algorithm"] = copy.deepcopy(meta.get("algorithm", {}))
     base_data["meta"]["algorithm"]["iterations"] = iters
+    if "memory" in meta:
+        base_data["meta"]["memory"] = copy.deepcopy(meta.get("memory"))
     _step_times["generate_dataset_s"] = round(_wtime.time() - _t0, 2)
 
     # Print stage breakdown

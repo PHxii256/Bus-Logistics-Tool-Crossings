@@ -59,6 +59,49 @@ _DRIVE_NODE_FILTERED_SIG_CACHE = {}
 # Cache: (lat, lon) -> nearest_graph_node for walking
 _STUDENT_NODE_CACHE = {}
 
+# Memory policy for large runs (optional, configured via run_algorithm).
+_MEMORY_POLICY = {
+    "safe_nodes_cache_mode": "full",  # full | truncated | none
+    "safe_nodes_cache_max_entries": None,
+    "walk_dist_cache_max_entries": None,
+    "path_cache_max_entries": None,
+    "matrix_store_lengths": True,
+    "osrm_table_max_sources": None,
+}
+
+
+def set_memory_policy(cfg):
+    """Apply optional memory constraints for large instances."""
+    if not isinstance(cfg, dict):
+        return
+    policy = _MEMORY_POLICY
+    if "safe_nodes_cache_mode" in cfg:
+        policy["safe_nodes_cache_mode"] = str(cfg.get("safe_nodes_cache_mode") or "full").lower()
+    if "safe_nodes_cache_max_entries" in cfg:
+        policy["safe_nodes_cache_max_entries"] = cfg.get("safe_nodes_cache_max_entries")
+    if "walk_dist_cache_max_entries" in cfg:
+        policy["walk_dist_cache_max_entries"] = cfg.get("walk_dist_cache_max_entries")
+    if "path_cache_max_entries" in cfg:
+        policy["path_cache_max_entries"] = cfg.get("path_cache_max_entries")
+    if "matrix_store_lengths" in cfg:
+        policy["matrix_store_lengths"] = bool(cfg.get("matrix_store_lengths"))
+    if "osrm_table_max_sources" in cfg:
+        policy["osrm_table_max_sources"] = cfg.get("osrm_table_max_sources")
+
+
+def _maybe_trim_cache(cache, max_entries):
+    if max_entries is None:
+        return
+    try:
+        max_entries = int(max_entries)
+    except Exception:
+        return
+    if max_entries <= 0:
+        cache.clear()
+        return
+    if len(cache) > max_entries:
+        cache.clear()
+
 _MAJOR_HIGHWAYS = {"motorway", "trunk", "primary", "secondary"}
 
 _DEFAULT_STAGE_CROSSING_POLICY = {
@@ -1673,6 +1716,7 @@ def walk_distance_on_roads(graph, node_a, node_b):
         dist = float('inf')
     _WALK_DIST_CACHE[cache_key] = dist
     _WALK_DIST_CACHE[(mapped_b, mapped_a, id(walk_g))] = dist  # Symmetric
+    _maybe_trim_cache(_WALK_DIST_CACHE, _MEMORY_POLICY.get("walk_dist_cache_max_entries"))
     return dist
 
 
@@ -1951,6 +1995,7 @@ def find_shortest_path_with_turns(graph, source, target, weight='travel_time', i
             path = _reconstruct_path(came_from, source, state)
             # Store in both caches
             _path_cache[cache_key] = (path, current_time)
+            _maybe_trim_cache(_path_cache, _MEMORY_POLICY.get("path_cache_max_entries"))
             if initial_bearing is None:
                 _MATRIX_CACHE[(source, target)] = current_time
             return path, current_time
@@ -1984,6 +2029,7 @@ def find_shortest_path_with_turns(graph, source, target, weight='travel_time', i
     
     # CACHE NEGATIVE RESULTS — prevents re-running expensive exhaustive searches
     _path_cache[cache_key] = (None, float('inf'))
+    _maybe_trim_cache(_path_cache, _MEMORY_POLICY.get("path_cache_max_entries"))
     if initial_bearing is None:
         _MATRIX_CACHE[(source, target)] = float('inf')
     return None, float('inf')
@@ -2001,6 +2047,7 @@ def precalculate_distance_matrix(graph, critical_node_ids, fast_mode=False):
     Fills _MATRIX_CACHE (travel_time in minutes) and _MATRIX_CACHE_LENGTH (meters).
     """
     node_list = list(critical_node_ids)
+    store_lengths = bool(_MEMORY_POLICY.get("matrix_store_lengths", True))
     total = len(node_list) * (len(node_list) - 1)
     print(f"Pre-calculating distance matrix for {len(node_list)} nodes ({total} pairs)... [{'fast' if fast_mode else 'accurate'}]")
     
@@ -2033,7 +2080,8 @@ def precalculate_distance_matrix(graph, critical_node_ids, fast_mode=False):
                 if tgt != src and (src, tgt) not in _MATRIX_CACHE:
                     t = dist_time.get(tgt, float('inf'))
                     _MATRIX_CACHE[(src, tgt)] = t
-                    _MATRIX_CACHE_LENGTH[(src, tgt)] = t * 500.0 if t < float('inf') else float('inf')
+                    if store_lengths:
+                        _MATRIX_CACHE_LENGTH[(src, tgt)] = t * 500.0 if t < float('inf') else float('inf')
             _DIJKSTRA_DONE.add(src)
 
         # --- reverse Dijkstra: fill (old_src → new_tgt) pairs ---
@@ -2055,7 +2103,8 @@ def precalculate_distance_matrix(graph, critical_node_ids, fast_mode=False):
                         if (src, tgt) not in _MATRIX_CACHE:
                             t = dist_rev.get(src, float('inf'))
                             _MATRIX_CACHE[(src, tgt)] = t
-                            _MATRIX_CACHE_LENGTH[(src, tgt)] = t * 500.0 if t < float('inf') else float('inf')
+                            if store_lengths:
+                                _MATRIX_CACHE_LENGTH[(src, tgt)] = t * 500.0 if t < float('inf') else float('inf')
 
         elapsed = time.time() - start_time
         fwd_cnt = len(new_nodes)
@@ -2077,7 +2126,7 @@ def precalculate_distance_matrix(graph, critical_node_ids, fast_mode=False):
             path, t = find_shortest_path_with_turns(graph, start_node, end_node)
             
             # Also compute length from the path to fill _MATRIX_CACHE_LENGTH
-            if path and t < float('inf'):
+            if store_lengths and path and t < float('inf'):
                 dist_m = 0.0
                 for pi in range(len(path) - 1):
                     ed = graph.get_edge_data(path[pi], path[pi+1])
@@ -2085,7 +2134,7 @@ def precalculate_distance_matrix(graph, critical_node_ids, fast_mode=False):
                         d = ed[0] if 0 in ed else list(ed.values())[0]
                         dist_m += d.get('length', 0)
                 _MATRIX_CACHE_LENGTH[(start_node, end_node)] = dist_m
-            else:
+            elif store_lengths:
                 _MATRIX_CACHE_LENGTH[(start_node, end_node)] = float('inf')
             
             count += 1
@@ -2430,15 +2479,33 @@ def find_safe_nodes_within_radius(coords, graph, radius_meters, walk_distance_li
     # Include walk_graph identity in cache key to avoid stale results
     walk_graph_id = id(walk_graph) if walk_graph is not None else 0
     stage_key = _resolve_stage_crossing_policy_key(student_stage, student_disabled)
-    cache_key = (lat, lon, walk_distance_limit, walk_graph_id, stage_key, bool(student_disabled))
-    if cache_key in _safe_nodes_cache:
-        all_reachable = _safe_nodes_cache[cache_key]
-        # Apply scoring/truncation on the cached full result if config given
-        if candidate_cfg:
-            return _rank_and_truncate_candidates(
-                all_reachable, graph, fast_nearest_node(graph, lon, lat), candidate_cfg
+    cache_mode = str(_MEMORY_POLICY.get("safe_nodes_cache_mode") or "full").lower()
+    cache_key = None
+    cache_truncated = False
+    if cache_mode not in {"none", "off", "false"}:
+        if candidate_cfg and cache_mode == "truncated":
+            max_k = int(candidate_cfg.get("max_candidates_per_student", 15))
+            cache_key = (
+                lat,
+                lon,
+                walk_distance_limit,
+                walk_graph_id,
+                stage_key,
+                bool(student_disabled),
+                "trunc",
+                max_k,
             )
-        return all_reachable
+            cache_truncated = True
+        elif cache_mode == "full":
+            cache_key = (lat, lon, walk_distance_limit, walk_graph_id, stage_key, bool(student_disabled), "full")
+
+    if cache_key in _safe_nodes_cache:
+        cached_nodes = _safe_nodes_cache[cache_key]
+        if candidate_cfg and not cache_truncated:
+            return _rank_and_truncate_candidates(
+                cached_nodes, graph, fast_nearest_node(graph, lon, lat), candidate_cfg
+            )
+        return cached_nodes
 
     # If walk_graph provided, do BFS on walk graph and map results to drive nodes.
     # Also union with direct drive-graph BFS so candidate coverage doesn't collapse
@@ -2468,11 +2535,17 @@ def find_safe_nodes_within_radius(coords, graph, radius_meters, walk_distance_li
         # Legacy mode: BFS directly on drive graph
         safe_nodes = _bfs_on_drive_graph(coords, graph, walk_distance_limit)
 
-    _safe_nodes_cache[cache_key] = safe_nodes
-
     if candidate_cfg:
         home_node = fast_nearest_node(graph, lon, lat)
-        return _rank_and_truncate_candidates(safe_nodes, graph, home_node, candidate_cfg)
+        ranked = _rank_and_truncate_candidates(safe_nodes, graph, home_node, candidate_cfg)
+        if cache_key:
+            _safe_nodes_cache[cache_key] = ranked if cache_truncated else safe_nodes
+            _maybe_trim_cache(_safe_nodes_cache, _MEMORY_POLICY.get("safe_nodes_cache_max_entries"))
+        return ranked
+
+    if cache_key:
+        _safe_nodes_cache[cache_key] = safe_nodes
+        _maybe_trim_cache(_safe_nodes_cache, _MEMORY_POLICY.get("safe_nodes_cache_max_entries"))
     return safe_nodes
 
 
@@ -3980,8 +4053,17 @@ def precalculate_distance_matrix_osrm(G, nodes_list):
     Replaces the memory-crashing Python A* matrix calculation.
     Queries a local OSRM Docker container to get all distances instantly.
     """
-    print(f"Asking local OSRM to calculate matrix for {len(nodes_list)} nodes...")
-    
+    total_nodes = len(nodes_list)
+    print(f"Asking local OSRM to calculate matrix for {total_nodes} nodes...")
+
+    store_lengths = bool(_MEMORY_POLICY.get("matrix_store_lengths", True))
+    annotations = "duration,distance" if store_lengths else "duration"
+    max_sources = _MEMORY_POLICY.get("osrm_table_max_sources")
+    try:
+        max_sources = int(max_sources) if max_sources is not None else None
+    except Exception:
+        max_sources = None
+
     # 1. Map node IDs to their Longitude/Latitude
     # OSRM expects the format: lon,lat
     coords_str_list = []
@@ -3989,40 +4071,70 @@ def precalculate_distance_matrix_osrm(G, nodes_list):
         lat = G.nodes[node]['y']
         lon = G.nodes[node]['x']
         coords_str_list.append(f"{lon},{lat}")
-        
+
     coords_string = ";".join(coords_str_list)
-    
-    # 2. Make the HTTP request to the local OSRM Docker container
-    # We ask for both 'duration' and 'distance' annotations
-    url = f"http://localhost:5000/table/v1/driving/{coords_string}?annotations=duration,distance"
-    
-    try:
+
+    def _fetch_table(source_indices=None):
+        sources_param = ""
+        if source_indices is not None:
+            sources_param = "&sources=" + ";".join(str(i) for i in source_indices)
+        url = (
+            f"http://localhost:5000/table/v1/driving/{coords_string}"
+            f"?annotations={annotations}{sources_param}"
+        )
         response = requests.get(url)
         response.raise_for_status()
-        data = response.json()
+        return response.json()
+
+    # 2. Make one or more HTTP requests to the local OSRM Docker container
+    try:
+        if max_sources and max_sources > 0 and max_sources < total_nodes:
+            for start in range(0, total_nodes, max_sources):
+                end = min(total_nodes, start + max_sources)
+                source_indices = list(range(start, end))
+                print(f"  OSRM chunk: sources {start}-{end - 1} of {total_nodes}")
+                data = _fetch_table(source_indices)
+                durations = data.get('durations', [])
+                distances = data.get('distances', []) if store_lengths else None
+
+                for i, origin_idx in enumerate(source_indices):
+                    origin_node = nodes_list[origin_idx]
+                    row_dur = durations[i] if i < len(durations) else []
+                    row_dist = distances[i] if store_lengths and distances and i < len(distances) else None
+                    for j, dest_node in enumerate(nodes_list):
+                        t_val = row_dur[j] if j < len(row_dur) else None
+                        if t_val is not None:
+                            _MATRIX_CACHE[(origin_node, dest_node)] = t_val / 60.0
+                        else:
+                            _MATRIX_CACHE[(origin_node, dest_node)] = float('inf')
+
+                        if store_lengths:
+                            d_val = row_dist[j] if row_dist and j < len(row_dist) else None
+                            _MATRIX_CACHE_LENGTH[(origin_node, dest_node)] = (
+                                d_val if d_val is not None else float('inf')
+                            )
+        else:
+            data = _fetch_table()
+            durations = data.get('durations', [])
+            distances = data.get('distances', []) if store_lengths else None
+
+            for i, origin_node in enumerate(nodes_list):
+                row_dur = durations[i] if i < len(durations) else []
+                row_dist = distances[i] if store_lengths and distances and i < len(distances) else None
+                for j, dest_node in enumerate(nodes_list):
+                    t_val = row_dur[j] if j < len(row_dur) else None
+                    if t_val is not None:
+                        _MATRIX_CACHE[(origin_node, dest_node)] = t_val / 60.0
+                    else:
+                        _MATRIX_CACHE[(origin_node, dest_node)] = float('inf')
+
+                    if store_lengths:
+                        d_val = row_dist[j] if row_dist and j < len(row_dist) else None
+                        _MATRIX_CACHE_LENGTH[(origin_node, dest_node)] = (
+                            d_val if d_val is not None else float('inf')
+                        )
     except requests.exceptions.RequestException as e:
         print(f"OSRM Error: Is the Docker container running? {e}")
         return
-        
-    durations = data.get('durations', [])
-    distances = data.get('distances', [])
-    
-    # 3. Save the results into the exact cache format the ALNS engine uses
-    for i, origin_node in enumerate(nodes_list):
-        for j, dest_node in enumerate(nodes_list):
-            
-            # --- HANDLE DURATIONS ---
-            if durations[i][j] is not None:
-                # Convert OSRM seconds to minutes
-                _MATRIX_CACHE[(origin_node, dest_node)] = durations[i][j] / 60.0
-            else:
-                # CRITICAL FIX: Prevent A* Death Spiral by caching infinity
-                _MATRIX_CACHE[(origin_node, dest_node)] = float('inf')
-                
-            # --- HANDLE DISTANCES ---
-            if distances[i][j] is not None:
-                _MATRIX_CACHE_LENGTH[(origin_node, dest_node)] = distances[i][j]
-            else:
-                _MATRIX_CACHE_LENGTH[(origin_node, dest_node)] = float('inf')
-                
+
     print("OSRM Matrix calculation complete! Cache populated.")
